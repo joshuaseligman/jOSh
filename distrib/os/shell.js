@@ -51,6 +51,9 @@ var TSOS;
             // whereami
             sc = new TSOS.ShellCommand(this.shellWhereAmI, "whereami", "- Displays your current location.");
             this.commandList[this.commandList.length] = sc;
+            // judgehomers
+            sc = new TSOS.ShellCommand(this.shellJudgeHomers, "judgehomers", "- Displays the current season home run total for Aaron Judge (requires internet connection).");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -276,6 +279,34 @@ var TSOS;
         shellWhereAmI(args) {
             // Prints the user's location
             _StdOut.putText('You are currently trapped in a simulation called the Matrix. Take the red pill to discover the truth of your current location.');
+        }
+        shellJudgeHomers(args) {
+            // Concepts and code found at https://gomakethings.com/getting-html-with-fetch-in-vanilla-js/
+            // Documentation for DOMParser: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+            // Fetch the baseball reference page for aaron judge
+            fetch('https://www.baseball-reference.com/players/j/judgeaa01.shtml', {
+                method: 'GET',
+                headers: {
+                    'mode': 'cors'
+                }
+            })
+                // Return the string html
+                .then((res) => res.text())
+                .then((html) => {
+                // Convert the HTML string into a document object
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(html, 'text/html');
+                let battingStatsTable = doc.querySelector('#batting_standard > tbody');
+                let battingRows = battingStatsTable.querySelectorAll('tr');
+                let currentSeasonStats = battingRows[battingRows.length - 1];
+                let currentHomersElement = currentSeasonStats.querySelector('td[data-stat="HR"]');
+                let surrondingRegex = /(strong|em)/g;
+                let currentHomers = currentHomersElement.innerHTML.replace(surrondingRegex, '');
+                _StdOut.putText(currentHomers);
+            }).catch((err) => {
+                // There was an error
+                _StdOut.putText('Error obtaining the stats.');
+            });
         }
     }
     TSOS.Shell = Shell;
