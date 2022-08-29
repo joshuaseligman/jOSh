@@ -79,6 +79,12 @@ module TSOS {
                 "- Displays the current date and time.");
             this.commandList[this.commandList.length] = sc;
 
+            // whereami
+            sc = new ShellCommand(this.shellWhereAmI,
+                "whereami",
+                "- Displays your current location.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -245,6 +251,7 @@ module TSOS {
                         case 'shutdown':
                         case 'cls':
                         case 'date':
+                        case 'whereami':
                             // Get the description after the "- "
                             _StdOut.putText(requestedCommand.description.substring(2));
                             _StdOut.advanceLine();
@@ -318,6 +325,11 @@ module TSOS {
         public shellDate(args: string[]) {
             // Output the current date and time
             _StdOut.putText(`Current date: ${Utils.getDate()}`);
+        }
+
+        public shellWhereAmI(args: string[]) {
+            // Prints the user's location
+            _StdOut.putText('You are currently trapped in a simulation called the Matrix. Take the red pill to discover the truth of your current location.')
         }
     }
 }
