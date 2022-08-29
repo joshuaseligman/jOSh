@@ -193,7 +193,7 @@ var TSOS;
                 if (requestedCommand !== undefined) {
                     switch (requestedCommand.command) {
                         // Cases for commands with 0 arguments
-                        case "help":
+                        case 'help':
                         case 'ver':
                         case 'shutdown':
                         case 'cls':
@@ -203,6 +203,18 @@ var TSOS;
                             // Add the usage for the user's reference
                             _StdOut.putText(`Usage: ${requestedCommand.command}`);
                             break;
+                        // Cases for commands with 1 argument
+                        case 'man':
+                        case 'trace':
+                        case 'rot13':
+                        case 'prompt':
+                            // Split the description to separate the needed argument with the actual description
+                            let splitDescription = requestedCommand.description.split(' - ');
+                            // Print out the actual description
+                            _StdOut.putText(splitDescription[1]);
+                            _StdOut.advanceLine();
+                            // Print out the command with the argument requirement
+                            _StdOut.putText(`Usage: ${requestedCommand.command} ${splitDescription[0]}`);
                     }
                 }
                 else {
