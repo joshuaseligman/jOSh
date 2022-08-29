@@ -42,6 +42,11 @@ var TSOS;
             }
             return retVal;
         }
+        static getDate() {
+            // Gets the current date and time and returns it in a string for easy use throughout the project
+            let now = new Date();
+            return now.toLocaleString();
+        }
     }
     TSOS.Utils = Utils;
 })(TSOS || (TSOS = {}));

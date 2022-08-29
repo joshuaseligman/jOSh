@@ -73,6 +73,12 @@ module TSOS {
                                   "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
 
+            // date
+            sc = new ShellCommand(this.shellDate,
+                "date",
+                "- Displays the current date and time.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -238,6 +244,7 @@ module TSOS {
                         case 'ver':
                         case 'shutdown':
                         case 'cls':
+                        case 'date':
                             // Get the description after the "- "
                             _StdOut.putText(requestedCommand.description.substring(2));
                             _StdOut.advanceLine();
@@ -308,5 +315,9 @@ module TSOS {
             }
         }
 
+        public shellDate(args: string[]) {
+            // Output the current date and time
+            _StdOut.putText(`Current date: ${Utils.getDate()}`);
+        }
     }
 }

@@ -43,5 +43,11 @@ module TSOS {
             }
             return retVal;
         }
+
+        public static getDate(): string {
+            // Gets the current date and time and returns it in a string for easy use throughout the project
+            let now = new Date();
+            return now.toLocaleString();
+        }
     }
 }
