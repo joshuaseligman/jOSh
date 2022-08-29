@@ -229,16 +229,28 @@ module TSOS {
 
         public shellMan(args: string[]) {
             if (args.length > 0) {
-                var topic = args[0];
-                switch (topic) {
-                    case "help":
-                        _StdOut.putText("Help displays a list of (hopefully) valid commands.");
-                        break;
-                    // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
-                    default:
-                        _StdOut.putText("No manual entry for " + args[0] + ".");
+                // Get the command that was requested by the argument for the man command
+                let requestedCommand: ShellCommand = _OsShell.commandList.find(cmd => cmd.command === args[0]);
+                if (requestedCommand !== undefined) {
+                    switch (requestedCommand.command) {
+                        // Cases for commands with 0 arguments
+                        case "help":
+                        case 'ver':
+                        case 'shutdown':
+                        case 'cls':
+                            // Get the description after the "- "
+                            _StdOut.putText(requestedCommand.description.substring(2));
+                            _StdOut.advanceLine();
+                            // Add the usage for the user's reference
+                            _StdOut.putText(`Usage: ${requestedCommand.command}`);
+                            break;
+                    }
+                } else {
+                    // The command in the man argument is not valid
+                    _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
             } else {
+                // Failed to provide a command to get the manual for
                 _StdOut.putText("Usage: man <topic>  Please supply a topic.");
             }
         }
