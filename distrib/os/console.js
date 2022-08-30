@@ -34,6 +34,7 @@ var TSOS;
                 var chr = _KernelInputQueue.dequeue();
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
+                    this.resetTabCompletion();
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
@@ -43,6 +44,7 @@ var TSOS;
                 else if (chr === String.fromCharCode(8)) { // Backspace
                     // Only do something if there is text out in the command
                     if (this.buffer.length > 0) {
+                        this.resetTabCompletion();
                         // get the width of the character to delete
                         let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
                         // Calculate the height to clear by
@@ -115,6 +117,7 @@ var TSOS;
                     }
                 }
                 else {
+                    this.resetTabCompletion();
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     this.putText(chr);
@@ -166,6 +169,18 @@ var TSOS;
             else {
                 // Only increment the yPosition if we have room to do so
                 this.currentYPosition += yDelta;
+            }
+        }
+        resetTabCompletion() {
+            if (this.completions !== null) {
+                this.buffer += this.completions[this.completionIndex].command.substring(this.buffer.length);
+                this.completions = null;
+                this.completionIndex = -1;
+                this.lastWidth = 0;
+                let yDelta = _DefaultFontSize +
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin;
+                _DrawingContext.clearRect(0, this.currentYPosition + yDelta - _DefaultFontSize, _Canvas.width, this.currentYPosition + yDelta);
             }
         }
     }
