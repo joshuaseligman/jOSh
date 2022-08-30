@@ -51,8 +51,11 @@ module TSOS {
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
 
-                    // Add the command to the command history
-                    this.commandHistory.unshift(this.buffer);
+                    // Only add to history if there is content
+                    if (this.buffer !== '') {
+                        // Add the command to the command history
+                        this.commandHistory.unshift(this.buffer);
+                    }
 
                     // ... and reset our buffer.
                     this.buffer = "";

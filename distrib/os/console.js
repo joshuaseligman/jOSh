@@ -42,8 +42,10 @@ var TSOS;
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
-                    // Add the command to the command history
-                    this.commandHistory.unshift(this.buffer);
+                    if (this.buffer !== '') {
+                        // Add the command to the command history
+                        this.commandHistory.unshift(this.buffer);
+                    }
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
