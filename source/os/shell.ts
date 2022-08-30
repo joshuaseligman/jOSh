@@ -85,6 +85,12 @@ module TSOS {
                 "- Displays your current location.");
             this.commandList[this.commandList.length] = sc;
 
+            // seeya
+            sc = new ShellCommand(this.shellSeeYa,
+                "seeya",
+                "- Watch a baseball get crushed. No questions asked.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -321,6 +327,23 @@ module TSOS {
         public shellWhereAmI(args: string[]) {
             // Prints the user's location
             _StdOut.putText('You are currently trapped in a simulation called the Matrix. Take the red pill to discover the truth of your current location.')
+        }
+
+        public shellSeeYa(args: string[]) {
+            _StdOut.putText("SEE YA!!!");
+
+            // The area with the gif overlaps the rest of the page, so we need to make the content visible
+            let seeYaArea: HTMLDivElement = document.querySelector('#seeYaArea');
+            seeYaArea.style.display = 'flex';
+            
+            // Remove the focus so no input during this time
+            _Canvas.blur();
+
+            // Wait 10 seconds (the length of the gif) to make the webpage back to how it was
+            setTimeout(() => {
+                seeYaArea.style.display = 'none';
+                _Canvas.focus();
+            }, 10000);
         }
     }
 }
