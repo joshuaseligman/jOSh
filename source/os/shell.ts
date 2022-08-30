@@ -332,7 +332,7 @@ module TSOS {
 
         public shellWhereAmI(args: string[]) {
             // Prints the user's location
-            _StdOut.putText('You are currently trapped in a simulation called the Matrix. Take the red pill to discover the truth of your current location.')
+            _StdOut.putText('You are currently trapped in a simulation called the Matrix. Take the red pill to discover the truth of your current location.');
         }
 
         public shellSeeYa(args: string[]) {
