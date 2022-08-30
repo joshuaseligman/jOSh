@@ -14,6 +14,9 @@ module TSOS {
         private completionIndex: number = -1;
         private lastWidth: number = 0;
 
+        private commandHistory: string[] = [];
+        private historyIndex = 0;
+
         constructor(public currentFont = _DefaultFontFamily,
                     public currentFontSize = _DefaultFontSize,
                     public currentXPosition = 0,
@@ -42,15 +45,21 @@ module TSOS {
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     this.resetTabCompletion();
+                    this.historyIndex = 0;
 
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
+
+                    // Add the command to the command history
+                    this.commandHistory.unshift(this.buffer);
+
                     // ... and reset our buffer.
                     this.buffer = "";
 
                 } else if (chr === String.fromCharCode(8)) { // Backspace
                     this.resetTabCompletion();
+                    this.historyIndex = 0;
 
                     // Only do something if there is text out in the command
                     if (this.buffer.length > 0) {
@@ -70,6 +79,8 @@ module TSOS {
 
                     }
                 } else if (chr === String.fromCharCode(9)) {
+                    this.historyIndex = 0;
+
                     if (this.completions === null) {
                         if (this.buffer === '') { return; }
                         // Get all the commands that the user has potentially started to type
@@ -126,7 +137,7 @@ module TSOS {
                             this.completionIndex = 0;
                         }
 
-                        // Put the 
+                        // Put the x cursor back where it was
                         this.currentXPosition -= this.lastWidth;
 
                         // Get the string that the user is still yet to type
@@ -135,11 +146,29 @@ module TSOS {
 
                         // Type out the rest of the command and put it in the buffer
                         this.putText(remainingCmd);
+                        this.buffer = this.completions[this.completionIndex].command;
                     }
                 } else if (chr === 'up' || chr === 'down') {
-                    console.log(chr + ' pressed')
+                    this.resetTabCompletion();
+
+                    // Go through history if possible
+                    if (this.commandHistory.length > 0 &&
+                        chr === 'up' && this.historyIndex < this.commandHistory.length) {
+                        // Calculate the starting x position
+                        let newX: number = this.currentXPosition - _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
+                        // Clear the area from what was already there and set the new x position
+                        _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize, _Canvas.width, this.getLineHeight());
+                        this.currentXPosition = newX;
+
+                        // Update the screen, buffer, and history index
+                        this.putText(this.commandHistory[this.historyIndex]);
+                        this.buffer = this.commandHistory[this.historyIndex];
+
+                        this.historyIndex++;
+                    }
                 } else {
                     this.resetTabCompletion();
+                    this.historyIndex = 0;
 
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
@@ -198,9 +227,6 @@ module TSOS {
         public resetTabCompletion(): void {
             // Reset everything only if there is something to reset
             if (this.completions !== null) {
-                // Update the buffer with the selected command
-                this.buffer += this.completions[this.completionIndex].command.substring(this.buffer.length);
-
                 // Reset the variables
                 this.completions = null;
                 this.completionIndex = -1;
