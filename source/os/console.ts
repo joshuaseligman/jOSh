@@ -74,14 +74,14 @@ module TSOS {
                         // We start at the y position - the font size because we only need to measure from the baseline-up and do not
                         // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
                         // need to clear the entire letter.
-                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize, charWidth, this.getLineHeight());
+                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize - _FontHeightMargin, charWidth, this.getLineHeight() + _FontHeightMargin);
 
                         // Remove it from the x position and the buffer
                         this.currentXPosition -= charWidth;
                         this.buffer = this.buffer.substring(0, this.buffer.length - 1);
 
                     }
-                } else if (chr === String.fromCharCode(9)) {
+                } else if (chr === String.fromCharCode(9)) { // tab
                     this.historyIndex = 0;
 
                     if (this.completions === null) {
@@ -161,7 +161,7 @@ module TSOS {
                         // Calculate the starting x position
                         let newX: number = this.currentXPosition - _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
                         // Clear the area from what was already there and set the new x position
-                        _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize, _Canvas.width, this.getLineHeight());
+                        _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize - _FontHeightMargin, _Canvas.width, this.getLineHeight() + _FontHeightMargin);
                         this.currentXPosition = newX;
 
                         // Edge cases for the logic to make sure we stay within the confines of the command history array
