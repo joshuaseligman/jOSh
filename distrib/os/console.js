@@ -48,15 +48,11 @@ var TSOS;
                         this.resetTabCompletion();
                         // get the width of the character to delete
                         let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
-                        // Calculate the height to clear by
-                        let yDelta = _DefaultFontSize +
-                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                            _FontHeightMargin;
                         // Draw a clear rect over the character and a little more to make sure it is all clear
                         // We start at the y position - the font size because we only need to measure from the baseline-up and do not
                         // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
                         // need to clear the entire letter.
-                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize, charWidth, yDelta);
+                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize, charWidth, this.getLineHeight());
                         // Remove it from the x position and the buffer
                         this.currentXPosition -= charWidth;
                         this.buffer = this.buffer.substring(0, this.buffer.length - 1);
@@ -100,15 +96,11 @@ var TSOS;
                         }
                     }
                     else {
-                        // Calculate the height to clear by
-                        let yDelta = _DefaultFontSize +
-                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                            _FontHeightMargin;
                         // Draw a clear rect over the last filled part and a little more to make sure it is all clear
                         // We start at the y position - the font size because we only need to measure from the baseline-up and do not
                         // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
                         // need to clear the entire letter.
-                        _DrawingContext.clearRect(this.currentXPosition - this.lastWidth, this.currentYPosition - this.currentFontSize, this.lastWidth, yDelta);
+                        _DrawingContext.clearRect(this.currentXPosition - this.lastWidth, this.currentYPosition - this.currentFontSize, this.lastWidth, this.getLineHeight());
                         // Increment the index that we are going to use
                         this.completionIndex++;
                         if (this.completionIndex >= this.completions.length) {
@@ -152,21 +144,11 @@ var TSOS;
         }
         advanceLine() {
             this.currentXPosition = 0;
-            /*
-             * Font size measures from the baseline to the highest point in the font.
-             * Font descent measures from the baseline to the lowest point in the font.
-             * Font height margin is extra spacing between the lines.
-             */
-            // yDelta represents the total height of the line because that is how much the y postiton
-            // changes on each line advance
-            let yDelta = _DefaultFontSize +
-                _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                _FontHeightMargin;
-            if (this.currentYPosition + yDelta > _Canvas.height) {
+            if (this.currentYPosition + this.getLineHeight() > _Canvas.height) {
                 // Solution inspired by https://www.w3schools.com/tags/canvas_getimagedata.asp
-                // Since yDelta is the height of a line, we are able to grab starting at yDelta (the top of the second line)
+                // Since this.getLineHeight() is the height of a line, we are able to grab starting at this.getLineHeight() (the top of the second line)
                 // all the way down to the bottom of the canvas
-                let imgData = _DrawingContext.getImageData(0, yDelta, _Canvas.width, _Canvas.height - yDelta);
+                let imgData = _DrawingContext.getImageData(0, this.getLineHeight(), _Canvas.width, _Canvas.height - this.getLineHeight());
                 // Clear the screen and paste the image at the top
                 this.clearScreen();
                 _DrawingContext.putImageData(imgData, 0, 0);
@@ -175,7 +157,7 @@ var TSOS;
             }
             else {
                 // Only increment the yPosition if we have room to do so
-                this.currentYPosition += yDelta;
+                this.currentYPosition += this.getLineHeight();
             }
         }
         resetTabCompletion() {
@@ -187,12 +169,19 @@ var TSOS;
                 this.completions = null;
                 this.completionIndex = -1;
                 this.lastWidth = 0;
-                let yDelta = _DefaultFontSize +
-                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                    _FontHeightMargin;
                 // Clear the area where we drew the options
-                _DrawingContext.clearRect(0, this.currentYPosition + yDelta - _DefaultFontSize, _Canvas.width, yDelta);
+                _DrawingContext.clearRect(0, this.currentYPosition + this.getLineHeight() - _DefaultFontSize, _Canvas.width, this.getLineHeight());
             }
+        }
+        getLineHeight() {
+            /*
+            * Font size measures from the baseline to the highest point in the font.
+            * Font descent measures from the baseline to the lowest point in the font.
+            * Font height margin is extra spacing between the lines.
+            */
+            return _DefaultFontSize +
+                _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                _FontHeightMargin;
         }
     }
     TSOS.Console = Console;
