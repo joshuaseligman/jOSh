@@ -93,7 +93,13 @@ module TSOS {
                             let origY: number = this.currentYPosition;
 
                             // Go to the next line to write out the commands
-                            this.advanceLine();
+                            // Fix the origY variable if needed to match where the actual command is
+                            let hadToScroll: boolean = this.advanceLine();
+                            if (hadToScroll) {
+                                origY -= this.getLineHeight();
+                            }
+
+                            // Write out each possible command
                             for (let i: number = 0; i < this.completions.length; i++) {
                                 // Write the command and leave some space if needed
                                 this.putText(this.completions[i].command)
@@ -159,7 +165,7 @@ module TSOS {
             }
          }
 
-        public advanceLine(): void {
+        public advanceLine(): boolean {
             this.currentXPosition = 0;
 
             if (this.currentYPosition + this.getLineHeight() > _Canvas.height) {
@@ -174,9 +180,15 @@ module TSOS {
 
                 // The current y position doesn't get changed because we moved the text up to make room for a new line
                 // and the y position is currently at the lowest possible point for a complete line
+
+                // Return true because we scrolled
+                return true;
             } else {
                 // Only increment the yPosition if we have room to do so
                 this.currentYPosition += this.getLineHeight();
+
+                // Return false because we did not scroll
+                return false;
             }
         }
 

@@ -82,7 +82,12 @@ var TSOS;
                             let origX = this.currentXPosition;
                             let origY = this.currentYPosition;
                             // Go to the next line to write out the commands
-                            this.advanceLine();
+                            // Fix the origY variable if needed to match where the actual command is
+                            let hadToScroll = this.advanceLine();
+                            if (hadToScroll) {
+                                origY -= this.getLineHeight();
+                            }
+                            // Write out each possible command
                             for (let i = 0; i < this.completions.length; i++) {
                                 // Write the command and leave some space if needed
                                 this.putText(this.completions[i].command);
@@ -154,10 +159,14 @@ var TSOS;
                 _DrawingContext.putImageData(imgData, 0, 0);
                 // The current y position doesn't get changed because we moved the text up to make room for a new line
                 // and the y position is currently at the lowest possible point for a complete line
+                // Return true because we scrolled
+                return true;
             }
             else {
                 // Only increment the yPosition if we have room to do so
                 this.currentYPosition += this.getLineHeight();
+                // Return false because we did not scroll
+                return false;
             }
         }
         resetTabCompletion() {
