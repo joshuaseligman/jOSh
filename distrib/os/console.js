@@ -63,6 +63,9 @@ var TSOS;
                 }
                 else if (chr === String.fromCharCode(9)) {
                     if (this.completions === null) {
+                        if (this.buffer === '') {
+                            return;
+                        }
                         // Get all the commands that the user has potentially started to type
                         let possibleCompletions = _OsShell.commandList.filter((cmd) => {
                             return cmd.command.startsWith(this.buffer);
