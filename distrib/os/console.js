@@ -37,6 +37,21 @@ var TSOS;
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
+                else if (chr === String.fromCharCode(8)) { // Backspace
+                    // Only do something if there is text out in the command
+                    if (this.buffer.length > 0) {
+                        // get the width of the character to delete
+                        let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+                        let yDelta = _DefaultFontSize +
+                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                            _FontHeightMargin;
+                        // Draw a clear rect over the character and a little more to make sure it is all clear
+                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize, charWidth, yDelta);
+                        // Remove it from the x position and the buffer
+                        this.currentXPosition -= charWidth;
+                        this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                    }
+                }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...

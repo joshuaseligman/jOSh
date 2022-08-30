@@ -41,6 +41,27 @@ module TSOS {
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
+                } else if (chr === String.fromCharCode(8)) { // Backspace
+                    // Only do something if there is text out in the command
+                    if (this.buffer.length > 0) {
+                        // get the width of the character to delete
+                        let charWidth: number = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+
+                        // Calculate the height to clear by
+                        let yDelta: number = _DefaultFontSize + 
+                                             _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                                             _FontHeightMargin;
+
+                        // Draw a clear rect over the character and a little more to make sure it is all clear
+                        // We start at the y position - the font size because we only need to measure from the baseline-up and do not
+                        // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
+                        // need to clear the entire letter.
+                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize, charWidth, yDelta);
+
+                        // Remove it from the x position and the buffer
+                        this.currentXPosition -= charWidth;
+                        this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                    }
                 } else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
