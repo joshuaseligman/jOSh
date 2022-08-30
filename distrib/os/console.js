@@ -70,9 +70,6 @@ var TSOS;
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
-            // this.currentYPosition += _DefaultFontSize + 
-            //                          _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-            //                          _FontHeightMargin;
             // yDelta represents the total height of the line because that is how much the y postiton
             // changes on each line advance
             let yDelta = _DefaultFontSize +
