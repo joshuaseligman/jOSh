@@ -17,6 +17,7 @@ var TSOS;
             this.completions = null;
             this.completionIndex = -1;
             this.lastWidth = 0;
+            this.originalBuffer = '';
             this.commandHistory = [];
             this.historyIndex = 0;
         }
@@ -88,6 +89,7 @@ var TSOS;
                         else if (possibleCompletions.length > 1) {
                             // First tab for multiple commands
                             this.completions = possibleCompletions;
+                            this.originalBuffer = this.buffer;
                             // Save x and y for future use
                             let origX = this.currentXPosition;
                             let origY = this.currentYPosition;
@@ -124,7 +126,7 @@ var TSOS;
                         // Put the x cursor back where it was
                         this.currentXPosition -= this.lastWidth;
                         // Get the string that the user is still yet to type
-                        let remainingCmd = this.completions[this.completionIndex].command.substring(this.buffer.length);
+                        let remainingCmd = this.completions[this.completionIndex].command.substring(this.originalBuffer.length);
                         this.lastWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, remainingCmd);
                         // Type out the rest of the command and put it in the buffer
                         this.putText(remainingCmd);
@@ -217,6 +219,7 @@ var TSOS;
                 this.completions = null;
                 this.completionIndex = -1;
                 this.lastWidth = 0;
+                this.originalBuffer = '';
                 // Clear the area where we drew the options
                 _DrawingContext.clearRect(0, this.currentYPosition + this.getLineHeight() - _DefaultFontSize, _Canvas.width, this.getLineHeight());
             }

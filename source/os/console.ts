@@ -13,6 +13,7 @@ module TSOS {
         private completions: ShellCommand[] = null;
         private completionIndex: number = -1;
         private lastWidth: number = 0;
+        private originalBuffer: string = '';
 
         private commandHistory: string[] = [];
         private historyIndex = 0;
@@ -102,6 +103,7 @@ module TSOS {
                         } else if (possibleCompletions.length > 1) {
                             // First tab for multiple commands
                             this.completions = possibleCompletions;
+                            this.originalBuffer = this.buffer;
                             
                             // Save x and y for future use
                             let origX: number = this.currentXPosition;
@@ -144,7 +146,7 @@ module TSOS {
                         this.currentXPosition -= this.lastWidth;
 
                         // Get the string that the user is still yet to type
-                        let remainingCmd: string = this.completions[this.completionIndex].command.substring(this.buffer.length);
+                        let remainingCmd: string = this.completions[this.completionIndex].command.substring(this.originalBuffer.length);
                         this.lastWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, remainingCmd);
 
                         // Type out the rest of the command and put it in the buffer
@@ -246,6 +248,7 @@ module TSOS {
                 this.completions = null;
                 this.completionIndex = -1;
                 this.lastWidth = 0;
+                this.originalBuffer = '';
     
                 // Clear the area where we drew the options
                 _DrawingContext.clearRect(0, this.currentYPosition + this.getLineHeight() - _DefaultFontSize, _Canvas.width, this.getLineHeight());
