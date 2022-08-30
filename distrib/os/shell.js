@@ -55,7 +55,10 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellSeeYa, "seeya", "- Watch a baseball get crushed. No questions asked.");
             this.commandList[this.commandList.length] = sc;
             // name
-            sc = new TSOS.ShellCommand(this.shellName, "name", "- Learn a name.");
+            sc = new TSOS.ShellCommand(this.shellName, "name", "- Learn a name. You'll be happy you did.");
+            this.commandList[this.commandList.length] = sc;
+            // status
+            sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Updates the status in the status bar.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -296,9 +299,20 @@ var TSOS;
                 _Canvas.focus();
             }, 10000);
         }
-        shellName() {
+        shellName(args) {
             // The name
             _StdOut.putText('The name\'s Bond... James Bond.');
+        }
+        shellStatus(args) {
+            if (args.length > 0) {
+                // Update the status and let the user know that it was done
+                document.querySelector('#status').innerHTML = args[0];
+                _StdOut.putText(`Status updated to ${args[0]}`);
+            }
+            else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: status <string>  Please supply a string.');
+            }
         }
     }
     TSOS.Shell = Shell;

@@ -94,7 +94,13 @@ module TSOS {
             // name
             sc = new ShellCommand(this.shellName,
                 "name",
-                "- Learn a name.");
+                "- Learn a name. You'll be happy you did.");
+            this.commandList[this.commandList.length] = sc;
+
+            // status
+            sc = new ShellCommand(this.shellStatus,
+                "status",
+                "<string> - Updates the status in the status bar.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -352,9 +358,20 @@ module TSOS {
             }, 10000);
         }
 
-        public shellName() {
+        public shellName(args: string[]) {
             // The name
             _StdOut.putText('The name\'s Bond... James Bond.');
+        }
+
+        public shellStatus(args: string[]) {
+            if (args.length > 0) {
+                // Update the status and let the user know that it was done
+                (<HTMLSpanElement> document.querySelector('#status')).innerHTML = args[0];
+                _StdOut.putText(`Status updated to ${args[0]}`);
+            } else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: status <string>  Please supply a string.')
+            }
         }
     }
 }
