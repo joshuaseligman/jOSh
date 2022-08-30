@@ -13,6 +13,7 @@ var TSOS;
             this.currentXPosition = currentXPosition;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
+            // Initialize variables needed for the multiple completion options
             this.completions = null;
             this.completionIndex = -1;
             this.lastWidth = 0;
@@ -84,16 +85,18 @@ var TSOS;
                             // Save x and y for future use
                             let origX = this.currentXPosition;
                             let origY = this.currentYPosition;
+                            // Go to the next line to write out the commands
                             this.advanceLine();
                             for (let i = 0; i < this.completions.length; i++) {
+                                // Write the command and leave some space if needed
                                 this.putText(this.completions[i].command);
                                 if (i !== this.completions.length - 1) {
                                     this.putText('  ');
                                 }
                             }
+                            // Reset the position to where we were
                             this.currentXPosition = origX;
                             this.currentYPosition = origY;
-                            this.completionIndex = -1;
                         }
                     }
                     else {
@@ -101,7 +104,7 @@ var TSOS;
                         let yDelta = _DefaultFontSize +
                             _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                             _FontHeightMargin;
-                        // Draw a clear rect over the character and a little more to make sure it is all clear
+                        // Draw a clear rect over the last filled part and a little more to make sure it is all clear
                         // We start at the y position - the font size because we only need to measure from the baseline-up and do not
                         // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
                         // need to clear the entire letter.
@@ -111,6 +114,7 @@ var TSOS;
                         if (this.completionIndex >= this.completions.length) {
                             this.completionIndex = 0;
                         }
+                        // Put the 
                         this.currentXPosition -= this.lastWidth;
                         // Get the string that the user is still yet to type
                         let remainingCmd = this.completions[this.completionIndex].command.substring(this.buffer.length);
@@ -175,15 +179,19 @@ var TSOS;
             }
         }
         resetTabCompletion() {
+            // Reset everything only if there is something to reset
             if (this.completions !== null) {
+                // Update the buffer with the selected command
                 this.buffer += this.completions[this.completionIndex].command.substring(this.buffer.length);
+                // Reset the variables
                 this.completions = null;
                 this.completionIndex = -1;
                 this.lastWidth = 0;
                 let yDelta = _DefaultFontSize +
                     _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                     _FontHeightMargin;
-                _DrawingContext.clearRect(0, this.currentYPosition + yDelta - _DefaultFontSize, _Canvas.width, this.currentYPosition + yDelta);
+                // Clear the area where we drew the options
+                _DrawingContext.clearRect(0, this.currentYPosition + yDelta - _DefaultFontSize, _Canvas.width, yDelta);
             }
         }
     }
