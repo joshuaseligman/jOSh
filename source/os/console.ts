@@ -9,6 +9,10 @@ module TSOS {
 
     export class Console {
 
+        private completions: ShellCommand[] = null;
+        private completionIndex: number = -1;
+        private lastWidth: number = 0;
+
         constructor(public currentFont = _DefaultFontFamily,
                     public currentFontSize = _DefaultFontSize,
                     public currentXPosition = 0,
@@ -63,21 +67,66 @@ module TSOS {
                         this.buffer = this.buffer.substring(0, this.buffer.length - 1);
                     }
                 } else if (chr === String.fromCharCode(9)) {
-                    // Get all the commands that the user has potentially started to type
-                    let completions: ShellCommand[] = _OsShell.commandList.filter((cmd: ShellCommand): boolean => {
-                        return cmd.command.startsWith(this.buffer);
-                    });
-                    
-                    // Logic for the autocomplete
-                    if (completions.length === 1) {
+                    if (this.completions === null) {
+                        // Get all the commands that the user has potentially started to type
+                        let possibleCompletions: ShellCommand[] = _OsShell.commandList.filter((cmd: ShellCommand): boolean => {
+                            return cmd.command.startsWith(this.buffer);
+                        });
+                        
+                        // Logic for the autocomplete
+                        if (possibleCompletions.length === 1) {
+                            // Get the string that the user is still yet to type
+                            let remainingCmd: string = possibleCompletions[0].command.substring(this.buffer.length)
+    
+                            // Type out the rest of the command and put it in the buffer
+                            _StdOut.putText(remainingCmd);
+                            this.buffer += remainingCmd;
+                        } else if (possibleCompletions.length > 1) {
+                            // First tab for multiple commands
+                            this.completions = possibleCompletions;
+                            
+                            // Save x and y for future use
+                            let origX: number = this.currentXPosition;
+                            let origY: number = this.currentYPosition;
+
+                            this.advanceLine();
+                            for (let i: number = 0; i < this.completions.length; i++) {
+                                this.putText(this.completions[i].command)
+                                if (i !== this.completions.length - 1) {
+                                    this.putText('  ');
+                                }
+                            }
+
+                            this.currentXPosition = origX;
+                            this.currentYPosition = origY;
+                            this.completionIndex = -1;
+                        }
+                    } else {
+                        // Calculate the height to clear by
+                        let yDelta: number = _DefaultFontSize + 
+                                             _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                                             _FontHeightMargin;
+
+                        // Draw a clear rect over the character and a little more to make sure it is all clear
+                        // We start at the y position - the font size because we only need to measure from the baseline-up and do not
+                        // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
+                        // need to clear the entire letter.
+                        _DrawingContext.clearRect(this.currentXPosition - this.lastWidth, this.currentYPosition - this.currentFontSize, this.lastWidth, yDelta);
+
+                        // Increment the index that we are going to use
+                        this.completionIndex++;
+                        if (this.completionIndex >= this.completions.length) {
+                            this.completionIndex = 0;
+                        }
+
+                        this.currentXPosition -= this.lastWidth;
+
                         // Get the string that the user is still yet to type
-                        let remainingCmd: string = completions[0].command.substring(this.buffer.length)
+                        let remainingCmd: string = this.completions[this.completionIndex].command.substring(this.buffer.length);
+                        this.lastWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, remainingCmd);
 
                         // Type out the rest of the command and put it in the buffer
                         _StdOut.putText(remainingCmd);
-                        this.buffer += remainingCmd;
-                    } else if (completions.length > 1) {
-                        // Add logic
                     }
                 } else {
                     // This is a "normal" character, so ...

@@ -13,6 +13,9 @@ var TSOS;
             this.currentXPosition = currentXPosition;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
+            this.completions = null;
+            this.completionIndex = -1;
+            this.lastWidth = 0;
         }
         init() {
             this.clearScreen();
@@ -57,20 +60,58 @@ var TSOS;
                     }
                 }
                 else if (chr === String.fromCharCode(9)) {
-                    // Get all the commands that the user has potentially started to type
-                    let completions = _OsShell.commandList.filter((cmd) => {
-                        return cmd.command.startsWith(this.buffer);
-                    });
-                    // Logic for the autocomplete
-                    if (completions.length === 1) {
+                    if (this.completions === null) {
+                        // Get all the commands that the user has potentially started to type
+                        let possibleCompletions = _OsShell.commandList.filter((cmd) => {
+                            return cmd.command.startsWith(this.buffer);
+                        });
+                        // Logic for the autocomplete
+                        if (possibleCompletions.length === 1) {
+                            // Get the string that the user is still yet to type
+                            let remainingCmd = possibleCompletions[0].command.substring(this.buffer.length);
+                            // Type out the rest of the command and put it in the buffer
+                            _StdOut.putText(remainingCmd);
+                            this.buffer += remainingCmd;
+                        }
+                        else if (possibleCompletions.length > 1) {
+                            // First tab for multiple commands
+                            this.completions = possibleCompletions;
+                            // Save x and y for future use
+                            let origX = this.currentXPosition;
+                            let origY = this.currentYPosition;
+                            this.advanceLine();
+                            for (let i = 0; i < this.completions.length; i++) {
+                                this.putText(this.completions[i].command);
+                                if (i !== this.completions.length - 1) {
+                                    this.putText('  ');
+                                }
+                            }
+                            this.currentXPosition = origX;
+                            this.currentYPosition = origY;
+                            this.completionIndex = -1;
+                        }
+                    }
+                    else {
+                        // Calculate the height to clear by
+                        let yDelta = _DefaultFontSize +
+                            _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                            _FontHeightMargin;
+                        // Draw a clear rect over the character and a little more to make sure it is all clear
+                        // We start at the y position - the font size because we only need to measure from the baseline-up and do not
+                        // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
+                        // need to clear the entire letter.
+                        _DrawingContext.clearRect(this.currentXPosition - this.lastWidth, this.currentYPosition - this.currentFontSize, this.lastWidth, yDelta);
+                        // Increment the index that we are going to use
+                        this.completionIndex++;
+                        if (this.completionIndex >= this.completions.length) {
+                            this.completionIndex = 0;
+                        }
+                        this.currentXPosition -= this.lastWidth;
                         // Get the string that the user is still yet to type
-                        let remainingCmd = completions[0].command.substring(this.buffer.length);
+                        let remainingCmd = this.completions[this.completionIndex].command.substring(this.buffer.length);
+                        this.lastWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, remainingCmd);
                         // Type out the rest of the command and put it in the buffer
                         _StdOut.putText(remainingCmd);
-                        this.buffer += remainingCmd;
-                    }
-                    else if (completions.length > 1) {
-                        // Add logic
                     }
                 }
                 else {
