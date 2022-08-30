@@ -43,9 +43,9 @@ var TSOS;
                     this.buffer = "";
                 }
                 else if (chr === String.fromCharCode(8)) { // Backspace
+                    this.resetTabCompletion();
                     // Only do something if there is text out in the command
                     if (this.buffer.length > 0) {
-                        this.resetTabCompletion();
                         // get the width of the character to delete
                         let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
                         // Draw a clear rect over the character and a little more to make sure it is all clear
@@ -72,7 +72,7 @@ var TSOS;
                             // Get the string that the user is still yet to type
                             let remainingCmd = possibleCompletions[0].command.substring(this.buffer.length);
                             // Type out the rest of the command and put it in the buffer
-                            _StdOut.putText(remainingCmd);
+                            this.putText(remainingCmd);
                             this.buffer += remainingCmd;
                         }
                         else if (possibleCompletions.length > 1) {
@@ -117,7 +117,7 @@ var TSOS;
                         let remainingCmd = this.completions[this.completionIndex].command.substring(this.buffer.length);
                         this.lastWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, remainingCmd);
                         // Type out the rest of the command and put it in the buffer
-                        _StdOut.putText(remainingCmd);
+                        this.putText(remainingCmd);
                     }
                 }
                 else {
