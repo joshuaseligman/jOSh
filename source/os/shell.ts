@@ -91,6 +91,12 @@ module TSOS {
                 "- Watch a baseball get crushed. No questions asked.");
             this.commandList[this.commandList.length] = sc;
 
+            // name
+            sc = new ShellCommand(this.shellName,
+                "name",
+                "- Learn a name.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -344,6 +350,11 @@ module TSOS {
                 seeYaArea.style.display = 'none';
                 _Canvas.focus();
             }, 10000);
+        }
+
+        public shellName() {
+            // The name
+            _StdOut.putText('The name\'s Bond... James Bond.');
         }
     }
 }
