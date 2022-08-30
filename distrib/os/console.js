@@ -120,6 +120,9 @@ var TSOS;
                         this.putText(remainingCmd);
                     }
                 }
+                else if (chr === 'up' || chr === 'down') {
+                    console.log(chr + ' pressed');
+                }
                 else {
                     this.resetTabCompletion();
                     // This is a "normal" character, so ...

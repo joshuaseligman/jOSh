@@ -170,6 +170,16 @@ var TSOS;
                 }
                 _KernelInputQueue.enqueue(chr);
             }
+            else if (keyCode === 38 || keyCode === 40) {
+                switch (keyCode) {
+                    case 38:
+                        _KernelInputQueue.enqueue('up');
+                        break;
+                    case 40:
+                        _KernelInputQueue.enqueue('down');
+                        break;
+                }
+            }
         }
     }
     TSOS.DeviceDriverKeyboard = DeviceDriverKeyboard;

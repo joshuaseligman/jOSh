@@ -136,6 +136,8 @@ module TSOS {
                         // Type out the rest of the command and put it in the buffer
                         this.putText(remainingCmd);
                     }
+                } else if (chr === 'up' || chr === 'down') {
+                    console.log(chr + ' pressed')
                 } else {
                     this.resetTabCompletion();
 
