@@ -152,19 +152,31 @@ module TSOS {
                     this.resetTabCompletion();
 
                     // Go through history if possible
-                    if (this.commandHistory.length > 0 &&
-                        chr === 'up' && this.historyIndex < this.commandHistory.length) {
+                    if ((this.commandHistory.length > 0) &&
+                        (chr === 'up' && this.historyIndex < this.commandHistory.length) ||
+                        (chr === 'down' && this.historyIndex >= -1)) {
                         // Calculate the starting x position
                         let newX: number = this.currentXPosition - _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
                         // Clear the area from what was already there and set the new x position
                         _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize, _Canvas.width, this.getLineHeight());
                         this.currentXPosition = newX;
 
+                        // Edge cases for the logic to make sure we stay within the confines of the command history array
+                        if (chr === 'down' && this.historyIndex === this.commandHistory.length) {
+                            this.historyIndex -= 2;
+                        } else if (chr === 'down' && this.historyIndex === -1) {
+                            this.buffer = '';
+                            return;
+                        } else if (chr === 'up' && this.historyIndex < 0) {
+                            this.historyIndex = 0;
+                        }
+
                         // Update the screen, buffer, and history index
                         this.putText(this.commandHistory[this.historyIndex]);
                         this.buffer = this.commandHistory[this.historyIndex];
 
-                        this.historyIndex++;
+                        // Go back if the up arrow and move ahead if down arrow
+                        this.historyIndex += (chr === 'up') ? 1 : -1;
                     }
                 } else {
                     this.resetTabCompletion();
