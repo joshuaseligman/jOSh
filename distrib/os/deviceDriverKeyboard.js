@@ -46,7 +46,44 @@ var TSOS;
             else if (((keyCode >= 48) && (keyCode <= 57)) || // digits
                 (keyCode == 32) || (keyCode === 8) || // space, backspace
                 (keyCode == 13)) { // enter
-                chr = String.fromCharCode(keyCode);
+                let chr = '';
+                if (isShifted && keyCode !== 32 && keyCode !== 8 && keyCode !== 13) {
+                    switch (keyCode) {
+                        case 49: // 1
+                            chr = '!';
+                            break;
+                        case 50: // 2
+                            chr = '@';
+                            break;
+                        case 51: // 3
+                            chr = '#';
+                            break;
+                        case 52: // 4
+                            chr = '$';
+                            break;
+                        case 53: // 5
+                            chr = '%';
+                            break;
+                        case 54: // 6
+                            chr = '^';
+                            break;
+                        case 55: // 7
+                            chr = '&';
+                            break;
+                        case 56: // 8
+                            chr = '*';
+                            break;
+                        case 57: // 9
+                            chr = '(';
+                            break;
+                        case 48: // 0
+                            chr = ')';
+                            break;
+                    }
+                }
+                else {
+                    chr = String.fromCharCode(keyCode);
+                }
                 _KernelInputQueue.enqueue(chr);
             }
         }
