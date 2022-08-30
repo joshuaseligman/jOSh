@@ -19,7 +19,7 @@ var TSOS;
             this.lastWidth = 0;
             this.originalBuffer = '';
             this.commandHistory = [];
-            this.historyIndex = 0;
+            this.historyIndex = -1;
         }
         init() {
             this.clearScreen();
@@ -39,7 +39,7 @@ var TSOS;
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     this.resetTabCompletion();
-                    this.historyIndex = 0;
+                    this.historyIndex = -1;
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
@@ -53,7 +53,7 @@ var TSOS;
                 }
                 else if (chr === String.fromCharCode(8)) { // Backspace
                     this.resetTabCompletion();
-                    this.historyIndex = 0;
+                    this.historyIndex = -1;
                     // Only do something if there is text out in the command
                     if (this.buffer.length > 0) {
                         // get the width of the character to delete
@@ -69,7 +69,7 @@ var TSOS;
                     }
                 }
                 else if (chr === String.fromCharCode(9)) { // tab
-                    this.historyIndex = 0;
+                    this.historyIndex = -1;
                     if (this.completions === null) {
                         if (this.buffer === '') {
                             return;
@@ -137,34 +137,29 @@ var TSOS;
                     this.resetTabCompletion();
                     // Go through history if possible
                     if ((this.commandHistory.length > 0) &&
-                        (chr === 'up' && this.historyIndex < this.commandHistory.length) ||
-                        (chr === 'down' && this.historyIndex >= -1)) {
+                        (chr === 'up' && this.historyIndex < this.commandHistory.length - 1) ||
+                        (chr === 'down' && this.historyIndex >= 0)) {
                         // Calculate the starting x position
                         let newX = this.currentXPosition - _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
                         // Clear the area from what was already there and set the new x position
                         _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize - _FontHeightMargin, _Canvas.width, this.getLineHeight() + _FontHeightMargin);
                         this.currentXPosition = newX;
-                        // Edge cases for the logic to make sure we stay within the confines of the command history array
-                        if (chr === 'down' && this.historyIndex === this.commandHistory.length) {
-                            this.historyIndex -= 2;
-                        }
-                        else if (chr === 'down' && this.historyIndex === -1) {
+                        // Go back if the up arrow and move ahead if down arrow
+                        this.historyIndex += (chr === 'up') ? 1 : -1;
+                        // Edge case for the logic to make sure we stay within the confines of the command history array
+                        // while also providing a clear buffer when returning from the history array
+                        if (chr === 'down' && this.historyIndex === -1) {
                             this.buffer = '';
                             return;
                         }
-                        else if (chr === 'up' && this.historyIndex < 0) {
-                            this.historyIndex = 0;
-                        }
-                        // Update the screen, buffer, and history index
+                        // Update the screen and buffer
                         this.putText(this.commandHistory[this.historyIndex]);
                         this.buffer = this.commandHistory[this.historyIndex];
-                        // Go back if the up arrow and move ahead if down arrow
-                        this.historyIndex += (chr === 'up') ? 1 : -1;
                     }
                 }
                 else {
                     this.resetTabCompletion();
-                    this.historyIndex = 0;
+                    this.historyIndex = -1;
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     this.putText(chr);
