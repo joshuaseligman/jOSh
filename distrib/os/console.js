@@ -70,10 +70,29 @@ var TSOS;
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
-            this.currentYPosition += _DefaultFontSize +
+            // this.currentYPosition += _DefaultFontSize + 
+            //                          _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+            //                          _FontHeightMargin;
+            // yDelta represents the total height of the line because that is how much the y postiton
+            // changes on each line advance
+            let yDelta = _DefaultFontSize +
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
-            // TODO: Handle scrolling. (iProject 1)
+            if (this.currentYPosition + yDelta > _Canvas.height) {
+                // Solution inspired by https://www.w3schools.com/tags/canvas_getimagedata.asp
+                // Since yDelta is the height of a line, we are able to grab starting at yDelta (the top of the second line)
+                // all the way down to the bottom of the canvas
+                let imgData = _DrawingContext.getImageData(0, yDelta, _Canvas.width, _Canvas.height - yDelta);
+                // Clear the screen and paste the image at the top
+                this.clearScreen();
+                _DrawingContext.putImageData(imgData, 0, 0);
+                // The current y position doesn't get changed because we moved the text up to make room for a new line
+                // and the y position is currently at the lowest possible point for a complete line
+            }
+            else {
+                // Only increment the yPosition if we have room to do so
+                this.currentYPosition += yDelta;
+            }
         }
     }
     TSOS.Console = Console;

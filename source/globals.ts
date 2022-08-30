@@ -35,7 +35,7 @@ var _Canvas: HTMLCanvasElement;          // Initialized in Control.hostInit().
 var _DrawingContext: any;                // = _Canvas.getContext("2d");  // Assigned here for type safety, but re-initialized in Control.hostInit() for OCD and logic.
 var _DefaultFontFamily: string = "sans"; // Ignored, I think. The was just a place-holder in 2008, but the HTML canvas may have use for it.
 var _DefaultFontSize: number = 11;
-var _FontHeightMargin: number = 4;       // Additional space added to font size when advancing a line.
+var _FontHeightMargin: number = 3;       // Additional space added to font size when advancing a line.
 
 var _Trace: boolean = true;              // Default the OS trace to be on.
 
