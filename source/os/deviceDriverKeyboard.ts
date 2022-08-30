@@ -58,9 +58,10 @@ module TSOS {
                         (keyCode === 173 || keyCode === 189) || (keyCode === 190) || // hyphen, period
                         (keyCode === 191) || (keyCode === 192) || // slash, backtick
                         (keyCode === 219) || (keyCode === 220) || // left bracket, back slash
-                        (keyCode === 221) || (keyCode === 222)) { // right bracket, apostrophe
+                        (keyCode === 221) || (keyCode === 222) || // right bracket, apostrophe
+                        (keyCode === 9)) { // tab
                 let chr: string = '';
-                if (isShifted && keyCode !== 32 && keyCode !== 8 && keyCode !== 13) {
+                if (isShifted && keyCode !== 32 && keyCode !== 8 && keyCode !== 13 && keyCode !== 9) {
                     // Get the shifted special characters
                     switch (keyCode) {
                     case 49: // 1

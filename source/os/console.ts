@@ -62,6 +62,23 @@ module TSOS {
                         this.currentXPosition -= charWidth;
                         this.buffer = this.buffer.substring(0, this.buffer.length - 1);
                     }
+                } else if (chr === String.fromCharCode(9)) {
+                    // Get all the commands that the user has potentially started to type
+                    let completions: ShellCommand[] = _OsShell.commandList.filter((cmd: ShellCommand): boolean => {
+                        return cmd.command.startsWith(this.buffer);
+                    });
+                    
+                    // Logic for the autocomplete
+                    if (completions.length === 1) {
+                        // Get the string that the user is still yet to type
+                        let remainingCmd: string = completions[0].command.substring(this.buffer.length)
+
+                        // Type out the rest of the command and put it in the buffer
+                        _StdOut.putText(remainingCmd);
+                        this.buffer += remainingCmd;
+                    } else if (completions.length > 1) {
+                        // Add logic
+                    }
                 } else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
