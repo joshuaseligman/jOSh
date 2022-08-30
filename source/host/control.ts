@@ -42,6 +42,14 @@ module TSOS {
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
 
+            // Initialize the date element with the current date and time
+            (<HTMLSpanElement> document.querySelector('#date')).innerHTML = Utils.getDate();
+            setInterval(() => {
+                // Utils.getDate() returns the date and time to the second, 
+                // so we want to update the html element every second
+                (<HTMLSpanElement> document.querySelector('#date')).innerHTML = Utils.getDate();
+            }, 1000);
+
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
             if (typeof Glados === "function") {

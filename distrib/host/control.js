@@ -34,6 +34,13 @@ var TSOS;
             // Set focus on the start button.
             // Use the TypeScript cast to HTMLInputElement
             document.getElementById("btnStartOS").focus();
+            // Initialize the date element with the current date and time
+            document.querySelector('#date').innerHTML = TSOS.Utils.getDate();
+            setInterval(() => {
+                // Utils.getDate() returns the date and time to the second, 
+                // so we want to update the html element every second
+                document.querySelector('#date').innerHTML = TSOS.Utils.getDate();
+            }, 1000);
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
             if (typeof Glados === "function") {
