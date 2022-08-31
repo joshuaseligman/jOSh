@@ -103,6 +103,12 @@ module TSOS {
                 "<string> - Updates the status in the status bar.");
             this.commandList[this.commandList.length] = sc;
 
+            // testbsod
+            sc = new ShellCommand(this.shellTestBSOD,
+                "testbsod",
+                "- Tests the blue screen of death when the kernel traps an OS error.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -372,6 +378,11 @@ module TSOS {
                 // Missing the argument for the function
                 _StdOut.putText('Usage: status <string>  Please supply a string.')
             }
+        }
+
+        public shellTestBSOD(args: string[]) {
+            // Tell the kernel to trap the error
+            _Kernel.krnTrapError('Test BSOD');
         }
     }
 }
