@@ -109,6 +109,12 @@ module TSOS {
                 "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
 
+             // load
+             sc = new ShellCommand(this.shellLoad,
+                "load",
+                "- Loads thi user program into memory.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -385,6 +391,11 @@ module TSOS {
         public shellTestBSOD(args: string[]) {
             // Tell the kernel to trap the error
             _Kernel.krnTrapError('Test BSOD');
+        }
+
+        public shellLoad(args: string[]) {
+            let progInput: HTMLTextAreaElement = document.querySelector('#taProgramInput');
+            console.log(progInput.value);
         }
     }
 }

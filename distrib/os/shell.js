@@ -63,6 +63,9 @@ var TSOS;
             // testbsod
             sc = new TSOS.ShellCommand(this.shellTestBSOD, "testbsod", "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
+            // load
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads thi user program into memory.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -322,6 +325,10 @@ var TSOS;
         shellTestBSOD(args) {
             // Tell the kernel to trap the error
             _Kernel.krnTrapError('Test BSOD');
+        }
+        shellLoad(args) {
+            let progInput = document.querySelector('#taProgramInput');
+            console.log(progInput.value);
         }
     }
     TSOS.Shell = Shell;
