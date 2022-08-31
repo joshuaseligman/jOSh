@@ -229,6 +229,19 @@ var TSOS;
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
         }
+        bsod() {
+            _DrawingContext.fillStyle = 'blue';
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+            let msg = 'A fatal error occurred... shutting down.';
+            this.currentFontSize *= 1.5;
+            let msgWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, msg);
+            // We want to center the text being displayed
+            this.currentXPosition = (_Canvas.width - msgWidth) / 2;
+            this.currentYPosition = _Canvas.height / 2;
+            // Draw the text in white
+            _DrawingContext.strokeStyle = 'white';
+            this.putText(msg);
+        }
     }
     TSOS.Console = Console;
 })(TSOS || (TSOS = {}));
