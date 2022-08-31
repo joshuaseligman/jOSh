@@ -332,6 +332,13 @@ var TSOS;
             // We want to work with the program without any whitespace and only deal with the
             // characters within the box.
             let program = progInput.value.replace(/\s/g, '');
+            // We need to make sure that we have complete bytes, so the number of characters in the program
+            // must be even because 2 hex digits = 1 byte of data for memory
+            if (program.length % 2 !== 0) {
+                _Kernel.krnTrace('Invalid program. Odd number of characters.');
+                _StdOut.putText('Invalid program. Must have an even number of characters.');
+                return;
+            }
             // We want to make sure all digits are either 0-9 or A-F (case insensitive)
             // Case doesn't matter because we can convert from string to number without worrying about
             // the case of the letters
