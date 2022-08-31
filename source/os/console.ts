@@ -10,11 +10,18 @@ module TSOS {
     export class Console {
 
         // Initialize variables needed for the multiple completion options
+        // Completions is null because we don't want it to point to anything and use null to check to see if
+        // and completions exist. Next, the completion index becomes -1 and will increment when needed.
+        // Last width keeps track of the width of the completed part of the command and is initially 0 to prevent
+        // anything from getting cleared. Lastly, the original buffer is the buffer when the completion is triggered
+        // and starts as an empty string for initialization purposes.
         private completions: ShellCommand[] = null;
         private completionIndex: number = -1;
         private lastWidth: number = 0;
         private originalBuffer: string = '';
 
+        // Command history is an empty array that will be added to throughout the time running the os and the index starts
+        // at -1 and will be incremented when needed.
         private commandHistory: string[] = [];
         private historyIndex = -1;
 
@@ -279,7 +286,7 @@ module TSOS {
             _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
 
             // This is the only thing that will be displayed, so we can increase the font size
-            this.currentFontSize *= 1.5;
+            this.currentFontSize = 18;
 
             // Create the message and get some of the important info
             let msg: string = 'A fatal error occurred... shutting down.';

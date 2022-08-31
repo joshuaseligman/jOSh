@@ -14,10 +14,17 @@ var TSOS;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
             // Initialize variables needed for the multiple completion options
+            // Completions is null because we don't want it to point to anything and use null to check to see if
+            // and completions exist. Next, the completion index becomes -1 and will increment when needed.
+            // Last width keeps track of the width of the completed part of the command and is initially 0 to prevent
+            // anything from getting cleared. Lastly, the original buffer is the buffer when the completion is triggered
+            // and starts as an empty string for initialization purposes.
             this.completions = null;
             this.completionIndex = -1;
             this.lastWidth = 0;
             this.originalBuffer = '';
+            // Command history is an empty array that will be added to throughout the time running the os and the index starts
+            // at -1 and will be incremented when needed.
             this.commandHistory = [];
             this.historyIndex = -1;
         }
@@ -244,7 +251,7 @@ var TSOS;
             _DrawingContext.fillStyle = 'blue';
             _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
             // This is the only thing that will be displayed, so we can increase the font size
-            this.currentFontSize *= 1.5;
+            this.currentFontSize = 18;
             // Create the message and get some of the important info
             let msg = 'A fatal error occurred... shutting down.';
             let msgWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, msg);
