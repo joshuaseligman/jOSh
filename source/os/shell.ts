@@ -171,7 +171,9 @@ module TSOS {
                 _StdOut.advanceLine();
             }
             // ... and finally write the prompt again.
-            this.putPrompt();
+            if (fn !== this.shellTestBSOD) {
+                this.putPrompt();
+            }
         }
 
         public parseInput(buffer: string): UserCommand {
