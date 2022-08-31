@@ -112,7 +112,7 @@ module TSOS {
              // load
              sc = new ShellCommand(this.shellLoad,
                 "load",
-                "- Loads thi user program into memory.");
+                "- Loads the user program into memory.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -394,8 +394,28 @@ module TSOS {
         }
 
         public shellLoad(args: string[]) {
+            // Get the input area
             let progInput: HTMLTextAreaElement = document.querySelector('#taProgramInput');
-            console.log(progInput.value);
+
+            // We want to work with the program without any whitespace and only deal with the
+            // characters within the box.
+            let program: string = progInput.value.replace(/\s/g, '');
+
+            // We want to make sure all digits are either 0-9 or A-F (case insensitive)
+            // Case doesn't matter because we can convert from string to number without worrying about
+            // the case of the letters
+            // Great website for writing and testing regular expressions: https://regex101.com/
+            let hexRegex: RegExp = /^[0-9A-F]*$/i
+
+            // Test the hex regular expression on the program
+            if (hexRegex.test(program)) {
+                // Let the user know the program is valid
+                _StdOut.putText('Program is valid');
+            } else {
+                // Invalid program from bad characters
+                _Kernel.krnTrace('Invalid program. Invalid characters present.');
+                _StdOut.putText('Invalid program. Only hex digits (0-9, A-F) and whitespace allowed.');
+            }
         }
     }
 }

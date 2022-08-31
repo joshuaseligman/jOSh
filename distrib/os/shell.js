@@ -64,7 +64,7 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellTestBSOD, "testbsod", "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
             // load
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads thi user program into memory.");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads the user program into memory.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -327,8 +327,26 @@ var TSOS;
             _Kernel.krnTrapError('Test BSOD');
         }
         shellLoad(args) {
+            // Get the input area
             let progInput = document.querySelector('#taProgramInput');
-            console.log(progInput.value);
+            // We want to work with the program without any whitespace and only deal with the
+            // characters within the box.
+            let program = progInput.value.replace(/\s/g, '');
+            // We want to make sure all digits are either 0-9 or A-F (case insensitive)
+            // Case doesn't matter because we can convert from string to number without worrying about
+            // the case of the letters
+            // Great website for writing and testing regular expressions: https://regex101.com/
+            let hexRegex = /^[0-9A-F]*$/i;
+            // Test the hex regular expression on the program
+            if (hexRegex.test(program)) {
+                // Let the user know the program is valid
+                _StdOut.putText('Program is valid');
+            }
+            else {
+                // Invalid program from bad characters
+                _Kernel.krnTrace('Invalid program. Invalid characters present.');
+                _StdOut.putText('Invalid program. Only hex digits (0-9, A-F) and whitespace allowed.');
+            }
         }
     }
     TSOS.Shell = Shell;
