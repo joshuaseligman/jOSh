@@ -203,11 +203,21 @@ module TSOS {
                 decided to write one function and use the term "text" to connote string or char.
             */
             if (text !== "") {
-                // Draw the text at the current X and Y coordinates.
-                _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
-                // Move the current X position.
-                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
-                this.currentXPosition = this.currentXPosition + offset;
+                // To implement word wrap, we need to check each character individually to see if they
+                // can be printed on the current line. if not, we need to advance the line
+                for (let i: number = 0; i < text.length; i++) {
+                    // Get the width of the character
+                    let charOffset: number = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text.charAt(i));
+                    // Go to the next line if needed
+                    if (this.currentXPosition + charOffset > _Canvas.width) {
+                        this.advanceLine();
+                        // The x position gets fixed in this.advanceLine(), so no need to do it here
+                    }
+                    // Draw the character at the current X and Y coordinates.
+                    _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text.charAt(i));
+                    // Move the current X position.
+                    this.currentXPosition = this.currentXPosition + charOffset;
+                }
             }
          }
 
