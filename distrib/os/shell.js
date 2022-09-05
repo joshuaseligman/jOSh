@@ -332,6 +332,11 @@ var TSOS;
             // We want to work with the program without any whitespace and only deal with the
             // characters within the box.
             let program = progInput.value.replace(/\s/g, '');
+            if (program.length === 0) {
+                _Kernel.krnTrace('Invalid program. Empty program input.');
+                _StdOut.putText('Invalid program. The program input is empty.');
+                return;
+            }
             // We want to make sure all digits are either 0-9 or A-F (case insensitive)
             // Great website for writing and testing regular expressions: https://regex101.com/
             let hexRegex = /^[0-9A-F]*$/i;

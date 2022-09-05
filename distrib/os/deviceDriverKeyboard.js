@@ -171,11 +171,14 @@ var TSOS;
                 _KernelInputQueue.enqueue(chr);
             }
             else if (keyCode === 38 || keyCode === 40) {
+                // Handle the up and down arrows
                 switch (keyCode) {
                     case 38:
+                        // We cannot just put in the character from the keycode because 38 is '&' in ASCII
                         _KernelInputQueue.enqueue('up');
                         break;
                     case 40:
+                        // Following the same practice as the up arrow
                         _KernelInputQueue.enqueue('down');
                         break;
                 }
