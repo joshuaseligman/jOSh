@@ -136,15 +136,13 @@ var TSOS;
             var retVal = new TSOS.UserCommand();
             // 1. Remove leading and trailing spaces.
             buffer = TSOS.Utils.trim(buffer);
-            // 2. Lower-case it.
-            buffer = buffer.toLowerCase();
-            // 3. Separate on spaces so we can determine the command and command-line args, if any.
+            // Separate on spaces so we can determine the command and command-line args, if any.
             var tempList = buffer.split(" ");
-            // 4. Take the first (zeroth) element and use that as the command.
-            var cmd = tempList.shift(); // Yes, you can do that to an array in JavaScript. See the Queue class.
-            // 4.1 Remove any left-over spaces.
+            // Take the first (zeroth) element and use that as the command.
+            var cmd = tempList.shift().toLowerCase(); // Yes, you can do that to an array in JavaScript. See the Queue class.
+            // Remove any left-over spaces.
             cmd = TSOS.Utils.trim(cmd);
-            // 4.2 Record it in the return value.
+            // Record it in the return value.
             retVal.command = cmd;
             // 5. Now create the args array from what's left.
             for (var i in tempList) {
@@ -212,7 +210,7 @@ var TSOS;
         shellMan(args) {
             if (args.length > 0) {
                 // Get the command that was requested by the argument for the man command
-                let requestedCommand = _OsShell.commandList.find(cmd => cmd.command === args[0]);
+                let requestedCommand = _OsShell.commandList.find(cmd => cmd.command === args[0].toLowerCase());
                 if (requestedCommand !== undefined) {
                     let hasArgument = requestedCommand.description.includes(' - ');
                     if (hasArgument) {
@@ -236,7 +234,7 @@ var TSOS;
                 }
                 else {
                     // The command in the man argument is not valid
-                    _StdOut.putText("No manual entry for " + args[0] + ".");
+                    _StdOut.putText("No manual entry for " + args[0].toLowerCase() + ".");
                 }
             }
             else {
@@ -247,7 +245,7 @@ var TSOS;
         shellTrace(args) {
             if (args.length > 0) {
                 var setting = args[0];
-                switch (setting) {
+                switch (setting.toLowerCase()) {
                     case "on":
                         if (_Trace && _SarcasticMode) {
                             _StdOut.putText("Trace is already on, doofus.");
@@ -271,8 +269,9 @@ var TSOS;
         }
         shellRot13(args) {
             if (args.length > 0) {
+                let strInput = args.join(' ').toLowerCase();
                 // Requires Utils.ts for rot13() function.
-                _StdOut.putText(args.join(' ') + " = '" + TSOS.Utils.rot13(args.join(' ')) + "'");
+                _StdOut.putText(strInput + " = '" + TSOS.Utils.rot13(strInput) + "'");
             }
             else {
                 _StdOut.putText("Usage: rot13 <string>  Please supply a string.");
@@ -313,9 +312,10 @@ var TSOS;
         }
         shellStatus(args) {
             if (args.length > 0) {
+                let newStatus = args.join(' ');
                 // Update the status and let the user know that it was done
-                document.querySelector('#status').innerHTML = args[0];
-                _StdOut.putText(`Status updated to ${args[0]}`);
+                document.querySelector('#status').innerHTML = newStatus;
+                _StdOut.putText(`Status updated to ${newStatus}`);
             }
             else {
                 // Missing the argument for the function
