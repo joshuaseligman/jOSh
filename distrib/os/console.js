@@ -27,6 +27,7 @@ var TSOS;
             // at -1 and will be incremented when needed.
             this.commandHistory = [];
             this.historyIndex = -1;
+            this.commandXStack = new TSOS.Stack();
         }
         init() {
             this.clearScreen();
@@ -47,6 +48,8 @@ var TSOS;
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     this.resetTabCompletion();
                     this.historyIndex = -1;
+                    this.buffer = this.buffer.replace('\n', '');
+                    this.commandXStack.clear();
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
@@ -73,6 +76,11 @@ var TSOS;
                         // Remove it from the x position and the buffer
                         this.currentXPosition -= charWidth;
                         this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                        if (this.buffer.charAt(this.buffer.length - 1) === '\n') {
+                            this.currentXPosition = this.commandXStack.pop();
+                            this.currentYPosition -= this.getLineHeight();
+                            this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                        }
                     }
                 }
                 else if (chr === String.fromCharCode(9)) { // tab
@@ -192,6 +200,8 @@ var TSOS;
                     let charOffset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text.charAt(i));
                     // Go to the next line if needed
                     if (this.currentXPosition + charOffset > _Canvas.width) {
+                        this.commandXStack.push(this.currentXPosition);
+                        this.buffer = this.buffer + '\n';
                         this.advanceLine();
                         // The x position gets fixed in this.advanceLine(), so no need to do it here
                     }
