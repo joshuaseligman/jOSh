@@ -27,6 +27,7 @@ var TSOS;
             // at -1 and will be incremented when needed.
             this.commandHistory = [];
             this.historyIndex = -1;
+            // Stack that will be used to save the x position at the end of the line when word wrapping
             this.commandXStack = new TSOS.Stack();
         }
         init() {
@@ -48,23 +49,27 @@ var TSOS;
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     this.resetTabCompletion();
                     this.historyIndex = -1;
+                    // Clear the stack in case it was used
                     this.commandXStack.clear();
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
                     // Only add to history if there is content
                     if (this.buffer !== '') {
+                        // Get rid of all \n occurrences to only keep the text
                         this.buffer = this.buffer.replace(/\n/g, '');
                         // Add the command to the command history
                         this.commandHistory.unshift(this.buffer);
                     }
+                    // The stack was probably used, with the output, so it should be cleared
+                    this.commandXStack.clear();
                     // ... and reset our buffer.
-                    // this.commandXStack.clear();
                     this.buffer = "";
                 }
                 else if (chr === String.fromCharCode(8)) { // Backspace
                     this.resetTabCompletion();
                     this.historyIndex = -1;
+                    // Call the function to handle the backspaces
                     this.handleBackspace();
                 }
                 else if (chr === String.fromCharCode(9)) { // tab
@@ -138,6 +143,7 @@ var TSOS;
                     if ((this.commandHistory.length > 0) &&
                         (chr === 'up' && this.historyIndex < this.commandHistory.length - 1) ||
                         (chr === 'down' && this.historyIndex >= 0)) {
+                        // Backspace to clear whatever text is there. This will also take care of word wrap
                         while (this.handleBackspace())
                             ;
                         // Go back if the up arrow and move ahead if down arrow
@@ -180,7 +186,9 @@ var TSOS;
                     let charOffset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text.charAt(i));
                     // Go to the next line if needed
                     if (this.currentXPosition + charOffset > _Canvas.width) {
+                        // Save where we are in case of a backspace
                         this.commandXStack.push(this.currentXPosition);
+                        // \n is going to be used to represent where the word wraps
                         this.buffer += '\n';
                         this.advanceLine();
                         // The x position gets fixed in this.advanceLine(), so no need to do it here
@@ -189,6 +197,7 @@ var TSOS;
                     _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text.charAt(i));
                     // Move the current X position.
                     this.currentXPosition = this.currentXPosition + charOffset;
+                    // If the buffer is being dynamically worked on as the text is printed, we want to add the character to the buffer here
                     if (addToBuffer) {
                         this.buffer += text.charAt(i);
                     }
@@ -268,14 +277,20 @@ var TSOS;
                 // Remove it from the x position and the buffer
                 this.currentXPosition -= charWidth;
                 this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                // The \n character in the buffer is being used to represent where the word wraps
                 if (this.buffer.charAt(this.buffer.length - 1) === '\n') {
+                    // Get the x position of the end of the previous line
                     this.currentXPosition = this.commandXStack.pop();
+                    // Move the y position back up a line
                     this.currentYPosition -= this.getLineHeight();
+                    // Remove the \n from the buffer
                     this.buffer = this.buffer.substring(0, this.buffer.length - 1);
                 }
+                // Return true because there was a character to backspace
                 return true;
             }
             else {
+                // Return false because the buffer is empty
                 return false;
             }
         }
