@@ -48,40 +48,24 @@ var TSOS;
                 if (chr === String.fromCharCode(13)) { // the Enter key
                     this.resetTabCompletion();
                     this.historyIndex = -1;
-                    this.buffer = this.buffer.replace('\n', '');
                     this.commandXStack.clear();
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
                     // Only add to history if there is content
                     if (this.buffer !== '') {
+                        this.buffer = this.buffer.replace(/\n/g, '');
                         // Add the command to the command history
                         this.commandHistory.unshift(this.buffer);
                     }
                     // ... and reset our buffer.
+                    // this.commandXStack.clear();
                     this.buffer = "";
                 }
                 else if (chr === String.fromCharCode(8)) { // Backspace
                     this.resetTabCompletion();
                     this.historyIndex = -1;
-                    // Only do something if there is text out in the command
-                    if (this.buffer.length > 0) {
-                        // get the width of the character to delete
-                        let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
-                        // Draw a clear rect over the character and a little more to make sure it is all clear
-                        // We start at the y position - the font size because we only need to measure from the baseline-up and do not
-                        // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
-                        // need to clear the entire letter.
-                        _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize - _FontHeightMargin, charWidth, this.getLineHeight() + _FontHeightMargin);
-                        // Remove it from the x position and the buffer
-                        this.currentXPosition -= charWidth;
-                        this.buffer = this.buffer.substring(0, this.buffer.length - 1);
-                        if (this.buffer.charAt(this.buffer.length - 1) === '\n') {
-                            this.currentXPosition = this.commandXStack.pop();
-                            this.currentYPosition -= this.getLineHeight();
-                            this.buffer = this.buffer.substring(0, this.buffer.length - 1);
-                        }
-                    }
+                    this.handleBackspace();
                 }
                 else if (chr === String.fromCharCode(9)) { // tab
                     this.historyIndex = -1;
@@ -154,11 +138,8 @@ var TSOS;
                     if ((this.commandHistory.length > 0) &&
                         (chr === 'up' && this.historyIndex < this.commandHistory.length - 1) ||
                         (chr === 'down' && this.historyIndex >= 0)) {
-                        // Calculate the starting x position
-                        let newX = this.currentXPosition - _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
-                        // Clear the area from what was already there and set the new x position
-                        _DrawingContext.clearRect(newX, this.currentYPosition - this.currentFontSize - _FontHeightMargin, _Canvas.width, this.getLineHeight() + _FontHeightMargin);
-                        this.currentXPosition = newX;
+                        while (this.handleBackspace())
+                            ;
                         // Go back if the up arrow and move ahead if down arrow
                         this.historyIndex += (chr === 'up') ? 1 : -1;
                         // Edge case for the logic to make sure we stay within the confines of the command history array
@@ -168,8 +149,7 @@ var TSOS;
                             return;
                         }
                         // Update the screen and buffer
-                        this.putText(this.commandHistory[this.historyIndex]);
-                        this.buffer = this.commandHistory[this.historyIndex];
+                        this.putText(this.commandHistory[this.historyIndex], true);
                     }
                 }
                 else {
@@ -184,7 +164,7 @@ var TSOS;
                 // TODO: Add a case for Ctrl-C that would allow the user to break the current program.
             }
         }
-        putText(text) {
+        putText(text, addToBuffer = false) {
             /*  My first inclination here was to write two functions: putChar() and putString().
                 Then I remembered that JavaScript is (sadly) untyped and it won't differentiate
                 between the two. (Although TypeScript would. But we're compiling to JavaScipt anyway.)
@@ -201,7 +181,7 @@ var TSOS;
                     // Go to the next line if needed
                     if (this.currentXPosition + charOffset > _Canvas.width) {
                         this.commandXStack.push(this.currentXPosition);
-                        this.buffer = this.buffer + '\n';
+                        this.buffer += '\n';
                         this.advanceLine();
                         // The x position gets fixed in this.advanceLine(), so no need to do it here
                     }
@@ -209,6 +189,9 @@ var TSOS;
                     _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text.charAt(i));
                     // Move the current X position.
                     this.currentXPosition = this.currentXPosition + charOffset;
+                    if (addToBuffer) {
+                        this.buffer += text.charAt(i);
+                    }
                 }
             }
         }
@@ -271,6 +254,30 @@ var TSOS;
             // Draw the text in white
             _DrawingContext.strokeStyle = 'white';
             this.putText(msg);
+        }
+        handleBackspace() {
+            // Only do something if there is text out in the command
+            if (this.buffer.length > 0) {
+                // get the width of the character to delete
+                let charWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+                // Draw a clear rect over the character and a little more to make sure it is all clear
+                // We start at the y position - the font size because we only need to measure from the baseline-up and do not
+                // want to cut off from the previous line. But the height of the box can be tall because noting is below and we
+                // need to clear the entire letter.
+                _DrawingContext.clearRect(this.currentXPosition - charWidth, this.currentYPosition - this.currentFontSize - _FontHeightMargin, charWidth, this.getLineHeight() + _FontHeightMargin);
+                // Remove it from the x position and the buffer
+                this.currentXPosition -= charWidth;
+                this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                if (this.buffer.charAt(this.buffer.length - 1) === '\n') {
+                    this.currentXPosition = this.commandXStack.pop();
+                    this.currentYPosition -= this.getLineHeight();
+                    this.buffer = this.buffer.substring(0, this.buffer.length - 1);
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     }
     TSOS.Console = Console;
