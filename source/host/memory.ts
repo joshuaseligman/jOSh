@@ -12,6 +12,7 @@ module TSOS {
             this.initializeMemoryTable();
         }
 
+        // Memory table is initially empty, so we need to fill it with the appropriate elements
         private initializeMemoryTable(): void {
             let memTable: HTMLTableElement = document.querySelector('#memTable');
             
@@ -34,6 +35,27 @@ module TSOS {
                     memTable.rows[memTable.rows.length - 1].appendChild(dataElement);
                 }
             }
+        }
+
+        // Update the table with the updated values
+        public updateMemoryTable(): void {
+            let memTable: HTMLTableElement = document.querySelector('#memTable');
+
+            // Iterate through each row of the table
+            for (let i: number = 0; i < memTable.rows.length; i++) {
+                // Get the row
+                let row: HTMLTableRowElement = memTable.rows[i];
+
+                // The actual data goes from index 1 to 8
+                for (let j: number = 1; j <= 8; j++) {
+                    row.children[j].innerHTML = Utils.getHexString(this._memArr[i * 8 + j - 1], 2, false);
+                }
+            }
+        }
+
+        public write(addr: number, val: number): void {
+            // Sets the location in memory to be the value
+            this._memArr[addr] = val;
         }
     }
 }
