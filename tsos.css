@@ -61,3 +61,33 @@ h3 {
   align-items: center;
   justify-content: space-evenly;
 }
+
+#centerArea {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+#cpuStatus {
+  font-weight: normal;
+}
+
+#cpuPcbMemDiv {
+  text-align: center;
+  width: 300px;
+}
+
+#cpuPcbMemDiv table {
+  width: 100%;
+  font-size: 12px;
+}
+
+#pcbDiv {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+#memDiv {
+  max-height: 200px;
+  overflow-y: auto;
+}

@@ -73,37 +73,278 @@
       <p>Status: <span id="status"></span></p>
    </div>
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
-      <canvas id="display"
-              width="500px"
-              height="500px"
-              tabindex="3">
-      </canvas>
-   </div>
+   <div id="centerArea">
+      <div id="divConsole" style="width:500px; height:500px">
+         <canvas id="display"
+                 width="500px"
+                 height="500px"
+                 tabindex="3">
+         </canvas>
+      </div>
+   
+      <div id="logAndInput">
+         <div id="divLog">
+            <label>
+               Host Log
+               <br>
+               <textarea name="taHostLog"
+                         id  ="taHostLog"
+                         rows="26"
+                         cols="48"
+               ></textarea>
+            </label>
+         </div>
+      
+         <div id="divUserProgramInput">
+            <label>
+               User Program Input
+               <br>
+               <textarea name="taProgramInput"
+                         id  ="taProgramInput"
+                         rows="8"
+                         cols="48"
+               ></textarea>
+            </label>
+         </div>
+      </div>
+   
+      <div id="cpuPcbMemDiv">
+         <h3>CPU Status</h3>
+         <table id="cpuTable">
+            <tr>
+               <th>PC</th>
+               <th>IR</th>
+               <th>ACC</th>
+               <th>X</th>
+               <th>Y</th>
+               <th>Z</th>
+            </tr>
+            <tr>
+               <td>00</td>
+               <td>00</td>
+               <td>00</td>
+               <td>00</td>
+               <td>00</td>
+               <td>0</td>
+            </tr>
+         </table>
 
-   <div id="divLog" style="margin-left:520px;">
-      <label>
-         Host Log
-         <br>
-         <textarea name="taHostLog"
-                   id  ="taHostLog"
-                   rows="26"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
+         <hr />
 
-   <div id="divUserProgramInput" style="margin-left:520px;">
-      <label>
-         User Program Input
-         <br>
-         <textarea name="taProgramInput"
-                   id  ="taProgramInput"
-                   rows="8"
-                   cols="48"
-         ></textarea>
-      </label>
+         <h3>Process Control Block</h3>
+         <div id="pcbDiv">
+            <table id="pcbTable">
+               <tr>
+                  <th>PID</th>
+                  <th>SEG</th>
+                  <th>PC</th>
+                  <th>IR</th>
+                  <th>ACC</th>
+                  <th>X</th>
+                  <th>Y</th>
+                  <th>Z</th>
+                  <th>Status</th>
+               </tr>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>0</td>
+                  <td>Running</td>
+               </tr>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>0</td>
+                  <td>Ready</td>
+               </tr>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>0</td>
+                  <td>Terminated</td>
+               </tr>
+               <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>0</td>
+                  <td>Terminated</td>
+               </tr>
+            </table>
+         </div>
+
+         <hr />
+
+         <h3>Memory</h3>
+         <div id="memDiv">
+            <table id="memTable">
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+               <tr>
+                  <td>0x000</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+                  <td>00</td>
+               </tr>
+            </table>
+         </div>
+      </div>
    </div>
+   
 </div>
 
 <div id="seeYaArea">
