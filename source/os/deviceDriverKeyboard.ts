@@ -8,10 +8,6 @@ module TSOS {
 
     // Extends DeviceDriver
     export class DeviceDriverKeyboard extends DeviceDriver {
-
-        // Flag to keep track of the state of the caps lock key
-        private capsLockOn: boolean;
-
         constructor() {
             // Override the base method pointers.
 
@@ -22,13 +18,6 @@ module TSOS {
             super();
             this.driverEntry = this.krnKbdDriverEntry;
             this.isr = this.krnKbdDispatchKeyPress;
-
-            this.capsLockOn = false;
-
-            // Code from https://www.educative.io/answers/how-to-detect-the-caps-lock-status-in-javascript
-            document.addEventListener('keydown', (e) => {
-                this.capsLockOn = e.getModifierState('CapsLock');
-            });
         }
 
         public krnKbdDriverEntry() {
@@ -41,11 +30,12 @@ module TSOS {
             // Parse the params.  TODO: Check that the params are valid and osTrapError if not.
             var keyCode = params[0];
             var isShifted = params[1];
-            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + this.capsLockOn);
+            let capsLockOn: boolean = params[2];
+            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + capsLockOn);
             var chr = "";
             // Check to see if we even want to deal with the key that was pressed.
             if ((keyCode >= 65) && (keyCode <= 90)) { // letter
-                if (isShifted || this.capsLockOn) { 
+                if (isShifted || capsLockOn) { 
                     chr = String.fromCharCode(keyCode); // Uppercase A-Z
                 } else {
                     chr = String.fromCharCode(keyCode + 32); // Lowercase a-z
