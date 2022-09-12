@@ -16,11 +16,6 @@ var TSOS;
             super();
             this.driverEntry = this.krnKbdDriverEntry;
             this.isr = this.krnKbdDispatchKeyPress;
-            this.capsLockOn = false;
-            // Code from https://www.educative.io/answers/how-to-detect-the-caps-lock-status-in-javascript
-            document.addEventListener('keydown', (e) => {
-                this.capsLockOn = e.getModifierState('CapsLock');
-            });
         }
         krnKbdDriverEntry() {
             // Initialization routine for this, the kernel-mode Keyboard Device Driver.
@@ -31,11 +26,12 @@ var TSOS;
             // Parse the params.  TODO: Check that the params are valid and osTrapError if not.
             var keyCode = params[0];
             var isShifted = params[1];
-            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + this.capsLockOn);
+            let capsLockOn = params[2];
+            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + capsLockOn);
             var chr = "";
             // Check to see if we even want to deal with the key that was pressed.
             if ((keyCode >= 65) && (keyCode <= 90)) { // letter
-                if (isShifted || this.capsLockOn) {
+                if (isShifted || capsLockOn) {
                     chr = String.fromCharCode(keyCode); // Uppercase A-Z
                 }
                 else {
