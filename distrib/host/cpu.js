@@ -147,6 +147,22 @@ var TSOS;
                     // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
                     this.add(this.Xreg, compValNeg);
                     break;
+                case 0xD0: // BNE
+                    // Only branch if the z flag is not enabled
+                    if (this.Zflag === 0) {
+                        // Add the operand to the program counter
+                        this.PC = this.add(this.PC, operands[0]);
+                    }
+                    break;
+                case 0xEE: // INC
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let incAddr = operands[1] << 8 | operands[0];
+                    // Get the value from memory and add 1 to it
+                    let origVal = _MemoryAccessor.callRead(incAddr);
+                    let newVal = this.add(origVal, 1);
+                    // Write the new value back to memory
+                    _MemoryAccessor.callWrite(incAddr, newVal);
+                    break;
             }
         }
         // Function to update the table on the website
@@ -158,7 +174,8 @@ var TSOS;
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
         }
-        // All ALU code below is from https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
+        // All ALU code below is from Computer Organization and Architecture project
+        // https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
         // Low-level adder for 2 8-bit numbers
         add(num1, num2) {
             // Sum is the outputted answer and starts at 0 and carry will initally be 0

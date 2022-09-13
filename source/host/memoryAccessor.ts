@@ -28,12 +28,23 @@ module TSOS {
 
         // Function that gets the data from the given address in memory, taking the curSection into account
         public callRead(addr: number): number {
-            return _Memory.read(this.getRealAddress(addr, this.curSection));
+            let requestedAddr: number = this.getRealAddress(addr, this.curSection);
+            if (requestedAddr >= this.SECTION_SIZE) {
+                _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
+                return -1;
+            } else {
+                return _Memory.read(requestedAddr);
+            }
         }
 
         // Function that writes the data into the address in memory, taking the curSection into account
         public callWrite(addr: number, val: number): void {
-            _Memory.write(this.getRealAddress(addr, this.curSection), val);
+            let requestedAddr: number = this.getRealAddress(addr, this.curSection);
+            if (requestedAddr >= this.SECTION_SIZE) {
+                _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr]));
+            } else {
+                _Memory.write(this.getRealAddress(addr, this.curSection), val);
+            }
         }
     }
 }

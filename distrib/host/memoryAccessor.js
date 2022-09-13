@@ -27,11 +27,24 @@ var TSOS;
         }
         // Function that gets the data from the given address in memory, taking the curSection into account
         callRead(addr) {
-            return _Memory.read(this.getRealAddress(addr, this.curSection));
+            let requestedAddr = this.getRealAddress(addr, this.curSection);
+            if (requestedAddr >= this.SECTION_SIZE) {
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
+                return -1;
+            }
+            else {
+                return _Memory.read(requestedAddr);
+            }
         }
         // Function that writes the data into the address in memory, taking the curSection into account
         callWrite(addr, val) {
-            _Memory.write(this.getRealAddress(addr, this.curSection), val);
+            let requestedAddr = this.getRealAddress(addr, this.curSection);
+            if (requestedAddr >= this.SECTION_SIZE) {
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr]));
+            }
+            else {
+                _Memory.write(this.getRealAddress(addr, this.curSection), val);
+            }
         }
     }
     TSOS.MemoryAccessor = MemoryAccessor;

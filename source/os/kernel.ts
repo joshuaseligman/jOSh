@@ -136,6 +136,15 @@ module TSOS {
                     _CPU.init();
                     this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
                     break;
+                case MEM_EXCEPTION_IRQ:
+                    _CPU.isExecuting = false;
+                    let exitedProgram: ProcessControlBlock = _PCBQueue.dequeue();
+                    exitedProgram.status = 'Terminated';
+                    exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                    exitedProgram.updateTableEntry();
+                    _CPU.init();
+                    this.krnTrace(`Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 0, true)}; Section: ${params[1]}`);
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
