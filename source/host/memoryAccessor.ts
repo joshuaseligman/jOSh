@@ -10,8 +10,14 @@ module TSOS {
         public flashProgram(program: number[], section: number): void {
             // Loop through the program and add each byte to memory
             // Load will check to make sure we have no more than 256 bytes of hex digits
-            for (let i: number = 0; i < program.length; i++) {
-                _Memory.write(this.getRealAddress(i, section), program[i]);
+            for (let i: number = 0; i < this.SECTION_SIZE; i++) {
+                if (i < program.length) {
+                    // Write the program
+                    _Memory.write(this.getRealAddress(i, section), program[i]);
+                } else {
+                    // Rest of the section should be 0
+                    _Memory.write(this.getRealAddress(i, section), 0);
+                }
             }
         }
 

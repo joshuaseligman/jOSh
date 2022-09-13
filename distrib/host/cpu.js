@@ -105,7 +105,7 @@ var TSOS;
             document.querySelector('#cpuAcc').innerHTML = TSOS.Utils.getHexString(this.Acc, 2, false);
             document.querySelector('#cpuXReg').innerHTML = TSOS.Utils.getHexString(this.Xreg, 2, false);
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
-            document.querySelector('#cpuPC').innerHTML = this.Zflag.toString();
+            document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
         }
     }
     TSOS.Cpu = Cpu;

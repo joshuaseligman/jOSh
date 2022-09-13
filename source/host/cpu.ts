@@ -121,7 +121,7 @@ module TSOS {
             (<HTMLTableCellElement> document.querySelector('#cpuAcc')).innerHTML = Utils.getHexString(this.Acc, 2, false);
             (<HTMLTableCellElement> document.querySelector('#cpuXReg')).innerHTML = Utils.getHexString(this.Xreg, 2, false);
             (<HTMLTableCellElement> document.querySelector('#cpuYReg')).innerHTML = Utils.getHexString(this.Yreg, 2, false);
-            (<HTMLTableCellElement> document.querySelector('#cpuPC')).innerHTML = this.Zflag.toString();
+            (<HTMLTableCellElement> document.querySelector('#cpuZFlag')).innerHTML = this.Zflag.toString();
         }
     }
 }
