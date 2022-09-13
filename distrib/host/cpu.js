@@ -106,9 +106,21 @@ var TSOS;
                     // Put the operand into the x register
                     this.Xreg = operands[0];
                     break;
+                case 0xAE: // LDX memory
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let xAddr = operands[1] << 8 | operands[0];
+                    // Set the x register to the value in memory
+                    this.Xreg = _MemoryAccessor.callRead(xAddr);
+                    break;
                 case 0xA0: // LDY constant
                     // Put the operand into the y register
                     this.Yreg = operands[0];
+                    break;
+                case 0xAC: // LDY memory
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let yAddr = operands[1] << 8 | operands[0];
+                    // Set the x register to the value in memory
+                    this.Yreg = _MemoryAccessor.callRead(yAddr);
                     break;
                 case 0x00: // BRK
                     // Call an interrupt for the OS to handle to end of the program execution
