@@ -447,6 +447,9 @@ var TSOS;
                         // Add the row to the table
                         let pcbTable = document.querySelector('#pcbTable');
                         pcbTable.appendChild(newRow);
+                        // Make sue the CPU is executing
+                        _CPU.isExecuting = true;
+                        _Kernel.krnTrace(`Started execution of process ${requestedID}.`);
                         _StdOut.putText(`Started execution of process ${requestedID}.`);
                         break;
                     // The process is currently running

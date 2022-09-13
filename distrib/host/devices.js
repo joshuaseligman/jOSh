@@ -28,6 +28,8 @@ var TSOS;
             _OSclock++;
             // Call the kernel clock pulse event handler.
             _Kernel.krnOnCPUClockPulse();
+            // Update the CPU table in real time
+            _CPU.updateCpuTable();
             // Update the memory table in real time
             _Memory.updateMemoryTable();
         }

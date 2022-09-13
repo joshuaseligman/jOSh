@@ -104,5 +104,15 @@ module TSOS {
                 break;
             }
         }
+
+        // Function to update the table on the website
+        public updateCpuTable(): void {
+            (<HTMLTableCellElement> document.querySelector('#cpuPC')).innerHTML = Utils.getHexString(this.PC, 2, false);
+            (<HTMLTableCellElement> document.querySelector('#cpuIR')).innerHTML = Utils.getHexString(this.IR, 2, false);
+            (<HTMLTableCellElement> document.querySelector('#cpuAcc')).innerHTML = Utils.getHexString(this.Acc, 2, false);
+            (<HTMLTableCellElement> document.querySelector('#cpuXReg')).innerHTML = Utils.getHexString(this.Xreg, 2, false);
+            (<HTMLTableCellElement> document.querySelector('#cpuYReg')).innerHTML = Utils.getHexString(this.Yreg, 2, false);
+            (<HTMLTableCellElement> document.querySelector('#cpuPC')).innerHTML = this.Zflag.toString();
+        }
     }
 }

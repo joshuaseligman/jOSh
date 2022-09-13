@@ -91,6 +91,15 @@ var TSOS;
                     break;
             }
         }
+        // Function to update the table on the website
+        updateCpuTable() {
+            document.querySelector('#cpuPC').innerHTML = TSOS.Utils.getHexString(this.PC, 2, false);
+            document.querySelector('#cpuIR').innerHTML = TSOS.Utils.getHexString(this.IR, 2, false);
+            document.querySelector('#cpuAcc').innerHTML = TSOS.Utils.getHexString(this.Acc, 2, false);
+            document.querySelector('#cpuXReg').innerHTML = TSOS.Utils.getHexString(this.Xreg, 2, false);
+            document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
+            document.querySelector('#cpuPC').innerHTML = this.Zflag.toString();
+        }
     }
     TSOS.Cpu = Cpu;
 })(TSOS || (TSOS = {}));
