@@ -354,9 +354,6 @@ var TSOS;
                     _StdOut.putText('Invalid program. Must be no longer than 256 bytes.');
                     return;
                 }
-                // Let the user know the program is valid
-                _Kernel.krnTrace('Read a valid program.');
-                _StdOut.putText('Program is valid.');
                 // Format the input text box for cleanliness by inserting a space between
                 // every 2 characters
                 for (let i = program.length - 2; i >= 2; i -= 2) {
@@ -364,6 +361,24 @@ var TSOS;
                 }
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
+                console.log(progInput.value);
+                let progStrArr = progInput.value.split(' ');
+                let progArr = [];
+                for (let byte = 0; byte < progStrArr.length; byte++) {
+                    progArr.push(parseInt(progStrArr[byte], 16));
+                }
+                let section = _MemoryManager.allocateProgram(progArr);
+                if (section == -1) {
+                    _Kernel.krnTrace('No space for the program.');
+                    _StdOut.putText('Failed to load program. No available space.');
+                }
+                else {
+                    let newPCB = new TSOS.ProcessControlBlock(0);
+                    _PCBQueue.enqueue(newPCB);
+                    // Let the user know the program is valid
+                    _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
+                    _StdOut.putText(`Process ID: ${newPCB.pid}`);
+                }
             }
             else {
                 // Invalid program from bad characters
