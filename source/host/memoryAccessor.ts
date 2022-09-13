@@ -2,7 +2,7 @@ module TSOS {
     export class MemoryAccessor {
 
         // Variable for determining which memory block we are working with
-        private curSection: number = 0;
+        public curSection: number = 0;
 
         private SECTION_SIZE: number = 0x100;
 
@@ -18,6 +18,16 @@ module TSOS {
         // Function to get the actual address depending on the section one is working with
         private getRealAddress(virtualAddr: number, section: number): number {
             return section * this.SECTION_SIZE + virtualAddr;
+        }
+
+        // Function that gets the data from the given address in memory, taking the curSection into account
+        public callRead(addr: number): number {
+            return _Memory.read(this.getRealAddress(addr, this.curSection));
+        }
+
+        // Function that writes the data into the address in memory, taking the curSection into account
+        public callWrite(addr: number, val: number): void {
+            _Memory.write(this.getRealAddress(addr, this.curSection), val);
         }
     }
 }

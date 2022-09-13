@@ -18,6 +18,14 @@ var TSOS;
         getRealAddress(virtualAddr, section) {
             return section * this.SECTION_SIZE + virtualAddr;
         }
+        // Function that gets the data from the given address in memory, taking the curSection into account
+        callRead(addr) {
+            return _Memory.read(this.getRealAddress(addr, this.curSection));
+        }
+        // Function that writes the data into the address in memory, taking the curSection into account
+        callWrite(addr, val) {
+            _Memory.write(this.getRealAddress(addr, this.curSection), val);
+        }
     }
     TSOS.MemoryAccessor = MemoryAccessor;
 })(TSOS || (TSOS = {}));

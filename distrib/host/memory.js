@@ -44,6 +44,10 @@ var TSOS;
             // Sets the location in memory to be the value
             this._memArr[addr] = val;
         }
+        read(addr) {
+            // Returns the value stored in memory at that location
+            return this._memArr[addr];
+        }
     }
     TSOS.Memory = Memory;
 })(TSOS || (TSOS = {}));

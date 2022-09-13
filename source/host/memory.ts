@@ -57,5 +57,10 @@ module TSOS {
             // Sets the location in memory to be the value
             this._memArr[addr] = val;
         }
+
+        public read(addr: number): number {
+            // Returns the value stored in memory at that location
+            return this._memArr[addr];
+        }
     }
 }

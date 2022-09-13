@@ -431,7 +431,6 @@ module TSOS {
                 }
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
-                console.log(progInput.value)
 
                 let progStrArr: string[] = progInput.value.split(' ');
                 let progArr: number[] = [];

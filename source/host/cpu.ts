@@ -16,6 +16,7 @@ module TSOS {
     export class Cpu {
 
         constructor(public PC: number = 0,
+                    public IR: number = 0,
                     public Acc: number = 0,
                     public Xreg: number = 0,
                     public Yreg: number = 0,
@@ -26,6 +27,7 @@ module TSOS {
 
         public init(): void {
             this.PC = 0;
+            this.IR = 0;
             this.Acc = 0;
             this.Xreg = 0;
             this.Yreg = 0;
@@ -37,6 +39,26 @@ module TSOS {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
+
+            this.fetch();
+            this.decode();
+            this.execute();
+        }
+
+        // Function for fetching an instruction
+        private fetch(): void {
+            this.IR = _MemoryAccessor.callRead(this.PC);
+            this.PC++;
+        }
+
+        // Function for decoding the instruction
+        private decode(): void {
+
+        }
+
+        // Function for executing the instruction
+        private execute(): void {
+
         }
     }
 }
