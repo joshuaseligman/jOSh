@@ -137,6 +137,16 @@ var TSOS;
                     // Call an interrupt for the OS to handle to end of the program execution
                     _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
                     break;
+                case 0xEC: // CPX
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let compAddr = operands[1] << 8 | operands[0];
+                    // Get the value in memory and negate it
+                    let compVal = _MemoryAccessor.callRead(compAddr);
+                    let compValNeg = this.negate(compVal);
+                    // Run the values through the adder
+                    // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
+                    this.add(this.Xreg, compValNeg);
+                    break;
             }
         }
         // Function to update the table on the website
@@ -148,6 +158,7 @@ var TSOS;
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
         }
+        // All ALU code below is from https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
         // Low-level adder for 2 8-bit numbers
         add(num1, num2) {
             // Sum is the outputted answer and starts at 0 and carry will initally be 0
@@ -186,6 +197,10 @@ var TSOS;
             let sum = bit1 ^ bit2;
             let carry = bit1 & bit2;
             return [sum, carry];
+        }
+        // Negates a number using 2s complement
+        negate(num) {
+            return ~num + 1;
         }
     }
     TSOS.Cpu = Cpu;

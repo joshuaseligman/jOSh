@@ -162,6 +162,19 @@ module TSOS {
                 // Call an interrupt for the OS to handle to end of the program execution
                 _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
                 break;
+            
+            case 0xEC: // CPX
+                // Convert the operands from little endian format to a plain address as described in 0xAD
+                let compAddr: number = operands[1] << 8 | operands[0];
+
+                // Get the value in memory and negate it
+                let compVal: number = _MemoryAccessor.callRead(compAddr);
+                let compValNeg: number = this.negate(compVal);
+
+                // Run the values through the adder
+                // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
+                this.add(this.Xreg, compValNeg);
+                break;
             }
         }
 
@@ -223,6 +236,11 @@ module TSOS {
             let sum: number = bit1 ^ bit2;
             let carry: number = bit1 & bit2;
             return [sum, carry];
+        }
+
+        // Negates a number using 2s complement
+        private negate(num: number): number {
+            return ~num + 1;
         }
     }
 }
