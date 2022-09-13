@@ -57,6 +57,9 @@ module TSOS {
             switch (this.IR) {
             // 1 operand
             case 0xA9: // LDA constant
+            case 0xA2: // LDX constant
+            case 0xA0: // LDY constant
+            case 0xD0: // BNE
                 // Get the operand
                 let op: number = _MemoryAccessor.callRead(this.PC);
                 // Increment the PC
@@ -67,6 +70,11 @@ module TSOS {
             // 2 operands
             case 0xAD: // LDA memory
             case 0x8D: // STA
+            case 0x6D: // ADC
+            case 0xAE: // LDX memory
+            case 0xAC: // LDY memory
+            case 0xEC: // CPX
+            case 0xEE: // INC
                 // Get the operands from memory
                 let op1: number = _MemoryAccessor.callRead(this.PC);
                 this.PC++;
@@ -77,7 +85,9 @@ module TSOS {
                 return [op1, op2];
             
             // 0 operands
+            case 0xEA: // NOP
             case 0x00: // BRK
+            case 0xFF: // SYS
                 return [];
             }
         }
@@ -105,6 +115,16 @@ module TSOS {
 
                 // Write the accumulator to memory
                 _MemoryAccessor.callWrite(writeAddr, this.Acc);
+                break;
+
+            case 0xA2: // LDX constant
+                // Put the operand into the x register
+                this.Xreg = operands[0];
+                break;
+
+            case 0xA0: // LDY constant
+                // Put the operand into the y register
+                this.Yreg = operands[0];
                 break;
 
             case 0x00: // BRK
