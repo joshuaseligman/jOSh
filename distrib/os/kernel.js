@@ -52,6 +52,18 @@ var TSOS;
             // ... Disable the Interrupts.
             this.krnTrace("Disabling the interrupts.");
             this.krnDisableInterrupts();
+            if (_CPU.isExecuting) {
+                // Abruptly terminate the program
+                let finishedProgram = _PCBQueue.dequeue();
+                finishedProgram.status = 'Terminated';
+                // Get final CPU values and save them in the table
+                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                finishedProgram.updateTableEntry();
+                _CPU.init();
+            }
+            // Stop everything from running
+            this.krnTrace('Stopping the CPU and logging.');
+            clearInterval(_hardwareClockID);
             //
             // Unload the Device Drivers?
             // More?
