@@ -59,7 +59,11 @@ var TSOS;
         }
         // Function for executing the instruction
         execute(operands) {
-            console.log(operands);
+            switch (this.IR) {
+                case 0xA9: // LDA constant
+                    this.Acc = operands[0];
+                    break;
+            }
         }
     }
     TSOS.Cpu = Cpu;

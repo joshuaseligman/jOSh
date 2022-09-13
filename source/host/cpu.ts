@@ -55,6 +55,7 @@ module TSOS {
         // Function for decoding the instruction
         private decode(): number[] {
             switch (this.IR) {
+            // 1 operand
             case 0xA9: // LDA constant
                 // Get the operand
                 let op1: number = _MemoryAccessor.callRead(this.PC);
@@ -67,7 +68,12 @@ module TSOS {
 
         // Function for executing the instruction
         private execute(operands: number[]): void {
-            console.log(operands)
+            switch (this.IR) {
+            case 0xA9: // LDA constant
+                // Update the accumulator
+                this.Acc = operands[0];
+                break;
+            }
         }
     }
 }
