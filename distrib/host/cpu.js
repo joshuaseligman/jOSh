@@ -102,6 +102,14 @@ var TSOS;
                     // Write the accumulator to memory
                     _MemoryAccessor.callWrite(writeAddr, this.Acc);
                     break;
+                case 0x6D: // ADC
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let addAddr = operands[1] << 8 | operands[0];
+                    // Get the value to add to the accumulator
+                    let addVal = _MemoryAccessor.callRead(addAddr);
+                    // Add the numbers together
+                    this.Acc = this.add(this.Acc, addVal);
+                    break;
                 case 0xA2: // LDX constant
                     // Put the operand into the x register
                     this.Xreg = operands[0];
@@ -122,6 +130,9 @@ var TSOS;
                     // Set the x register to the value in memory
                     this.Yreg = _MemoryAccessor.callRead(yAddr);
                     break;
+                case 0xEA: // NOP
+                    // Do nothing for a no operation
+                    break;
                 case 0x00: // BRK
                     // Call an interrupt for the OS to handle to end of the program execution
                     _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
@@ -136,6 +147,45 @@ var TSOS;
             document.querySelector('#cpuXReg').innerHTML = TSOS.Utils.getHexString(this.Xreg, 2, false);
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
+        }
+        // Low-level adder for 2 8-bit numbers
+        add(num1, num2) {
+            // Sum is the outputted answer and starts at 0 and carry will initally be 0
+            let sum = 0;
+            let carry = 0;
+            // Iterate 8 times because each number is 8 bits
+            for (let i = 0; i < 8; i++) {
+                // Get the bits to add
+                let bit1 = num1 & 1;
+                let bit2 = num2 & 1;
+                // Update the numbers
+                num1 = num1 >> 1;
+                num2 = num2 >> 1;
+                // Get the result
+                let result = this.fullAdder(bit1, bit2, carry);
+                // Update the final total and carry for next adder
+                sum = result[0] << i | sum;
+                carry = result[1];
+            }
+            // Update the z flag accordingly
+            this.Zflag = (sum === 0) ? 1 : 0;
+            return sum;
+        }
+        // Low-level full adder for adding 2 bits with carry
+        fullAdder(bit1, bit2, carry) {
+            // Add the 2 bits together
+            let firstOut = this.halfAdder(bit1, bit2);
+            // Add the sum of the 2 bits with the carry bit
+            let secondOut = this.halfAdder(firstOut[0], carry);
+            // The total sum is the sum of the second output and the carry output is if either half adder returned a carry flag
+            return [secondOut[0], firstOut[1] | secondOut[1]];
+        }
+        // Low-level half adder for adding 2 bits
+        halfAdder(bit1, bit2) {
+            // The sum is the XOR or the bits and the carry is the AND of the bits
+            let sum = bit1 ^ bit2;
+            let carry = bit1 & bit2;
+            return [sum, carry];
         }
     }
     TSOS.Cpu = Cpu;
