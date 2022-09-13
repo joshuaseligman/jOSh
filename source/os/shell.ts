@@ -109,10 +109,16 @@ module TSOS {
                 "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
 
-             // load
-             sc = new ShellCommand(this.shellLoad,
+            // load
+            sc = new ShellCommand(this.shellLoad,
                 "load",
                 "- Loads the user program into memory.");
+            this.commandList[this.commandList.length] = sc;
+
+            // run
+            sc = new ShellCommand(this.shellRun,
+                "run",
+                "<pid> - Runs the given process ID.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -455,6 +461,97 @@ module TSOS {
                 // Invalid program from bad characters
                 _Kernel.krnTrace('Invalid program. Invalid characters present.');
                 _StdOut.putText('Invalid program. Only hex digits (0-9, A-F) and whitespace allowed.');
+            }
+        }
+
+        public shellRun(args: string[]) {
+            if (args.length > 0) {
+                // Get the integer process id that was requested
+                let requestedID: number = parseInt(args[0]);
+
+                // Process IDs start at 0 and go up to the current id (exclusive)
+                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= ProcessControlBlock.currentPID) {
+                    _Kernel.krnTrace(`Run request failed. Invalid PID: ${requestedID}`)
+                    _StdOut.putText(`Failed to run process. Invalid PID: ${requestedID}`);
+                    return;
+                }
+
+                // We have a valid PID, so we can find the element safely in the history array
+                let requestedPCB: ProcessControlBlock = _PCBHistory.find((pcb: ProcessControlBlock) => pcb.pid === requestedID);
+                switch (requestedPCB.status) {
+                // The process is loaded but has not been called to run
+                case '':
+                    _PCBQueue.enqueue(requestedPCB);
+                    requestedPCB.status = 'Running';
+
+                    // Create the row for the pcb info to be placed in
+                    let newRow: HTMLTableRowElement = document.createElement('tr');
+                    newRow.id = `pid${requestedID}`;
+
+                    // Create the pid element
+                    let pidElem: HTMLTableCellElement = document.createElement('td');
+                    pidElem.innerHTML = requestedPCB.pid.toString();
+                    newRow.appendChild(pidElem);
+
+                    // Create the segment element
+                    let segmentElem: HTMLTableCellElement = document.createElement('td');
+                    segmentElem.innerHTML = requestedPCB.segment.toString();
+                    newRow.appendChild(segmentElem);
+
+                    // Create the PC element
+                    let pcElem: HTMLTableCellElement = document.createElement('td');
+                    pcElem.innerHTML = Utils.getHexString(requestedPCB.programCounter, 2, false);
+                    newRow.appendChild(pcElem);
+
+                    // Create the IR element
+                    let irElem: HTMLTableCellElement = document.createElement('td');
+                    irElem.innerHTML = Utils.getHexString(requestedPCB.instructionRegister, 2, false);
+                    newRow.appendChild(irElem);
+
+                    // Create the Acc element
+                    let accElem: HTMLTableCellElement = document.createElement('td');
+                    accElem.innerHTML = Utils.getHexString(requestedPCB.acc, 2, false);
+                    newRow.appendChild(accElem);
+
+                    // Create the X Reg element
+                    let xRegElem: HTMLTableCellElement = document.createElement('td');
+                    xRegElem.innerHTML = Utils.getHexString(requestedPCB.xReg, 2, false);
+                    newRow.appendChild(xRegElem);
+
+                    // Create the Y Reg element
+                    let yRegElem: HTMLTableCellElement = document.createElement('td');
+                    yRegElem.innerHTML = Utils.getHexString(requestedPCB.yReg, 2, false);
+                    newRow.appendChild(yRegElem);
+
+                    // Create the Z flag element
+                    let zFlagElem: HTMLTableCellElement = document.createElement('td');
+                    zFlagElem.innerHTML = requestedPCB.zFlag.toString();
+                    newRow.appendChild(zFlagElem);
+
+                    // Create the Status element
+                    let statusElem: HTMLTableCellElement = document.createElement('td');
+                    statusElem.innerHTML = requestedPCB.status;
+                    newRow.appendChild(statusElem);
+
+                    // Add the row to the table
+                    let pcbTable: HTMLTableElement = document.querySelector('#pcbTable');
+                    pcbTable.appendChild(newRow);
+
+                    _StdOut.putText(`Started execution of process ${requestedID}.`);
+                    break;
+                // The process is currently running
+                case 'Running':
+                    _StdOut.putText(`Process ${requestedID} is already running.`);
+                    break;
+                // The process has already executed
+                case 'Terminated':
+                    _StdOut.putText(`Process ${requestedID} is terminated.`);
+                    break;
+                }
+
+            } else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: run <pid>  Please supply a prcess id.')
             }
         }
     }

@@ -58,7 +58,7 @@ var TSOS;
                     return [op];
                 // 2 operands
                 case 0xAD: // LDA memory
-                case 0x8D: // STD
+                case 0x8D: // STA
                     // Get the operands from memory
                     let op1 = _MemoryAccessor.callRead(this.PC);
                     this.PC++;
