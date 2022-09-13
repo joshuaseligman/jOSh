@@ -59,6 +59,7 @@ var TSOS;
                 // Get final CPU values and save them in the table
                 finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                 finishedProgram.updateTableEntry();
+                // Clear the CPU
                 _CPU.init();
             }
             // Stop everything from running
@@ -128,14 +129,16 @@ var TSOS;
                     _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
                     let finishedProgram = _PCBQueue.dequeue();
-                    finishedProgram.status = 'Terminated';
-                    // Get final CPU values and save them in the table
-                    finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    finishedProgram.updateTableEntry();
-                    // Reset the CPU
-                    _CPU.init();
-                    // Trace the terminated program
-                    this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
+                    if (finishedProgram !== undefined) {
+                        finishedProgram.status = 'Terminated';
+                        // Get final CPU values and save them in the table
+                        finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                        finishedProgram.updateTableEntry();
+                        // Reset the CPU
+                        _CPU.init();
+                        // Trace the terminated program
+                        this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
+                    }
                     break;
                 case MEM_EXCEPTION_IRQ:
                     // Set the CPU to not execute anymore
