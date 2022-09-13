@@ -86,6 +86,8 @@ module TSOS {
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
+
+                // Get the running program and update its value in the PCB table
                 let currentPCB: ProcessControlBlock = _PCBQueue.getHead();
                 currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                 currentPCB.updateTableEntry();
@@ -128,22 +130,40 @@ module TSOS {
                     _StdIn.handleInput();
                     break;
                 case PROG_BREAK_IRQ:
+                    // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
+                    
+                    // Get the finished program and set it to terminated
                     let finishedProgram: ProcessControlBlock = _PCBQueue.dequeue();
                     finishedProgram.status = 'Terminated';
+
+                    // Get final CPU values and save them in the table
                     finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     finishedProgram.updateTableEntry();
+
+                    // Reset the CPU
                     _CPU.init();
+
+                    // Trace the terminated program
                     this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
                     break;
                 case MEM_EXCEPTION_IRQ:
+                    // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
+
+                    // Get the finished program and set it to terminated
                     let exitedProgram: ProcessControlBlock = _PCBQueue.dequeue();
                     exitedProgram.status = 'Terminated';
+
+                    // Get final CPU values and save them in the table
                     exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     exitedProgram.updateTableEntry();
+
+                    // Reset the CPU
                     _CPU.init();
-                    this.krnTrace(`Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 0, true)}; Section: ${params[1]}`);
+                    
+                    // Trace the error
+                    this.krnTrace(`Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Section: ${params[1]}`);
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
