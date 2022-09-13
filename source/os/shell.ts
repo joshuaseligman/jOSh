@@ -418,6 +418,10 @@ module TSOS {
                     _Kernel.krnTrace('Invalid program. Odd number of characters.');
                     _StdOut.putText('Invalid program. Must have an even number of characters.');
                     return;
+                } else if (program.length > 512) {
+                    _Kernel.krnTrace('Invalid program. Program larger than 256 bytes.');
+                    _StdOut.putText('Invalid program. Must be no longer than 256 bytes.');
+                    return;
                 }
 
                 // Let the user know the program is valid
