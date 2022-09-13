@@ -177,6 +177,8 @@ var TSOS;
                         }
                     }
                     else if (this.Xreg === 2) {
+                        // Convert the operands from little endian format to a plain address as described in 0xAD
+                        _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SYSCALL_PRINT_STR_IRQ, [this.Yreg]));
                     }
                     break;
             }

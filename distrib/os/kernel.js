@@ -143,6 +143,19 @@ var TSOS;
                     // Print the integer to the screen
                     _Console.putText(params[0].toString());
                     break;
+                case SYSCALL_PRINT_STR_IRQ:
+                    // Get the first character from memory
+                    let charVal = _MemoryAccessor.callRead(params[0]);
+                    // Increment variable to go untir 0x00 or error
+                    let i = 0;
+                    while (charVal !== -1 && charVal !== 0) {
+                        // Print the character
+                        _Console.putText(String.fromCharCode(charVal));
+                        // Increment i and get the next character
+                        i++;
+                        charVal = _MemoryAccessor.callRead(params[0] + i);
+                    }
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
