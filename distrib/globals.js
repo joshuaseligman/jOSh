@@ -18,6 +18,8 @@ const TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt pri
 const KEYBOARD_IRQ = 1;
 const PROG_BREAK_IRQ = 2; // IRQ for a BRK (0x00) instruction to stop the program
 const MEM_EXCEPTION_IRQ = 3; // IRQ for a memory out of bounds error
+const SYSCALL_PRINT_INT_IRQ = 4; // IRQ for printing an integer
+const SYSCALL_PRINT_STR_IRQ = 5; // IRQ for printing a string
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

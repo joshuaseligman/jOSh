@@ -195,6 +195,22 @@ module TSOS {
                 // Write the new value back to memory
                 _MemoryAccessor.callWrite(incAddr, newVal);
                 break;
+
+            case 0xFF: // SYS
+                if (this.Xreg === 1) {
+                    if (this.Yreg >> 7 === 1) {
+                        // We have a negative number and have to put it in a usable format for base 10
+                        let printableNum: number = -1 * this.negate(this.Yreg);
+                        // Make a system call for printing the number
+                        _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_INT_IRQ, [printableNum]));
+                    } else {
+                        // Make a system call for printing the number
+                        _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_INT_IRQ, [this.Yreg]));
+                    }
+                } else if (this.Xreg === 2) {
+                   
+                }
+                break;
             }
         }
 
@@ -261,7 +277,7 @@ module TSOS {
 
         // Negates a number using 2s complement
         private negate(num: number): number {
-            return ~num + 1;
+            return ((~num) & 0xFF) + 1;
         }
     }
 }

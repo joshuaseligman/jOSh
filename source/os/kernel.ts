@@ -165,6 +165,11 @@ module TSOS {
                     // Trace the error
                     this.krnTrace(`Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Section: ${params[1]}`);
                     break;
+
+                case SYSCALL_PRINT_INT_IRQ:
+                    // Print the integer to the screen
+                    _Console.putText(params[0].toString());
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }

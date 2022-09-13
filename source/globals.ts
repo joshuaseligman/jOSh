@@ -24,6 +24,10 @@ const PROG_BREAK_IRQ: number = 2; // IRQ for a BRK (0x00) instruction to stop th
 
 const MEM_EXCEPTION_IRQ: number = 3; // IRQ for a memory out of bounds error
 
+const SYSCALL_PRINT_INT_IRQ: number = 4; // IRQ for printing an integer
+
+const SYSCALL_PRINT_STR_IRQ: number = 5; // IRQ for printing a string
+
 
 //
 // Global Variables
