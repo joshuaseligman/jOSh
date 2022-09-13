@@ -75,6 +75,10 @@ module TSOS {
 
                 // Return the operands
                 return [op1, op2];
+            
+            // 0 operands
+            case 0x00: // BRK
+                return [];
             }
         }
 
@@ -101,6 +105,11 @@ module TSOS {
 
                 // Write the accumulator to memory
                 _MemoryAccessor.callWrite(writeAddr, this.Acc);
+                break;
+
+            case 0x00: // BRK
+                // Call an interrupt for the OS to handle to end of the program execution
+                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
                 break;
             }
         }

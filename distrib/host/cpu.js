@@ -66,6 +66,9 @@ var TSOS;
                     this.PC++;
                     // Return the operands
                     return [op1, op2];
+                // 0 operands
+                case 0x00: // BRK
+                    return [];
             }
         }
         // Function for executing the instruction
@@ -88,6 +91,10 @@ var TSOS;
                     let writeAddr = operands[1] << 8 | operands[0];
                     // Write the accumulator to memory
                     _MemoryAccessor.callWrite(writeAddr, this.Acc);
+                    break;
+                case 0x00: // BRK
+                    // Call an interrupt for the OS to handle to end of the program execution
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
                     break;
             }
         }

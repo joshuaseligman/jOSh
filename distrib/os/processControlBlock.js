@@ -17,6 +17,29 @@ var TSOS;
             // Set the status to '' for now
             this.status = '';
         }
+        // Function to update the information for the PCB based on the CPU status
+        updateCpuInfo(pc, ir, acc, xReg, yReg, zFlag) {
+            this.programCounter = pc;
+            this.instructionRegister = ir;
+            this.acc = acc;
+            this.xReg = xReg;
+            this.yReg = yReg;
+            this.zFlag = zFlag;
+        }
+        // Function to update the table entry for the PCB
+        updateTableEntry() {
+            // Get the table row
+            let tableEntry = document.querySelector(`#pid${this.pid}`);
+            // Update each of the CPU fields
+            tableEntry.cells[2].innerHTML = TSOS.Utils.getHexString(this.programCounter, 2, false);
+            tableEntry.cells[3].innerHTML = TSOS.Utils.getHexString(this.instructionRegister, 2, false);
+            tableEntry.cells[4].innerHTML = TSOS.Utils.getHexString(this.acc, 2, false);
+            tableEntry.cells[5].innerHTML = TSOS.Utils.getHexString(this.xReg, 2, false);
+            tableEntry.cells[6].innerHTML = TSOS.Utils.getHexString(this.yReg, 2, false);
+            tableEntry.cells[7].innerHTML = this.zFlag.toString();
+            // Update the status
+            tableEntry.cells[8].innerHTML = this.status;
+        }
     }
     // Public variable to keep track of the allocated ids
     ProcessControlBlock.currentPID = 0;

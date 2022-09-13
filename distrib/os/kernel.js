@@ -73,6 +73,9 @@ var TSOS;
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 _CPU.cycle();
+                let currentPCB = _PCBQueue.getHead();
+                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                currentPCB.updateTableEntry();
             }
             else { // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
@@ -106,6 +109,15 @@ var TSOS;
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params); // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case PROG_BREAK_IRQ:
+                    _CPU.isExecuting = false;
+                    let finishedProgram = _PCBQueue.dequeue();
+                    finishedProgram.status = 'Terminated';
+                    finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                    finishedProgram.updateTableEntry();
+                    _CPU.init();
+                    this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
