@@ -36,19 +36,30 @@ var TSOS;
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             this.fetch();
-            this.decode();
-            this.execute();
+            let operands = this.decode();
+            this.execute(operands);
         }
         // Function for fetching an instruction
         fetch() {
+            // Get the instruction from memory and increment the PC
             this.IR = _MemoryAccessor.callRead(this.PC);
             this.PC++;
         }
         // Function for decoding the instruction
         decode() {
+            switch (this.IR) {
+                case 0xA9: // LDA constant
+                    // Get the operand
+                    let op1 = _MemoryAccessor.callRead(this.PC);
+                    // Increment the PC
+                    this.PC++;
+                    // Return the operand
+                    return [op1];
+            }
         }
         // Function for executing the instruction
-        execute() {
+        execute(operands) {
+            console.log(operands);
         }
     }
     TSOS.Cpu = Cpu;

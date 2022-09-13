@@ -361,7 +361,6 @@ var TSOS;
                 }
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
-                console.log(progInput.value);
                 let progStrArr = progInput.value.split(' ');
                 let progArr = [];
                 for (let byte = 0; byte < progStrArr.length; byte++) {

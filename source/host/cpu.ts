@@ -41,24 +41,33 @@ module TSOS {
             // Do the real work here. Be sure to set this.isExecuting appropriately.
 
             this.fetch();
-            this.decode();
-            this.execute();
+            let operands: number[] = this.decode();
+            this.execute(operands);
         }
 
         // Function for fetching an instruction
         private fetch(): void {
+            // Get the instruction from memory and increment the PC
             this.IR = _MemoryAccessor.callRead(this.PC);
             this.PC++;
         }
 
         // Function for decoding the instruction
-        private decode(): void {
-
+        private decode(): number[] {
+            switch (this.IR) {
+            case 0xA9: // LDA constant
+                // Get the operand
+                let op1: number = _MemoryAccessor.callRead(this.PC);
+                // Increment the PC
+                this.PC++;
+                // Return the operand
+                return [op1];
+            }
         }
 
         // Function for executing the instruction
-        private execute(): void {
-
+        private execute(operands: number[]): void {
+            console.log(operands)
         }
     }
 }
