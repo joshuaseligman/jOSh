@@ -48,20 +48,46 @@ var TSOS;
         // Function for decoding the instruction
         decode() {
             switch (this.IR) {
+                // 1 operand
                 case 0xA9: // LDA constant
                     // Get the operand
-                    let op1 = _MemoryAccessor.callRead(this.PC);
+                    let op = _MemoryAccessor.callRead(this.PC);
                     // Increment the PC
                     this.PC++;
                     // Return the operand
-                    return [op1];
+                    return [op];
+                // 2 operands
+                case 0xAD: // LDA memory
+                case 0x8D: // STD
+                    // Get the operands from memory
+                    let op1 = _MemoryAccessor.callRead(this.PC);
+                    this.PC++;
+                    let op2 = _MemoryAccessor.callRead(this.PC);
+                    this.PC++;
+                    // Return the operands
+                    return [op1, op2];
             }
         }
         // Function for executing the instruction
         execute(operands) {
             switch (this.IR) {
                 case 0xA9: // LDA constant
+                    // Update the accumulator
                     this.Acc = operands[0];
+                    break;
+                case 0xAD: // LDA memory
+                    // Convert the operands from little endian format to a plain address
+                    // Since each operand is 8 bits, we can left shift the first one and do a bitwise OR
+                    // te combine them into one whole address
+                    let readAddr = operands[1] << 8 | operands[0];
+                    // Set the accumulator to whatever is in memory at the given address
+                    this.Acc = _MemoryAccessor.callRead(readAddr);
+                    break;
+                case 0x8D: // STA
+                    // Convert the operands from little endian format to a plain address as described in 0xAD
+                    let writeAddr = operands[1] << 8 | operands[0];
+                    // Write the accumulator to memory
+                    _MemoryAccessor.callWrite(writeAddr, this.Acc);
                     break;
             }
         }
