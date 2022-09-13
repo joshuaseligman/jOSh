@@ -374,7 +374,7 @@ var TSOS;
                 }
                 else {
                     let newPCB = new TSOS.ProcessControlBlock(0);
-                    _PCBQueue.enqueue(newPCB);
+                    _PCBHistory.push(newPCB);
                     // Let the user know the program is valid
                     _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
                     _StdOut.putText(`Process ID: ${newPCB.pid}`);

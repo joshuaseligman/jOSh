@@ -446,7 +446,7 @@ module TSOS {
                     _StdOut.putText('Failed to load program. No available space.');
                 } else {
                     let newPCB: ProcessControlBlock = new ProcessControlBlock(0);
-                    _PCBQueue.enqueue(newPCB);
+                    _PCBHistory.push(newPCB);
                     // Let the user know the program is valid
                     _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
                     _StdOut.putText(`Process ID: ${newPCB.pid}`);
