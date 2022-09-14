@@ -113,6 +113,11 @@
       </div>
    
       <div id="cpuPcbMemDiv">
+         <div id="singleStepDiv">
+            <button id="toggleSingleStepBtn" class="singleStepBtn" onclick="TSOS.Control.toggleSingleStep()">Toggle Single Step</button>
+            <button id="stepBtn" class="singleStepBtn" disabled>Step</button>
+         </div>
+
          <h3>CPU Status</h3>
          <table id="cpuTable">
             <tr>
@@ -149,17 +154,6 @@
                   <th>Z</th>
                   <th>Status</th>
                </tr>
-               <!-- <tr>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>00</td>
-                  <td>00</td>
-                  <td>00</td>
-                  <td>00</td>
-                  <td>00</td>
-                  <td>0</td>
-                  <td>Running</td>
-               </tr> -->
             </table>
          </div>
 

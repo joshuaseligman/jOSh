@@ -126,5 +126,11 @@ module TSOS {
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
         }
+
+        public static toggleSingleStep(): void {
+            // Toggle if the step button is disabled or not
+            let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
+            stepBtn.disabled = !stepBtn.disabled;
+        }
     }
 }

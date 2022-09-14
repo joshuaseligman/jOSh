@@ -432,7 +432,7 @@ module TSOS {
                 
                 // Format the input text box for cleanliness by inserting a space between
                 // every 2 characters
-                for (let i: number = program.length -2; i >= 2; i -= 2) {
+                for (let i: number = program.length - 2; i >= 2; i -= 2) {
                     program = program.slice(0, i) + ' ' + program.slice(i);
                 }
                 // Update the value of the input box

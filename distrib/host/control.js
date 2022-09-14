@@ -102,6 +102,11 @@ var TSOS;
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
         }
+        static toggleSingleStep() {
+            // Toggle if the step button is disabled or not
+            let stepBtn = document.querySelector('#stepBtn');
+            stepBtn.disabled = !stepBtn.disabled;
+        }
     }
     TSOS.Control = Control;
 })(TSOS || (TSOS = {}));
