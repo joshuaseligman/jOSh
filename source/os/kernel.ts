@@ -103,12 +103,23 @@ module TSOS {
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                _CPU.cycle();
+                // Get the button for requesting the step
+                let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
 
-                // Get the running program and update its value in the PCB table
-                let currentPCB: ProcessControlBlock = _PCBQueue.getHead();
-                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                currentPCB.updateTableEntry();
+                // We can execute a CPU cycle if the step button is disabled (single step off)
+                // or if the button is enabled and the user just clicked it (_NextStepRequested)
+                if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                    _CPU.cycle();
+
+                    // Get the running program and update its value in the PCB table
+                    let currentPCB: ProcessControlBlock = _PCBQueue.getHead();
+                    currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                    currentPCB.updateTableEntry();
+
+                    // Set the flag to false so the user can click again
+                    // If the button is disabled, it still will be false
+                    _NextStepRequested = false;
+                }
             } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }

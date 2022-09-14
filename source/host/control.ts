@@ -132,5 +132,10 @@ module TSOS {
             let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
             stepBtn.disabled = !stepBtn.disabled;
         }
+
+        public static nextStep(): void {
+            // Set the flag to be true so the next tick the kernel will tell the CPU to do the next step
+            _NextStepRequested = true;
+        }
     }
 }

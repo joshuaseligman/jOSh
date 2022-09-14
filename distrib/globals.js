@@ -20,6 +20,8 @@ const PROG_BREAK_IRQ = 2; // IRQ for a BRK (0x00) instruction to stop the progra
 const MEM_EXCEPTION_IRQ = 3; // IRQ for a memory out of bounds error
 const SYSCALL_PRINT_INT_IRQ = 4; // IRQ for printing an integer
 const SYSCALL_PRINT_STR_IRQ = 5; // IRQ for printing a string
+// Flag to determine if the next step should be executed
+let _NextStepRequested = false;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

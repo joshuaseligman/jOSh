@@ -107,6 +107,10 @@ var TSOS;
             let stepBtn = document.querySelector('#stepBtn');
             stepBtn.disabled = !stepBtn.disabled;
         }
+        static nextStep() {
+            // Set the flag to be true so the next tick the kernel will tell the CPU to do the next step
+            _NextStepRequested = true;
+        }
     }
     TSOS.Control = Control;
 })(TSOS || (TSOS = {}));

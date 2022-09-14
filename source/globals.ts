@@ -29,6 +29,9 @@ const SYSCALL_PRINT_INT_IRQ: number = 4; // IRQ for printing an integer
 const SYSCALL_PRINT_STR_IRQ: number = 5; // IRQ for printing a string
 
 
+// Flag to determine if the next step should be executed
+let _NextStepRequested: boolean = false;
+
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
