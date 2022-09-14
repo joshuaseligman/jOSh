@@ -22,6 +22,7 @@ var TSOS;
                 // Iterate through each of the data elements in the row and set them to 0
                 for (let j = 0; j < 8; j++) {
                     let dataElement = document.createElement('td');
+                    dataElement.id = `mem${i * 8 + j}`;
                     dataElement.innerHTML = TSOS.Utils.getHexString(0, 2, false);
                     memTable.rows[memTable.rows.length - 1].appendChild(dataElement);
                 }
@@ -36,7 +37,49 @@ var TSOS;
                 let row = memTable.rows[i];
                 // The actual data goes from index 1 to 8
                 for (let j = 1; j <= 8; j++) {
+                    row.children[j].classList.remove('opcode');
+                    row.children[j].classList.remove('operand');
                     row.children[j].innerHTML = TSOS.Utils.getHexString(this._memArr[i * 8 + j - 1], 2, false);
+                }
+            }
+            this.setMemoryCellClasses();
+        }
+        setMemoryCellClasses() {
+            let desiredAddr = _CPU.PC - 1;
+            let numOperands = 0;
+            switch (_CPU.IR) {
+                // 1 operand
+                case 0xA9: // LDA constant
+                case 0xA2: // LDX constant
+                case 0xA0: // LDY constant
+                    desiredAddr--;
+                    numOperands = 1;
+                    break;
+                // 2 operands
+                case 0xAD: // LDA memory
+                case 0x8D: // STA
+                case 0x6D: // ADC
+                case 0xAE: // LDX memory
+                case 0xAC: // LDY memory
+                case 0xEC: // CPX
+                case 0xEE: // INC
+                    desiredAddr -= 2;
+                    numOperands = 2;
+                    break;
+                case 0xD0: // BNE
+                    if (_CPU.branchTaken) {
+                        desiredAddr = _CPU.preBranchAddr - 2;
+                    }
+                    else {
+                        desiredAddr--;
+                    }
+                    numOperands = 1;
+                    break;
+            }
+            if (_CPU.isExecuting) {
+                document.querySelector(`#mem${_MemoryAccessor.getRealAddress(desiredAddr, _MemoryAccessor.curSection)}`).classList.add('opcode');
+                for (let i = desiredAddr + 1; i <= desiredAddr + numOperands; i++) {
+                    document.querySelector(`#mem${_MemoryAccessor.getRealAddress(i, _MemoryAccessor.curSection)}`).classList.add('operand');
                 }
             }
         }

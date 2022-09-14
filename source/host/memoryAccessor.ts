@@ -22,7 +22,7 @@ module TSOS {
         }
 
         // Function to get the actual address depending on the section one is working with
-        private getRealAddress(virtualAddr: number, section: number): number {
+        public getRealAddress(virtualAddr: number, section: number): number {
             return section * this.SECTION_SIZE + virtualAddr;
         }
 

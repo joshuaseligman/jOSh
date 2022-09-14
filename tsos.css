@@ -95,3 +95,12 @@ h3 {
 .singleStepBtn {
   width: 40%;
 }
+
+.opcode {
+  color: red;
+  text-emphasis: bold;
+}
+
+.operand {
+  color: blue;
+}

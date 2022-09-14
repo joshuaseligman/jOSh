@@ -21,6 +21,9 @@ var TSOS;
             this.Yreg = Yreg;
             this.Zflag = Zflag;
             this.isExecuting = isExecuting;
+            // Variables for the memory table update to highlight the right things
+            this.branchTaken = false;
+            this.preBranchAddr = 0;
         }
         init() {
             this.PC = 0;
@@ -150,8 +153,14 @@ var TSOS;
                 case 0xD0: // BNE
                     // Only branch if the z flag is not enabled
                     if (this.Zflag === 0) {
+                        // Save the state for the memory table updates
+                        this.preBranchAddr = this.PC;
+                        this.branchTaken = true;
                         // Add the operand to the program counter
                         this.PC = this.add(this.PC, operands[0]);
+                    }
+                    else {
+                        this.branchTaken = false;
                     }
                     break;
                 case 0xEE: // INC
