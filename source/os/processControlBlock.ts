@@ -30,6 +30,9 @@ module TSOS {
         // The status of the process
         public status: string;
 
+        // The printed output to keep track of
+        public output: string;
+
         constructor(segment: number) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.currentPID;
@@ -48,6 +51,9 @@ module TSOS {
 
             // Set the status to '' for now
             this.status = '';
+
+            // Output starts off as empty
+            this.output = '';
         }
 
         // Function to update the information for the PCB based on the CPU status

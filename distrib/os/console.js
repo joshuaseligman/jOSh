@@ -294,6 +294,13 @@ var TSOS;
                 return false;
             }
         }
+        // Function to reset everything for the kernel to just print out what it wants
+        resetCmdArea() {
+            this.resetTabCompletion();
+            this.historyIndex = -1;
+            this.commandXStack.clear();
+            this.buffer = '';
+        }
     }
     TSOS.Console = Console;
 })(TSOS || (TSOS = {}));

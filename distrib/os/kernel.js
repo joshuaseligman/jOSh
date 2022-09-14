@@ -146,7 +146,20 @@ var TSOS;
                         // Reset the CPU
                         _CPU.init();
                         // Trace the terminated program
-                        this.krnTrace(`Process ${finishedProgram.pid} terminated with status code 0.`);
+                        let outputStr = `Process ${finishedProgram.pid} terminated with status code 0.`;
+                        this.krnTrace(outputStr);
+                        // Reset the area for the output to be printed
+                        _Console.resetCmdArea();
+                        // Print out the status and all
+                        _Console.advanceLine();
+                        _Console.putText(outputStr);
+                        _Console.advanceLine();
+                        _Console.putText(`Program output: ${finishedProgram.output}`);
+                        // Reset again in case of word wrap
+                        _Console.resetCmdArea();
+                        // Set up for the new command
+                        _Console.advanceLine();
+                        _OsShell.putPrompt();
                     }
                     break;
                 case MEM_EXCEPTION_IRQ:
@@ -161,20 +174,42 @@ var TSOS;
                     // Reset the CPU
                     _CPU.init();
                     // Trace the error
-                    this.krnTrace(`Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${TSOS.Utils.getHexString(params[0], 4, true)}; Section: ${params[1]}`);
+                    let outputStr = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${TSOS.Utils.getHexString(params[0], 4, true)}; Section: ${params[1]}`;
+                    this.krnTrace(outputStr);
+                    // Reset the area for the output to be printed
+                    _Console.resetCmdArea();
+                    // Print out the status and all
+                    _Console.advanceLine();
+                    _Console.putText(outputStr);
+                    _Console.advanceLine();
+                    _Console.putText(`Program output: ${exitedProgram.output}`);
+                    // Reset again in case of word wrap
+                    _Console.resetCmdArea();
+                    // Set up for the new command
+                    _Console.advanceLine();
+                    _OsShell.putPrompt();
                     break;
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
-                    _Console.putText(params[0].toString());
+                    let printedOutput = params[0].toString();
+                    _Console.putText(printedOutput);
+                    // Add it to the buffered output for the program
+                    let curProgram = _PCBQueue.getHead();
+                    curProgram.output += printedOutput;
                     break;
                 case SYSCALL_PRINT_STR_IRQ:
+                    // Get the current program to add to the output buffer
+                    let runningProg = _PCBQueue.getHead();
                     // Get the first character from memory
                     let charVal = _MemoryAccessor.callRead(params[0]);
                     // Increment variable to go untir 0x00 or error
                     let i = 0;
                     while (charVal !== -1 && charVal !== 0) {
                         // Print the character
-                        _Console.putText(String.fromCharCode(charVal));
+                        let printedChar = String.fromCharCode(charVal);
+                        _Console.putText(printedChar);
+                        // Add the character to the program's output
+                        runningProg.output += printedChar;
                         // Increment i and get the next character
                         i++;
                         charVal = _MemoryAccessor.callRead(params[0] + i);

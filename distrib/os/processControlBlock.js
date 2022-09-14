@@ -16,6 +16,8 @@ var TSOS;
             this.segment = segment;
             // Set the status to '' for now
             this.status = '';
+            // Output starts off as empty
+            this.output = '';
         }
         // Function to update the information for the PCB based on the CPU status
         updateCpuInfo(pc, ir, acc, xReg, yReg, zFlag) {

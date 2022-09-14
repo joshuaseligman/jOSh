@@ -334,5 +334,14 @@ module TSOS {
                 return false;
             }
         }
+
+        // Function to reset everything for the kernel to just print out what it wants
+        public resetCmdArea(): void {
+            this.resetTabCompletion();
+            this.historyIndex = -1;
+            this.commandXStack.clear();
+
+            this.buffer = '';
+        }
     }
  }
