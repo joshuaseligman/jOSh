@@ -81,6 +81,7 @@
 % Question 1
 \section{Question 1}
 \textit{Explain the difference between internal and external fragmentation.} \\ \\
+Internal fragmentation is caused when an allocated process takes up less space than the gived partition, which leaves unused memory within the partition. The main solution for internal fragmentation is to break up memory into smaller chunks and allocate the minimum number of chunks needed to support the partition to minimize the amount of unused memory for a gived process. External fragmentation occurs when all the free memory is not contiguous, which can be the difference between being able to partition a process or rejecting it. This is a problem for all dynamic storage allocation algorithms, but the severity varies by which algorithm is used and how memory is allocated within the given system. The main solutions to external fragmentation are compaction and shuffling the processes around to maximize the amount of contiguous free memory or allow the logical addresses to be translated to noncontiguous physical addresses, which is called paging.
 
 % Question 2
 \section{Question 2}
