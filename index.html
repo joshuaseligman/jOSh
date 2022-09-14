@@ -43,20 +43,19 @@
 <body onload="onDocumentLoad()">
 
 <div id="divMain" style="width:100%;">
-
-   <div id="divButtonBar" style="margin:4px;">
+   <div id="divButtonBar">
       <input type="button"
              id = "btnStartOS"
-             name="brnStartOS"
              class="normal_button"
+             name="brnStartOS"
              value="Start"
              tabindex="0"
              onclick="TSOS.Control.hostBtnStartOS_click(this);">
 
       <input type="button"
              id = "btnHaltOS"
-             name="brnHaltOS"
              class="normal_button"
+             name="brnHaltOS"
              disabled="disabled"
              value="Halt"
              tabindex="1"
@@ -64,8 +63,8 @@
 
       <input type="button"
              id = "btnReset"
-             name="brnReset"
              class="normal_button"
+             name="brnReset"
              disabled="disabled"
              value="Reset"
              tabindex="2"
@@ -95,6 +94,7 @@
                          id  ="taHostLog"
                          rows="26"
                          cols="48"
+                         readonly
                ></textarea>
             </label>
          </div>
@@ -114,8 +114,8 @@
    
       <div id="cpuPcbMemDiv">
          <div id="singleStepDiv">
-            <button id="toggleSingleStepBtn" class="singleStepBtn" onclick="TSOS.Control.toggleSingleStep()">Toggle Single Step</button>
-            <button id="stepBtn" class="singleStepBtn" onclick="TSOS.Control.nextStep()" disabled>Step</button>
+            <button id="toggleSingleStepBtn" class="singleStepBtn normal_button" onclick="TSOS.Control.toggleSingleStep()">Toggle Single Step</button>
+            <button id="stepBtn" class="singleStepBtn normal_button" onclick="TSOS.Control.nextStep()" disabled>Step</button>
          </div>
 
          <h3>CPU Status</h3>

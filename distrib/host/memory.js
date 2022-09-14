@@ -37,21 +37,29 @@ var TSOS;
                 let row = memTable.rows[i];
                 // The actual data goes from index 1 to 8
                 for (let j = 1; j <= 8; j++) {
+                    // Clear the classes
                     row.children[j].classList.remove('opcode');
                     row.children[j].classList.remove('operand');
+                    // Update the value in the HTML
                     row.children[j].innerHTML = TSOS.Utils.getHexString(this._memArr[i * 8 + j - 1], 2, false);
                 }
             }
+            // Update the classes for highlighting the opcode and operands
             this.setMemoryCellClasses();
         }
+        // Function to highlight the opcode and operands
         setMemoryCellClasses() {
+            // The desired address is going to start at the current program counter - 1 (no operands)
             let desiredAddr = _CPU.PC - 1;
+            // Initial assumption is that there were no operands
             let numOperands = 0;
+            // Determine the location of the opcode and the number of operands
             switch (_CPU.IR) {
                 // 1 operand
                 case 0xA9: // LDA constant
                 case 0xA2: // LDX constant
                 case 0xA0: // LDY constant
+                    // Go back 1 more spot in memory because we have 1 operand
                     desiredAddr--;
                     numOperands = 1;
                     break;
@@ -63,21 +71,28 @@ var TSOS;
                 case 0xAC: // LDY memory
                 case 0xEC: // CPX
                 case 0xEE: // INC
+                    // Go back 2 more spots in memory because we have 2 operands
                     desiredAddr -= 2;
                     numOperands = 2;
                     break;
                 case 0xD0: // BNE
                     if (_CPU.branchTaken) {
+                        // If the branch was taken, we want to go to the old PC before the branch and go back 2 spaces
                         desiredAddr = _CPU.preBranchAddr - 2;
                     }
                     else {
+                        // Otherwise just go back 1 for the operand
                         desiredAddr--;
                     }
+                    // Set the operands to 1
                     numOperands = 1;
                     break;
             }
+            // Only show highlights if th CPU is running
             if (_CPU.isExecuting) {
+                // Set the opcode to highlight as the opcode
                 document.querySelector(`#mem${_MemoryAccessor.getRealAddress(desiredAddr, _MemoryAccessor.curSection)}`).classList.add('opcode');
+                // Set the operands to be highlighted
                 for (let i = desiredAddr + 1; i <= desiredAddr + numOperands; i++) {
                     document.querySelector(`#mem${_MemoryAccessor.getRealAddress(i, _MemoryAccessor.curSection)}`).classList.add('operand');
                 }

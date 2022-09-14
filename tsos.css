@@ -1,23 +1,22 @@
 /* TSOS.css */
 
 body {
-  background: #909193 url(distrib/images/linen.png) repeat;
-  font-family: Helvetica, Verdana, Arial, sans-serif;
+  background-color: #111111; /* From https://clrs.cc */
+  color: #2ECC40; /* From https://clrs.cc */
+  font-family: 'Courier New', Courier, monospace;
   font-size: 12pt;
   font-weight: normal;
   font-style: normal;
 }
 
 h1 {
-  color: black;
   font-size: 24pt;
   font-weight: normal;
   font-style: normal;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #2ECC40;
 }
 
 h2 {
-  color: black;
   font-size: 20pt;
   font-weight: normal;
   font-style: normal;
@@ -31,17 +30,46 @@ h3 {
 }
 
 #display {
-  background-color:#DFDBC3;
-  border: 2px solid red;
+  background-color: #111111;
+  border: 1px solid #FF4136; /* From https://clrs.cc */
   cursor: default;
+}
+
+#display:focus {
+  border: 1px solid #0074D9;
+  outline: 0;
 }
 
 .normal_button {
   width: 100px;
+
+  font-family: 'Courier New', Courier, monospace;
+  color: #2ECC40;
+  background-color: #111111;
+  padding: 2px;
+  border: 1px solid #2ECC40;
+}
+
+.normal_button:hover {
+  cursor: pointer;
+  border: 1px solid #FF4136;
+}
+
+.normal_button:disabled {
+  background-color: #555555; /* From https://clrs.cc */
+}
+
+.normal_button:disabled:hover {
+  border: 1px solid #2ECC40;
+  cursor: auto;
+}
+
+.normal_button:focus {
+  outline: none;
 }
 
 .footerText {
-  color: black;
+  color: #2ECC40;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 8pt;
   text-align: center;
@@ -74,12 +102,12 @@ h3 {
 
 #cpuPcbMemDiv {
   text-align: center;
-  width: 300px;
+  width: 350px;
 }
 
 #cpuPcbMemDiv table {
   width: 100%;
-  font-size: 12px;
+  font-size: 11pt;
 }
 
 #pcbDiv {
@@ -90,6 +118,8 @@ h3 {
 #memDiv {
   max-height: 200px;
   overflow-y: auto;
+
+  scrollbar-color: #2ECC40;
 }
 
 .singleStepBtn {
@@ -97,10 +127,31 @@ h3 {
 }
 
 .opcode {
-  color: red;
+  color: #FF4136;
   text-emphasis: bold;
 }
 
 .operand {
-  color: blue;
+  color: #0074D9; /* From https://clrs.cc */
+}
+
+textarea {
+  background-color: #111111;
+  color: #2ECC40;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10pt;
+  border: 1px solid #FF4136;
+  resize: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+#taProgramInput:focus {
+  border: 1px solid #0074D9;
+}
+
+hr {
+  border-color: #2ECC40;
 }
