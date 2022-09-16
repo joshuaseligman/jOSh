@@ -53,14 +53,14 @@ var TSOS;
                     this.commandXStack.clear();
                     // Get rid of all \n occurrences to only keep the text
                     this.buffer = this.buffer.replace(/\n/g, '');
-                    // The enter key marks the end of a console command, so ...
-                    // ... tell the shell ...
-                    _OsShell.handleInput(this.buffer);
                     // Only add to history if there is content
                     if (this.buffer !== '') {
                         // Add the command to the command history
                         this.commandHistory.unshift(this.buffer);
                     }
+                    // The enter key marks the end of a console command, so ...
+                    // ... tell the shell ...
+                    _OsShell.handleInput(this.buffer);
                     // The stack was probably used, with the output, so it should be cleared
                     this.commandXStack.clear();
                     // ... and reset our buffer.
