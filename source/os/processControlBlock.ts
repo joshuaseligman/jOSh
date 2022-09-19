@@ -50,7 +50,7 @@ module TSOS {
             this.segment = segment;
 
             // Set the status to '' for now
-            this.status = '';
+            this.status = 'Resident';
 
             // Output starts off as empty
             this.output = '';

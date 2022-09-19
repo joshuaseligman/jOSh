@@ -19,7 +19,7 @@ var TSOS;
             _KernelBuffers = new Array(); // Buffers... for the kernel.
             _KernelInputQueue = new TSOS.Queue(); // Where device input lands before being processed out somewhere.
             _MemoryManager = new TSOS.MemoryManager(); // The memory manager for allocating memory for processes
-            _PCBQueue = new TSOS.Queue(); // The queue for the process control blocks
+            _PCBReadyQueue = new TSOS.Queue(); // The queue for the executing process control blocks
             // Initialize the console.
             _Console = new TSOS.Console(); // The command line interface / console I/O device.
             _Console.init();
@@ -54,7 +54,7 @@ var TSOS;
             this.krnDisableInterrupts();
             if (_CPU.isExecuting) {
                 // Abruptly terminate the program
-                let finishedProgram = _PCBQueue.dequeue();
+                let finishedProgram = _PCBReadyQueue.dequeue();
                 finishedProgram.status = 'Terminated';
                 // Get final CPU values and save them in the table
                 finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
@@ -83,6 +83,12 @@ var TSOS;
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
+                // The process was interrupted, so we have to update its status
+                let currentPCB = _PCBReadyQueue.getHead();
+                if (currentPCB !== undefined) {
+                    currentPCB.status = 'Ready';
+                    currentPCB.updateTableEntry();
+                }
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 // Get the button for requesting the step
@@ -92,7 +98,8 @@ var TSOS;
                 if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
                     _CPU.cycle();
                     // Get the running program and update its value in the PCB table
-                    let currentPCB = _PCBQueue.getHead();
+                    let currentPCB = _PCBReadyQueue.getHead();
+                    currentPCB.status = 'Running';
                     currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     currentPCB.updateTableEntry();
                     // Set the flag to false so the user can click again
@@ -137,7 +144,7 @@ var TSOS;
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
-                    let finishedProgram = _PCBQueue.dequeue();
+                    let finishedProgram = _PCBReadyQueue.dequeue();
                     if (finishedProgram !== undefined) {
                         finishedProgram.status = 'Terminated';
                         // Get final CPU values and save them in the table
@@ -166,7 +173,7 @@ var TSOS;
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
-                    let exitedProgram = _PCBQueue.dequeue();
+                    let exitedProgram = _PCBReadyQueue.dequeue();
                     exitedProgram.status = 'Terminated';
                     // Get final CPU values and save them in the table
                     exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
@@ -194,12 +201,12 @@ var TSOS;
                     let printedOutput = params[0].toString();
                     _Console.putText(printedOutput);
                     // Add it to the buffered output for the program
-                    let curProgram = _PCBQueue.getHead();
+                    let curProgram = _PCBReadyQueue.getHead();
                     curProgram.output += printedOutput;
                     break;
                 case SYSCALL_PRINT_STR_IRQ:
                     // Get the current program to add to the output buffer
-                    let runningProg = _PCBQueue.getHead();
+                    let runningProg = _PCBReadyQueue.getHead();
                     // Get the first character from memory
                     let charVal = _MemoryAccessor.callRead(params[0]);
                     // Increment variable to go untir 0x00 or error

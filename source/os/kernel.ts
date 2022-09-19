@@ -22,7 +22,7 @@ module TSOS {
             _KernelInputQueue = new Queue();      // Where device input lands before being processed out somewhere.
 
             _MemoryManager = new MemoryManager(); // The memory manager for allocating memory for processes
-            _PCBQueue = new Queue(); // The queue for the process control blocks
+            _PCBReadyQueue = new Queue(); // The queue for the executing process control blocks
 
             // Initialize the console.
             _Console = new Console();             // The command line interface / console I/O device.
@@ -66,7 +66,7 @@ module TSOS {
 
             if (_CPU.isExecuting) {
                 // Abruptly terminate the program
-                let finishedProgram: ProcessControlBlock = _PCBQueue.dequeue();
+                let finishedProgram: ProcessControlBlock = _PCBReadyQueue.dequeue();
                 finishedProgram.status = 'Terminated';
 
                 // Get final CPU values and save them in the table
@@ -102,6 +102,14 @@ module TSOS {
                 // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
                 var interrupt = _KernelInterruptQueue.dequeue();
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
+
+                // The process was interrupted, so we have to update its status
+                let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
+                if (currentPCB !== undefined) {
+                    currentPCB.status = 'Ready';
+                    currentPCB.updateTableEntry();
+                }
+
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 // Get the button for requesting the step
                 let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
@@ -112,7 +120,8 @@ module TSOS {
                     _CPU.cycle();
 
                     // Get the running program and update its value in the PCB table
-                    let currentPCB: ProcessControlBlock = _PCBQueue.getHead();
+                    let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
+                    currentPCB.status = 'Running';
                     currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     currentPCB.updateTableEntry();
 
@@ -163,7 +172,7 @@ module TSOS {
                     _CPU.isExecuting = false;
                     
                     // Get the finished program and set it to terminated
-                    let finishedProgram: ProcessControlBlock = _PCBQueue.dequeue();
+                    let finishedProgram: ProcessControlBlock = _PCBReadyQueue.dequeue();
                     if (finishedProgram !== undefined) {
                         finishedProgram.status = 'Terminated';
     
@@ -200,7 +209,7 @@ module TSOS {
                     _CPU.isExecuting = false;
 
                     // Get the finished program and set it to terminated
-                    let exitedProgram: ProcessControlBlock = _PCBQueue.dequeue();
+                    let exitedProgram: ProcessControlBlock = _PCBReadyQueue.dequeue();
                     exitedProgram.status = 'Terminated';
 
                     // Get final CPU values and save them in the table
@@ -237,14 +246,14 @@ module TSOS {
                     _Console.putText(printedOutput);
 
                     // Add it to the buffered output for the program
-                    let curProgram: ProcessControlBlock = _PCBQueue.getHead();
+                    let curProgram: ProcessControlBlock = _PCBReadyQueue.getHead();
                     curProgram.output += printedOutput;
 
                     break;
 
                 case SYSCALL_PRINT_STR_IRQ:
                     // Get the current program to add to the output buffer
-                    let runningProg: ProcessControlBlock = _PCBQueue.getHead();
+                    let runningProg: ProcessControlBlock = _PCBReadyQueue.getHead();
 
                     // Get the first character from memory
                     let charVal: number = _MemoryAccessor.callRead(params[0]);

@@ -45,7 +45,7 @@ var _KernelBuffers = null;
 // The memory manager and the PCB queue
 var _MemoryManager = null;
 var _PCBHistory = [];
-var _PCBQueue = null;
+var _PCBReadyQueue = null;
 // Standard input and output
 var _StdIn = null;
 var _StdOut = null;

@@ -15,7 +15,7 @@ var TSOS;
             // Set the segment to wherever the program was stored
             this.segment = segment;
             // Set the status to '' for now
-            this.status = '';
+            this.status = 'Resident';
             // Output starts off as empty
             this.output = '';
         }
