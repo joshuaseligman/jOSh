@@ -30,7 +30,7 @@ module TSOS {
         public callRead(addr: number): number {
             // Get the actual address based on the section being used
             let requestedAddr: number = this.getRealAddress(addr, this.curSection);
-            if (requestedAddr >= this.SECTION_SIZE) {
+            if (addr >= this.SECTION_SIZE) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
                 return -1;
@@ -44,7 +44,7 @@ module TSOS {
         public callWrite(addr: number, val: number): void {
             // Get the actual address based on the section being used
             let requestedAddr: number = this.getRealAddress(addr, this.curSection);
-            if (requestedAddr >= this.SECTION_SIZE) {
+            if (addr >= this.SECTION_SIZE) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
             } else {

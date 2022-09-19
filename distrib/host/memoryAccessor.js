@@ -29,7 +29,7 @@ var TSOS;
         callRead(addr) {
             // Get the actual address based on the section being used
             let requestedAddr = this.getRealAddress(addr, this.curSection);
-            if (requestedAddr >= this.SECTION_SIZE) {
+            if (addr >= this.SECTION_SIZE) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
                 return -1;
@@ -43,7 +43,7 @@ var TSOS;
         callWrite(addr, val) {
             // Get the actual address based on the section being used
             let requestedAddr = this.getRealAddress(addr, this.curSection);
-            if (requestedAddr >= this.SECTION_SIZE) {
+            if (addr >= this.SECTION_SIZE) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
             }
