@@ -71,6 +71,13 @@ module TSOS {
             // Get the table row
             let tableEntry: HTMLTableRowElement = document.querySelector(`#pid${this.pid}`);
 
+            // Update the segment
+            if (this.segment === -1) {
+                tableEntry.cells[1].innerHTML = 'N/A'
+            } else {
+                tableEntry.cells[1].innerHTML = this.segment.toString();
+            }
+
             // Update each of the CPU fields
             tableEntry.cells[2].innerHTML = Utils.getHexString(this.programCounter, 2, false);
             tableEntry.cells[3].innerHTML = Utils.getHexString(this.instructionRegister, 2, false);
