@@ -9,8 +9,8 @@ module TSOS {
             // We can immediately flash the program if nothing has been allocated yet
             // And only use segment 0 for now
             if (allocatedPrograms.length === 0) {
-                _MemoryAccessor.flashProgram(program, 0x0000);
-                return 0;
+                _MemoryAccessor.flashProgram(program, 0x0100);
+                return 1;
             }
             
             for (const allcatedProg of allocatedPrograms) {

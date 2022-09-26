@@ -20,7 +20,7 @@ module TSOS {
         public callRead(addr: number): number {
             // Get the actual address based on the section being used
             let requestedAddr: number = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
-            if (addr >= _PCBReadyQueue.getHead().limitReg) {
+            if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
                 return -1;
@@ -34,7 +34,7 @@ module TSOS {
         public callWrite(addr: number, val: number): void {
             // Get the actual address based on the section being used
             let requestedAddr: number = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
-            if (addr >= _PCBReadyQueue.getHead().limitReg) {
+            if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
             } else {

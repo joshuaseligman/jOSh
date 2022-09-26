@@ -18,7 +18,7 @@ var TSOS;
         callRead(addr) {
             // Get the actual address based on the section being used
             let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
-            if (addr >= _PCBReadyQueue.getHead().limitReg) {
+            if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
                 return -1;
@@ -32,7 +32,7 @@ var TSOS;
         callWrite(addr, val) {
             // Get the actual address based on the section being used
             let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
-            if (addr >= _PCBReadyQueue.getHead().limitReg) {
+            if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
             }
