@@ -220,7 +220,7 @@ module TSOS {
                     _CPU.init();
                     
                     // Trace the error
-                    let outputStr: string = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Section: ${params[1]}`;
+                    let outputStr: string = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
                     this.krnTrace(outputStr);
                     
                     // Reset the area for the output to be printed

@@ -439,18 +439,18 @@ module TSOS {
                 progInput.value = program.toUpperCase();
 
                 let progStrArr: string[] = progInput.value.split(' ');
-                let progArr: number[] = [];
+                let progArr: number[] = new Array<number>(0x100);
                 for (let byte: number = 0; byte < progStrArr.length; byte++) {
-                    progArr.push(parseInt(progStrArr[byte], 16));
+                    progArr[byte] = parseInt(progStrArr[byte], 16);
                 }
 
-                let section: number = _MemoryManager.allocateProgram(progArr);
+                let segment: number = _MemoryManager.allocateProgram(progArr);
 
-                if (section == -1) {
+                if (segment == -1) {
                     _Kernel.krnTrace('No space for the program.');
                     _StdOut.putText('Failed to load program. No available space.');
                 } else {
-                    let newPCB: ProcessControlBlock = new ProcessControlBlock(0);
+                    let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
                     _PCBHistory.push(newPCB);
 
                     // Create the row for the pcb info to be placed in
@@ -524,7 +524,7 @@ module TSOS {
                 let requestedID: number = parseInt(args[0]);
 
                 // Process IDs start at 0 and go up to the current id (exclusive)
-                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= ProcessControlBlock.currentPID) {
+                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= ProcessControlBlock.CurrentPID) {
                     _Kernel.krnTrace(`Run request failed. Invalid PID: ${requestedID}`)
                     _StdOut.putText(`Failed to run process. Invalid PID: ${requestedID}`);
                     return;

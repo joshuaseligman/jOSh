@@ -91,10 +91,10 @@ var TSOS;
             // Only show highlights if th CPU is running
             if (_CPU.isExecuting) {
                 // Set the opcode to highlight as the opcode
-                document.querySelector(`#mem${_MemoryAccessor.getRealAddress(desiredAddr, _MemoryAccessor.curSection)}`).classList.add('opcode');
+                document.querySelector(`#mem${_MemoryAccessor.getPhysicalAddress(desiredAddr, _MemoryAccessor.curSection)}`).classList.add('opcode');
                 // Set the operands to be highlighted
                 for (let i = desiredAddr + 1; i <= desiredAddr + numOperands; i++) {
-                    document.querySelector(`#mem${_MemoryAccessor.getRealAddress(i, _MemoryAccessor.curSection)}`).classList.add('operand');
+                    document.querySelector(`#mem${_MemoryAccessor.getPhysicalAddress(i, _MemoryAccessor.curSection)}`).classList.add('operand');
                 }
             }
         }

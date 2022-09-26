@@ -3,8 +3,8 @@ var TSOS;
     class ProcessControlBlock {
         constructor(segment) {
             // Set the process id te the current id and increment the current id for future use
-            this.pid = ProcessControlBlock.currentPID;
-            ProcessControlBlock.currentPID++;
+            this.pid = ProcessControlBlock.CurrentPID;
+            ProcessControlBlock.CurrentPID++;
             // All CPU variables start at 0 because that is what is 
             this.programCounter = 0;
             this.instructionRegister = 0;
@@ -14,6 +14,8 @@ var TSOS;
             this.zFlag = 0;
             // Set the segment to wherever the program was stored
             this.segment = segment;
+            // Assign the base and limit registers accordingly
+            [this.baseReg, this.limitReg] = ProcessControlBlock.BaseLimitPairs[this.segment];
             // Set the status to '' for now
             this.status = 'Resident';
             // Output starts off as empty
@@ -51,7 +53,9 @@ var TSOS;
         }
     }
     // Public variable to keep track of the allocated ids
-    ProcessControlBlock.currentPID = 0;
+    ProcessControlBlock.CurrentPID = 0;
+    // Pairs for easily determining the base and limit registers
+    ProcessControlBlock.BaseLimitPairs = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
     TSOS.ProcessControlBlock = ProcessControlBlock;
 })(TSOS || (TSOS = {}));
 //# sourceMappingURL=processControlBlock.js.map

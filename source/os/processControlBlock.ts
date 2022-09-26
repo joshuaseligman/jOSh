@@ -1,13 +1,22 @@
 module TSOS {
     export class ProcessControlBlock {
         // Public variable to keep track of the allocated ids
-        public static currentPID = 0;
+        public static CurrentPID: number = 0;
+
+        // Pairs for easily determining the base and limit registers
+        public static BaseLimitPairs: number[][] = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
 
         // The process id of the process
         public pid: number;
 
         // The segment in memory the process is stored in
         public segment: number;
+
+        // Smallest physical address allowed by the program
+        public baseReg: number;
+
+        // First physical address not allowed by the program
+        public limitReg: number;
 
         // The most recent program counter of the running process
         public programCounter: number;
@@ -35,8 +44,8 @@ module TSOS {
 
         constructor(segment: number) {
             // Set the process id te the current id and increment the current id for future use
-            this.pid = ProcessControlBlock.currentPID;
-            ProcessControlBlock.currentPID++;
+            this.pid = ProcessControlBlock.CurrentPID;
+            ProcessControlBlock.CurrentPID++;
 
             // All CPU variables start at 0 because that is what is 
             this.programCounter = 0;
@@ -48,6 +57,9 @@ module TSOS {
 
             // Set the segment to wherever the program was stored
             this.segment = segment;
+
+            // Assign the base and limit registers accordingly
+            [this.baseReg, this.limitReg] = ProcessControlBlock.BaseLimitPairs[this.segment];
 
             // Set the status to '' for now
             this.status = 'Resident';

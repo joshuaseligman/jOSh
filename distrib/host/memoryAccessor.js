@@ -1,37 +1,26 @@
 var TSOS;
 (function (TSOS) {
     class MemoryAccessor {
-        constructor() {
-            // Variable for determining which memory block we are working with
-            this.curSection = 0;
-            this.SECTION_SIZE = 0x100;
-        }
         // Function to flash a program into memory
-        flashProgram(program, section) {
+        flashProgram(program, baseAddr) {
             // Loop through the program and add each byte to memory
             // Load will check to make sure we have no more than 256 bytes of hex digits
-            for (let i = 0; i < this.SECTION_SIZE; i++) {
-                if (i < program.length) {
-                    // Write the program
-                    _Memory.write(this.getRealAddress(i, section), program[i]);
-                }
-                else {
-                    // Rest of the section should be 0
-                    _Memory.write(this.getRealAddress(i, section), 0);
-                }
+            for (let i = 0; i < program.length; i++) {
+                // Write the program
+                _Memory.write(this.getPhysicalAddress(i, baseAddr), program[i]);
             }
         }
         // Function to get the actual address depending on the section one is working with
-        getRealAddress(virtualAddr, section) {
-            return section * this.SECTION_SIZE + virtualAddr;
+        getPhysicalAddress(virtualAddr, baseAddr) {
+            return virtualAddr + baseAddr;
         }
         // Function that gets the data from the given address in memory, taking the curSection into account
         callRead(addr) {
             // Get the actual address based on the section being used
-            let requestedAddr = this.getRealAddress(addr, this.curSection);
-            if (addr >= this.SECTION_SIZE) {
+            let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
+            if (addr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
                 return -1;
             }
             else {
@@ -42,14 +31,14 @@ var TSOS;
         // Function that writes the data into the address in memory, taking the curSection into account
         callWrite(addr, val) {
             // Get the actual address based on the section being used
-            let requestedAddr = this.getRealAddress(addr, this.curSection);
-            if (addr >= this.SECTION_SIZE) {
+            let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
+            if (addr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, this.curSection]));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
             }
             else {
                 // Requested address is in bounds
-                _Memory.write(this.getRealAddress(addr, this.curSection), val);
+                _Memory.write(requestedAddr, val);
             }
         }
     }
