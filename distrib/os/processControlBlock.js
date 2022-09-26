@@ -20,6 +20,53 @@ var TSOS;
             this.status = 'Resident';
             // Output starts off as empty
             this.output = '';
+            // Add the PCB to the table
+            this.createTableEntry();
+        }
+        // Function to handle the table row entry for the PCB
+        createTableEntry() {
+            // Create the row for the pcb info to be placed in
+            let newRow = document.createElement('tr');
+            newRow.id = `pid${this.pid}`;
+            // Create the pid element
+            let pidElem = document.createElement('td');
+            pidElem.innerHTML = this.pid.toString();
+            newRow.appendChild(pidElem);
+            // Create the segment element
+            let segmentElem = document.createElement('td');
+            segmentElem.innerHTML = this.segment.toString();
+            newRow.appendChild(segmentElem);
+            // Create the PC element
+            let pcElem = document.createElement('td');
+            pcElem.innerHTML = TSOS.Utils.getHexString(this.programCounter, 2, false);
+            newRow.appendChild(pcElem);
+            // Create the IR element
+            let irElem = document.createElement('td');
+            irElem.innerHTML = TSOS.Utils.getHexString(this.instructionRegister, 2, false);
+            newRow.appendChild(irElem);
+            // Create the Acc element
+            let accElem = document.createElement('td');
+            accElem.innerHTML = TSOS.Utils.getHexString(this.acc, 2, false);
+            newRow.appendChild(accElem);
+            // Create the X Reg element
+            let xRegElem = document.createElement('td');
+            xRegElem.innerHTML = TSOS.Utils.getHexString(this.xReg, 2, false);
+            newRow.appendChild(xRegElem);
+            // Create the Y Reg element
+            let yRegElem = document.createElement('td');
+            yRegElem.innerHTML = TSOS.Utils.getHexString(this.yReg, 2, false);
+            newRow.appendChild(yRegElem);
+            // Create the Z flag element
+            let zFlagElem = document.createElement('td');
+            zFlagElem.innerHTML = this.zFlag.toString();
+            newRow.appendChild(zFlagElem);
+            // Create the Status element
+            let statusElem = document.createElement('td');
+            statusElem.innerHTML = this.status;
+            newRow.appendChild(statusElem);
+            // Add the row to the table
+            let pcbTable = document.querySelector('#pcbTable');
+            pcbTable.appendChild(newRow);
         }
         // Function to update the information for the PCB based on the CPU status
         updateCpuInfo(pc, ir, acc, xReg, yReg, zFlag) {

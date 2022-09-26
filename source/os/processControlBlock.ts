@@ -66,6 +66,65 @@ module TSOS {
 
             // Output starts off as empty
             this.output = '';
+
+            // Add the PCB to the table
+            this.createTableEntry();
+        }
+
+        // Function to handle the table row entry for the PCB
+        private createTableEntry(): void {
+            // Create the row for the pcb info to be placed in
+            let newRow: HTMLTableRowElement = document.createElement('tr');
+            newRow.id = `pid${this.pid}`;
+
+            // Create the pid element
+            let pidElem: HTMLTableCellElement = document.createElement('td');
+            pidElem.innerHTML = this.pid.toString();
+            newRow.appendChild(pidElem);
+
+            // Create the segment element
+            let segmentElem: HTMLTableCellElement = document.createElement('td');
+            segmentElem.innerHTML = this.segment.toString();
+            newRow.appendChild(segmentElem);
+
+            // Create the PC element
+            let pcElem: HTMLTableCellElement = document.createElement('td');
+            pcElem.innerHTML = Utils.getHexString(this.programCounter, 2, false);
+            newRow.appendChild(pcElem);
+
+            // Create the IR element
+            let irElem: HTMLTableCellElement = document.createElement('td');
+            irElem.innerHTML = Utils.getHexString(this.instructionRegister, 2, false);
+            newRow.appendChild(irElem);
+
+            // Create the Acc element
+            let accElem: HTMLTableCellElement = document.createElement('td');
+            accElem.innerHTML = Utils.getHexString(this.acc, 2, false);
+            newRow.appendChild(accElem);
+
+            // Create the X Reg element
+            let xRegElem: HTMLTableCellElement = document.createElement('td');
+            xRegElem.innerHTML = Utils.getHexString(this.xReg, 2, false);
+            newRow.appendChild(xRegElem);
+
+            // Create the Y Reg element
+            let yRegElem: HTMLTableCellElement = document.createElement('td');
+            yRegElem.innerHTML = Utils.getHexString(this.yReg, 2, false);
+            newRow.appendChild(yRegElem);
+
+            // Create the Z flag element
+            let zFlagElem: HTMLTableCellElement = document.createElement('td');
+            zFlagElem.innerHTML = this.zFlag.toString();
+            newRow.appendChild(zFlagElem);
+
+            // Create the Status element
+            let statusElem: HTMLTableCellElement = document.createElement('td');
+            statusElem.innerHTML = this.status;
+            newRow.appendChild(statusElem);
+
+            // Add the row to the table
+            let pcbTable: HTMLTableElement = document.querySelector('#pcbTable');
+            pcbTable.appendChild(newRow);
         }
 
         // Function to update the information for the PCB based on the CPU status

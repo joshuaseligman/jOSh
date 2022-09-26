@@ -453,59 +453,6 @@ module TSOS {
                     let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
                     _PCBHistory.push(newPCB);
 
-                    // Create the row for the pcb info to be placed in
-                    let newRow: HTMLTableRowElement = document.createElement('tr');
-                    newRow.id = `pid${newPCB.pid}`;
-
-                    // Create the pid element
-                    let pidElem: HTMLTableCellElement = document.createElement('td');
-                    pidElem.innerHTML = newPCB.pid.toString();
-                    newRow.appendChild(pidElem);
-
-                    // Create the segment element
-                    let segmentElem: HTMLTableCellElement = document.createElement('td');
-                    segmentElem.innerHTML = newPCB.segment.toString();
-                    newRow.appendChild(segmentElem);
-
-                    // Create the PC element
-                    let pcElem: HTMLTableCellElement = document.createElement('td');
-                    pcElem.innerHTML = Utils.getHexString(newPCB.programCounter, 2, false);
-                    newRow.appendChild(pcElem);
-
-                    // Create the IR element
-                    let irElem: HTMLTableCellElement = document.createElement('td');
-                    irElem.innerHTML = Utils.getHexString(newPCB.instructionRegister, 2, false);
-                    newRow.appendChild(irElem);
-
-                    // Create the Acc element
-                    let accElem: HTMLTableCellElement = document.createElement('td');
-                    accElem.innerHTML = Utils.getHexString(newPCB.acc, 2, false);
-                    newRow.appendChild(accElem);
-
-                    // Create the X Reg element
-                    let xRegElem: HTMLTableCellElement = document.createElement('td');
-                    xRegElem.innerHTML = Utils.getHexString(newPCB.xReg, 2, false);
-                    newRow.appendChild(xRegElem);
-
-                    // Create the Y Reg element
-                    let yRegElem: HTMLTableCellElement = document.createElement('td');
-                    yRegElem.innerHTML = Utils.getHexString(newPCB.yReg, 2, false);
-                    newRow.appendChild(yRegElem);
-
-                    // Create the Z flag element
-                    let zFlagElem: HTMLTableCellElement = document.createElement('td');
-                    zFlagElem.innerHTML = newPCB.zFlag.toString();
-                    newRow.appendChild(zFlagElem);
-
-                    // Create the Status element
-                    let statusElem: HTMLTableCellElement = document.createElement('td');
-                    statusElem.innerHTML = newPCB.status;
-                    newRow.appendChild(statusElem);
-
-                    // Add the row to the table
-                    let pcbTable: HTMLTableElement = document.querySelector('#pcbTable');
-                    pcbTable.appendChild(newRow);
-
                     // Let the user know the program is valid
                     _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
                     _StdOut.putText(`Process ID: ${newPCB.pid}`);
