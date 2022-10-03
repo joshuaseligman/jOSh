@@ -34,8 +34,8 @@ var TSOS;
             //
             // ... more?
             //
-            // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
-            this.krnTrace("Enabling the interrupts.");
+            // Enable the OS   (Not the CPU clock interrupt, as that is done in the hardware sim.)
+            this.krnTrace("Enabling the ");
             this.krnEnableInterrupts();
             // Launch the shell.
             this.krnTrace("Creating and Launching the shell.");
@@ -49,8 +49,8 @@ var TSOS;
         krnShutdown() {
             this.krnTrace("begin shutdown OS");
             // TODO: Check for running processes.  If there are some, alert and stop. Else...
-            // ... Disable the Interrupts.
-            this.krnTrace("Disabling the interrupts.");
+            // ... Disable the 
+            this.krnTrace("Disabling the ");
             this.krnDisableInterrupts();
             if (_CPU.isExecuting) {
                 // Abruptly terminate the program
@@ -73,7 +73,7 @@ var TSOS;
         }
         krnOnCPUClockPulse() {
             /* This gets called from the host hardware simulation every time there is a hardware clock pulse.
-               This is NOT the same as a TIMER, which causes an interrupt and is handled like other interrupts.
+               This is NOT the same as a TIMER, which causes an interrupt and is handled like other
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
@@ -133,14 +133,14 @@ var TSOS;
             // Note: There is no need to "dismiss" or acknowledge the interrupts in our design here.
             //       Maybe the hardware simulation will grow to support/require that in the future.
             switch (irq) {
-                case 0 /* Interrupts.TIMER_IRQ */:
+                case TIMER_IRQ:
                     this.krnTimerISR(); // Kernel built-in routine for timers (not the clock).
                     break;
-                case 1 /* Interrupts.KEYBOARD_IRQ */:
+                case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params); // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
-                case 2 /* Interrupts.PROG_BREAK_IRQ */:
+                case PROG_BREAK_IRQ:
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
@@ -169,7 +169,7 @@ var TSOS;
                         _OsShell.putPrompt();
                     }
                     break;
-                case 3 /* Interrupts.MEM_EXCEPTION_IRQ */:
+                case MEM_EXCEPTION_IRQ:
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
@@ -196,7 +196,7 @@ var TSOS;
                     _Console.advanceLine();
                     _OsShell.putPrompt();
                     break;
-                case 4 /* Interrupts.SYSCALL_PRINT_INT_IRQ */:
+                case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
                     let printedOutput = params[0].toString();
                     _Console.putText(printedOutput);
@@ -204,7 +204,7 @@ var TSOS;
                     let curProgram = _PCBReadyQueue.getHead();
                     curProgram.output += printedOutput;
                     break;
-                case 5 /* Interrupts.SYSCALL_PRINT_STR_IRQ */:
+                case SYSCALL_PRINT_STR_IRQ:
                     // Get the current program to add to the output buffer
                     let runningProg = _PCBReadyQueue.getHead();
                     // Get the first character from memory

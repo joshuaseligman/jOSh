@@ -20,7 +20,7 @@ var TSOS;
             let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
             if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(3 /* Interrupts.MEM_EXCEPTION_IRQ */, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
                 return -1;
             }
             else {
@@ -34,7 +34,7 @@ var TSOS;
             let requestedAddr = this.getPhysicalAddress(addr, _PCBReadyQueue.getHead().baseReg);
             if (requestedAddr >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(3 /* Interrupts.MEM_EXCEPTION_IRQ */, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEM_EXCEPTION_IRQ, [requestedAddr, _PCBReadyQueue.getHead().baseReg / 0x0100]));
             }
             else {
                 // Requested address is in bounds

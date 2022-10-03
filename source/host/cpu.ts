@@ -164,7 +164,7 @@ module TSOS {
 
             case 0x00: // BRK
                 // Call an interrupt for the OS to handle to end of the program execution
-                _KernelInterruptQueue.enqueue(new Interrupt(Interrupts.PROG_BREAK_IRQ, []));
+                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
                 break;
             
             case 0xEC: // CPX
@@ -212,14 +212,14 @@ module TSOS {
                         // We have a negative number and have to put it in a usable format for base 10
                         let printableNum: number = -1 * this.negate(this.Yreg);
                         // Make a system call for printing the number
-                        _KernelInterruptQueue.enqueue(new Interrupt(Interrupts.SYSCALL_PRINT_INT_IRQ, [printableNum]));
+                        _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_INT_IRQ, [printableNum]));
                     } else {
                         // Make a system call for printing the number
-                        _KernelInterruptQueue.enqueue(new Interrupt(Interrupts.SYSCALL_PRINT_INT_IRQ, [this.Yreg]));
+                        _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_INT_IRQ, [this.Yreg]));
                     }
                 } else if (this.Xreg === 2) {
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    _KernelInterruptQueue.enqueue(new Interrupt(Interrupts.SYSCALL_PRINT_STR_IRQ, [this.Yreg]));
+                    _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_STR_IRQ, [this.Yreg]));
                 }
                 break;
             }
