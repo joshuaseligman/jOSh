@@ -3,8 +3,8 @@ jOSh
 
 Locations of the Incremental Projects
 =====================================
-iProject1 - Master and iProject1 Branches <br />
-iProject2 - iProject 2 Branch
+iProject1 - iProject1 Branche <br />
+iProject2 - Master and iProject 2 Branchs
 
 Setup TypeScript
 ================
