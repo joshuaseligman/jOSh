@@ -6,15 +6,14 @@ module TSOS {
             // Get the PCBs for programs allocated in memory
             let allocatedPrograms: TSOS.ProcessControlBlock[] = _PCBHistory.filter(pcb => pcb.segment !== -1);
 
-            // We can immediately flash the program if fewer than 3 programs have been allocated so far
-            if (allocatedPrograms.length < 3) {
-                // The index for the base and limit registers will be the length of the array
-                _MemoryAccessor.flashProgram(program, _BaseLimitPairs[allocatedPrograms.length][0]);
-                return allocatedPrograms.length;
+            // We can immediately flash the program if nothing has been allocated yet
+            // And only use segment 0 for now
+            if (allocatedPrograms.length === 0) {
+                _MemoryAccessor.flashProgram(program, _BaseLimitPairs[0][0]);
+                return 0;
             }
             
             for (const allcatedProg of allocatedPrograms) {
-                // Check to see if there is a terminated program still allocated in memory
                 if (allcatedProg.status === 'Terminated') {
                     // Replace the program in memory
                     _MemoryAccessor.flashProgram(program, allcatedProg.baseReg);
