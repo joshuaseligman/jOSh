@@ -46,7 +46,11 @@ module TSOS {
 
             this.fetch();
             let operands: number[] = this.decode();
-            this.execute(operands);
+
+            // Make sure we have a valid instruction before trying to execute
+            if (operands !== undefined) {
+                this.execute(operands);
+            }
         }
 
         // Function for fetching an instruction
@@ -93,6 +97,12 @@ module TSOS {
             case 0x00: // BRK
             case 0xFF: // SYS
                 return [];
+            
+            // Invalid opcode
+            default:
+                // Add the interrupt to kill the process and return nothing
+                _KernelInterruptQueue.enqueue(new Interrupt(INVALID_OPCODE_IRQ, [this.IR]));
+                return undefined;
             }
         }
 
