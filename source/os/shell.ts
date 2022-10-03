@@ -121,6 +121,37 @@ module TSOS {
                 "<pid> - Runs the given process ID.");
             this.commandList[this.commandList.length] = sc;
 
+            //clearmem
+            sc = new ShellCommand(this.shellClearMem,
+                "clearmem",
+                "- Clears all memory partitions");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellRunAll,
+                "runall",
+                "— Execute all programs at once");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellPs,
+                "ps",
+                "— Display the PID and state of all processes");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKill,
+                "kill",
+                "<pid> — Kill one process");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKillAll,
+                "killall",
+                "— Kill all processes");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellQuantum,
+                "quantum",
+                "<int> — Sets the Round Robin quantum (measured in cpu cycles)");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -507,6 +538,30 @@ module TSOS {
                 // Missing the argument for the function
                 _StdOut.putText('Usage: run <pid>  Please supply a prcess id.')
             }
+        }
+
+        public shellClearMem(args: string[]) {
+
+        }
+
+        public shellRunAll(args: string[]) {
+
+        }
+
+        public shellPs(args: string[]) {
+
+        }
+
+        public shellKill(args: string[]) {
+
+        }
+
+        public shellKillAll(args: string[]) {
+
+        }
+
+        public shellQuantum(args: string[]) {
+
         }
     }
 }
