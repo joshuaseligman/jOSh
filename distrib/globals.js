@@ -46,6 +46,8 @@ var _KernelBuffers = null;
 var _MemoryManager = null;
 var _PCBHistory = [];
 var _PCBReadyQueue = null;
+// Pairs for easily determining the base and limit registers
+const _BaseLimitPairs = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
 // Standard input and output
 var _StdIn = null;
 var _StdOut = null;

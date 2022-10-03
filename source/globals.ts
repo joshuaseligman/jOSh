@@ -63,6 +63,9 @@ var _MemoryManager: TSOS.MemoryManager = null;
 var _PCBHistory: TSOS.ProcessControlBlock[] = [];
 var _PCBReadyQueue: TSOS.Queue = null;
 
+// Pairs for easily determining the base and limit registers
+const _BaseLimitPairs: number[][] = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
+
 // Standard input and output
 var _StdIn:  TSOS.Console = null; 
 var _StdOut: TSOS.Console = null;

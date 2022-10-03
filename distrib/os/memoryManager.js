@@ -8,7 +8,7 @@ var TSOS;
             // We can immediately flash the program if nothing has been allocated yet
             // And only use segment 0 for now
             if (allocatedPrograms.length === 0) {
-                _MemoryAccessor.flashProgram(program, TSOS.ProcessControlBlock.BaseLimitPairs[0][0]);
+                _MemoryAccessor.flashProgram(program, _BaseLimitPairs[0][0]);
                 return 0;
             }
             for (const allcatedProg of allocatedPrograms) {

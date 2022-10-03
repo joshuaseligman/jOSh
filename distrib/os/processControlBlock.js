@@ -15,7 +15,7 @@ var TSOS;
             // Set the segment to wherever the program was stored
             this.segment = segment;
             // Assign the base and limit registers accordingly
-            [this.baseReg, this.limitReg] = ProcessControlBlock.BaseLimitPairs[this.segment];
+            [this.baseReg, this.limitReg] = _BaseLimitPairs[this.segment];
             // Set the status to '' for now
             this.status = 'Resident';
             // Output starts off as empty
@@ -101,8 +101,6 @@ var TSOS;
     }
     // Public variable to keep track of the allocated ids
     ProcessControlBlock.CurrentPID = 0;
-    // Pairs for easily determining the base and limit registers
-    ProcessControlBlock.BaseLimitPairs = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
     TSOS.ProcessControlBlock = ProcessControlBlock;
 })(TSOS || (TSOS = {}));
 //# sourceMappingURL=processControlBlock.js.map
