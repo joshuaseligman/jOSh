@@ -109,10 +109,16 @@ module TSOS {
                 "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
 
-             // load
-             sc = new ShellCommand(this.shellLoad,
+            // load
+            sc = new ShellCommand(this.shellLoad,
                 "load",
                 "- Loads the user program into memory.");
+            this.commandList[this.commandList.length] = sc;
+
+            // run
+            sc = new ShellCommand(this.shellRun,
+                "run",
+                "<pid> - Runs the given process ID.");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -418,23 +424,88 @@ module TSOS {
                     _Kernel.krnTrace('Invalid program. Odd number of characters.');
                     _StdOut.putText('Invalid program. Must have an even number of characters.');
                     return;
+                } else if (program.length > 512) {
+                    _Kernel.krnTrace('Invalid program. Program larger than 256 bytes.');
+                    _StdOut.putText('Invalid program. Must be no longer than 256 bytes.');
+                    return;
                 }
-
-                // Let the user know the program is valid
-                _Kernel.krnTrace('Read a valid program.')
-                _StdOut.putText('Program is valid.');
-
+                
                 // Format the input text box for cleanliness by inserting a space between
                 // every 2 characters
-                for (let i = program.length -2; i >= 2; i -= 2) {
+                for (let i: number = program.length - 2; i >= 2; i -= 2) {
                     program = program.slice(0, i) + ' ' + program.slice(i);
                 }
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
+
+                let progStrArr: string[] = progInput.value.split(' ');
+                let progArr: number[] = new Array<number>(0x100);
+                for (let byte: number = 0; byte < progStrArr.length; byte++) {
+                    progArr[byte] = parseInt(progStrArr[byte], 16);
+                }
+
+                let segment: number = _MemoryManager.allocateProgram(progArr);
+
+                if (segment == -1) {
+                    _Kernel.krnTrace('No space for the program.');
+                    _StdOut.putText('Failed to load program. No available space.');
+                } else {
+                    let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
+                    _PCBHistory.push(newPCB);
+
+                    // Let the user know the program is valid
+                    _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
+                    _StdOut.putText(`Process ID: ${newPCB.pid}`);
+                }
+
             } else {
                 // Invalid program from bad characters
                 _Kernel.krnTrace('Invalid program. Invalid characters present.');
                 _StdOut.putText('Invalid program. Only hex digits (0-9, A-F) and whitespace allowed.');
+            }
+        }
+
+        public shellRun(args: string[]) {
+            if (args.length > 0) {
+                // Get the integer process id that was requested
+                let requestedID: number = parseInt(args[0]);
+
+                // Process IDs start at 0 and go up to the current id (exclusive)
+                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= ProcessControlBlock.CurrentPID) {
+                    _Kernel.krnTrace(`Run request failed. Invalid PID: ${requestedID}`)
+                    _StdOut.putText(`Failed to run process. Invalid PID: ${requestedID}`);
+                    return;
+                }
+
+                // We have a valid PID, so we can find the element safely in the history array
+                let newPCB: ProcessControlBlock = _PCBHistory.find((pcb: ProcessControlBlock) => pcb.pid === requestedID);
+                switch (newPCB.status) {
+                // The process is loaded but has not been called to run
+                case 'Resident':
+                    _PCBReadyQueue.enqueue(newPCB);
+                    newPCB.status = 'Ready';
+                    newPCB.updateTableEntry();
+
+                    // Make sue the CPU is executing
+                    _CPU.isExecuting = true;
+
+                    _Kernel.krnTrace(`Started execution of process ${requestedID}.`);
+                    _StdOut.putText(`Started execution of process ${requestedID}.`);
+                    break;
+                // The process is currently running
+                case 'Running':
+                case 'Ready':
+                    _StdOut.putText(`Process ${requestedID} is already running.`);
+                    break;
+                // The process has already executed
+                case 'Terminated':
+                    _StdOut.putText(`Process ${requestedID} is terminated.`);
+                    break;
+                }
+
+            } else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: run <pid>  Please supply a prcess id.')
             }
         }
     }

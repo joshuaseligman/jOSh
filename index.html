@@ -15,6 +15,8 @@
    <script type="text/javascript" src="distrib/host/control.js"></script>
    <script type="text/javascript" src="distrib/host/devices.js"></script>
    <script type="text/javascript" src="distrib/host/cpu.js"></script>
+   <script type="text/javascript" src="distrib/host/memory.js"></script>
+   <script type="text/javascript" src="distrib/host/memoryAccessor.js"></script>
 
    <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
    <script type="text/javascript" src="distrib/os/interrupt.js"></script>
@@ -28,31 +30,32 @@
    <script type="text/javascript" src="distrib/os/userCommand.js"></script>
    <script type="text/javascript" src="distrib/os/kernel.js"></script>
    <script type="text/javascript" src="distrib/os/stack.js"></script>
+   <script type="text/javascript" src="distrib/os/processControlBlock.js"></script>
+   <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip1.js"></script>
+   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip2.js"></script>
    
 </head>
 
 <body onload="onDocumentLoad()">
 
 <div id="divMain" style="width:100%;">
-
-   <div id="divButtonBar" style="margin:4px;">
+   <div id="divButtonBar">
       <input type="button"
              id = "btnStartOS"
-             name="brnStartOS"
              class="normal_button"
+             name="brnStartOS"
              value="Start"
              tabindex="0"
              onclick="TSOS.Control.hostBtnStartOS_click(this);">
 
       <input type="button"
              id = "btnHaltOS"
-             name="brnHaltOS"
              class="normal_button"
+             name="brnHaltOS"
              disabled="disabled"
              value="Halt"
              tabindex="1"
@@ -60,8 +63,8 @@
 
       <input type="button"
              id = "btnReset"
-             name="brnReset"
              class="normal_button"
+             name="brnReset"
              disabled="disabled"
              value="Reset"
              tabindex="2"
@@ -73,37 +76,101 @@
       <p>Status: <span id="status"></span></p>
    </div>
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
-      <canvas id="display"
-              width="500px"
-              height="500px"
-              tabindex="3">
-      </canvas>
-   </div>
+   <div id="centerArea">
+      <div id="divConsole" style="width:500px; height:500px">
+         <label>
+            jOSh Console
+            <br>
+            <canvas id="display"
+                  width="500px"
+                  height="500px"
+                  tabindex="3">
+            </canvas>
+         </label>
+      </div>
+   
+      <div id="logAndInput">
+         <div id="divLog">
+            <label>
+               Host Log
+               <br>
+               <textarea name="taHostLog"
+                         id  ="taHostLog"
+                         rows="26"
+                         cols="48"
+                         readonly
+               ></textarea>
+            </label>
+         </div>
+      
+         <div id="divUserProgramInput">
+            <label>
+               User Program Input
+               <br>
+               <textarea name="taProgramInput"
+                         id  ="taProgramInput"
+                         rows="8"
+                         cols="48"
+               ></textarea>
+            </label>
+         </div>
+      </div>
+   
+      <div id="cpuPcbMemDiv">
+         <div id="singleStepDiv">
+            <button id="toggleSingleStepBtn" class="singleStepBtn normal_button" onclick="TSOS.Control.toggleSingleStep()">Toggle Single Step</button>
+            <button id="stepBtn" class="singleStepBtn normal_button" onclick="TSOS.Control.nextStep()" disabled>Step</button>
+         </div>
 
-   <div id="divLog" style="margin-left:520px;">
-      <label>
-         Host Log
-         <br>
-         <textarea name="taHostLog"
-                   id  ="taHostLog"
-                   rows="26"
-                   cols="48"
-         ></textarea>
-      </label>
-   </div>
+         <h3>CPU Status</h3>
+         <table id="cpuTable">
+            <tr>
+               <th>PC</th>
+               <th>IR</th>
+               <th>ACC</th>
+               <th>X</th>
+               <th>Y</th>
+               <th>Z</th>
+            </tr>
+            <tr>
+               <td id="cpuPC">00</td>
+               <td id="cpuIR">00</td>
+               <td id="cpuAcc">00</td>
+               <td id="cpuXReg">00</td>
+               <td id="cpuYReg">00</td>
+               <td id="cpuZFlag">0</td>
+            </tr>
+         </table>
 
-   <div id="divUserProgramInput" style="margin-left:520px;">
-      <label>
-         User Program Input
-         <br>
-         <textarea name="taProgramInput"
-                   id  ="taProgramInput"
-                   rows="8"
-                   cols="48"
-         ></textarea>
-      </label>
+         <hr />
+
+         <h3>Process Control Block Table</h3>
+         <div id="pcbDiv">
+            <table id="pcbTable">
+               <tr>
+                  <th>PID</th>
+                  <th>SEG</th>
+                  <th>PC</th>
+                  <th>IR</th>
+                  <th>ACC</th>
+                  <th>X</th>
+                  <th>Y</th>
+                  <th>Z</th>
+                  <th>Status</th>
+               </tr>
+            </table>
+         </div>
+
+         <hr />
+
+         <h3>Memory</h3>
+         <div id="memDiv">
+            <table id="memTable">
+            </table>
+         </div>
+      </div>
    </div>
+   
 </div>
 
 <div id="seeYaArea">

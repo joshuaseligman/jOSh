@@ -40,5 +40,9 @@ module TSOS {
             }
             return retVal;
         }
+
+        public getHead() {
+            return this.q[0];
+        }
     }
 }

@@ -28,6 +28,10 @@ var TSOS;
             _OSclock++;
             // Call the kernel clock pulse event handler.
             _Kernel.krnOnCPUClockPulse();
+            // Update the CPU table in real time
+            _CPU.updateCpuTable();
+            // Update the memory table in real time
+            _Memory.updateMemoryTable();
         }
         //
         // Keyboard Interrupt, a HARDWARE Interrupt Request. (See pages 560-561 in our text book.)
@@ -48,7 +52,7 @@ var TSOS;
                 event.preventDefault();
                 // Note the pressed key code in the params (Mozilla-specific).
                 // Caps lock code from https://www.educative.io/answers/how-to-detect-the-caps-lock-status-in-javascript
-                var params = new Array(event.which, event.shiftKey, event.getModifierState('CapsLock'));
+                var params = new Array(event.which, event.shiftKey, event.getModifierState('CapsLock'), event.ctrlKey);
                 // Enqueue this interrupt on the kernel interrupt queue so that it gets to the Interrupt handler.
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(KEYBOARD_IRQ, params));
             }

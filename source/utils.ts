@@ -49,5 +49,22 @@ module TSOS {
             let now = new Date();
             return now.toLocaleString();
         }
+
+        // Function for converting a number to a hex string
+        public static getHexString(num: number, minLength: number, addPrefix: boolean): string {
+            // Get the base 16 string representation
+            let hexString = num.toString(16).toUpperCase();;
+
+            // Add leading 0s if necessary
+            if (hexString.length < minLength) {
+                let diff = minLength - hexString.length;
+                hexString = '0'.repeat(diff) + hexString;
+            }
+            // Add the 0x prefix if requested
+            if (addPrefix) {
+                hexString = '0x' + hexString;
+            }
+            return hexString;
+        }
     }
 }

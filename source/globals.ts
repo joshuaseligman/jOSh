@@ -20,12 +20,25 @@ const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (inte
                               // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ: number = 1;
 
+const PROG_BREAK_IRQ: number = 2; // IRQ for a BRK (0x00) instruction to stop the program
+
+const MEM_EXCEPTION_IRQ: number = 3; // IRQ for a memory out of bounds error
+
+const SYSCALL_PRINT_INT_IRQ: number = 4; // IRQ for printing an integer
+
+const SYSCALL_PRINT_STR_IRQ: number = 5; // IRQ for printing a string
+
+
+// Flag to determine if the next step should be executed
+let _NextStepRequested: boolean = false;
 
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 var _CPU: TSOS.Cpu;  // Utilize TypeScript's type annotation system to ensure that _CPU is an instance of the Cpu class.
+var _Memory: TSOS.Memory; // Define the memory object
+var _MemoryAccessor: TSOS.MemoryAccessor; // Define the memory access object
 
 var _OSclock: number = 0;  // Page 23.
 
@@ -43,7 +56,15 @@ var _Trace: boolean = true;              // Default the OS trace to be on.
 var _Kernel: TSOS.Kernel;
 var _KernelInterruptQueue: TSOS.Queue = null;
 var _KernelInputQueue: TSOS.Queue = null; 
-var _KernelBuffers = null; 
+var _KernelBuffers = null;
+
+// The memory manager and the PCB queue
+var _MemoryManager: TSOS.MemoryManager = null;
+var _PCBHistory: TSOS.ProcessControlBlock[] = [];
+var _PCBReadyQueue: TSOS.Queue = null;
+
+// Pairs for easily determining the base and limit registers
+const _BaseLimitPairs: number[][] = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
 
 // Standard input and output
 var _StdIn:  TSOS.Console = null; 

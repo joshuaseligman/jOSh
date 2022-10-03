@@ -16,11 +16,19 @@ const CPU_CLOCK_INTERVAL = 100; // This is in ms (milliseconds) so 1000 = 1 seco
 const TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).
 // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ = 1;
+const PROG_BREAK_IRQ = 2; // IRQ for a BRK (0x00) instruction to stop the program
+const MEM_EXCEPTION_IRQ = 3; // IRQ for a memory out of bounds error
+const SYSCALL_PRINT_INT_IRQ = 4; // IRQ for printing an integer
+const SYSCALL_PRINT_STR_IRQ = 5; // IRQ for printing a string
+// Flag to determine if the next step should be executed
+let _NextStepRequested = false;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 var _CPU; // Utilize TypeScript's type annotation system to ensure that _CPU is an instance of the Cpu class.
+var _Memory; // Define the memory object
+var _MemoryAccessor; // Define the memory access object
 var _OSclock = 0; // Page 23.
 var _Mode = 0; // (currently unused)  0 = Kernel Mode, 1 = User Mode.  See page 21.
 var _Canvas; // Initialized in Control.hostInit().
@@ -34,6 +42,12 @@ var _Kernel;
 var _KernelInterruptQueue = null;
 var _KernelInputQueue = null;
 var _KernelBuffers = null;
+// The memory manager and the PCB queue
+var _MemoryManager = null;
+var _PCBHistory = [];
+var _PCBReadyQueue = null;
+// Pairs for easily determining the base and limit registers
+const _BaseLimitPairs = [[0x0000, 0x0100], [0x0100, 0x0200], [0x0200, 0x0300]];
 // Standard input and output
 var _StdIn = null;
 var _StdOut = null;

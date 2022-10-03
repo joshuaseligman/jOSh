@@ -31,16 +31,23 @@ module TSOS {
             var keyCode = params[0];
             var isShifted = params[1];
             let capsLockOn: boolean = params[2];
-            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + capsLockOn);
+            let controlPressed: boolean = params[3];
+            _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted + " caps lock: " + capsLockOn + " ctrl: " + controlPressed);
             var chr = "";
             // Check to see if we even want to deal with the key that was pressed.
             if ((keyCode >= 65) && (keyCode <= 90)) { // letter
-                if (isShifted || capsLockOn) { 
-                    chr = String.fromCharCode(keyCode); // Uppercase A-Z
+                if (keyCode === 67 && controlPressed) {
+                    // Kill the running program
+                    _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
                 } else {
-                    chr = String.fromCharCode(keyCode + 32); // Lowercase a-z
+                    if (isShifted || capsLockOn) { 
+                        chr = String.fromCharCode(keyCode); // Uppercase A-Z
+                    } else {
+                        chr = String.fromCharCode(keyCode + 32); // Lowercase a-z
+                    }
+                    _KernelInputQueue.enqueue(chr);
                 }
-                _KernelInputQueue.enqueue(chr);
+
             } else if (((keyCode >= 48) && (keyCode <= 57)) ||    // digits
                         (keyCode === 32) || (keyCode === 8)  ||   // space, backspace
                         (keyCode === 13) || (keyCode === 186 || keyCode === 59) ||   // enter, semicolon

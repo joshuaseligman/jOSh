@@ -189,7 +189,7 @@ module TSOS {
         public static enable(ctx) {
             // Moved this to the enable function because we need to change it later for bsod
             // And it is not changing anywhere else in the code
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = "#2ECC40";
 
             ctx.drawText = function(font,size,x,y,text) { return CanvasTextFunctions.draw( ctx, font,size,x,y,text); };
             ctx.measureText = function(font,size,text) { return CanvasTextFunctions.measure( font,size,text); };
