@@ -196,6 +196,33 @@ var TSOS;
                     _Console.advanceLine();
                     _OsShell.putPrompt();
                     break;
+                case INVALID_OPCODE_IRQ:
+                    // Set the CPU to not execute anymore
+                    _CPU.isExecuting = false;
+                    // Get the finished program and set it to terminated
+                    let prog = _PCBReadyQueue.dequeue();
+                    prog.status = 'Terminated';
+                    // Get final CPU values and save them in the table
+                    prog.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                    prog.updateTableEntry();
+                    // Reset the CPU
+                    _CPU.init();
+                    // Trace the error
+                    let errStr = `Process ${prog.pid} terminated with status code 1. Invalid opcode. Requested Opcode: ${TSOS.Utils.getHexString(params[0], 2, false)}`;
+                    this.krnTrace(errStr);
+                    // Reset the area for the output to be printed
+                    _Console.resetCmdArea();
+                    // Print out the status and all
+                    _Console.advanceLine();
+                    _Console.putText(errStr);
+                    _Console.advanceLine();
+                    _Console.putText(`Program output: ${prog.output}`);
+                    // Reset again in case of word wrap
+                    _Console.resetCmdArea();
+                    // Set up for the new command
+                    _Console.advanceLine();
+                    _OsShell.putPrompt();
+                    break;
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
                     let printedOutput = params[0].toString();
