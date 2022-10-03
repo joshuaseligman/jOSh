@@ -256,7 +256,9 @@ module TSOS {
                     let runningProg: ProcessControlBlock = _PCBReadyQueue.getHead();
 
                     // Get the first character from memory
+                    // Will return -1 if there is an error and will check for error bounds
                     let charVal: number = _MemoryAccessor.callRead(params[0]);
+
                     // Increment variable to go untir 0x00 or error
                     let i: number = 0;
                     while (charVal !== -1 && charVal !== 0) {

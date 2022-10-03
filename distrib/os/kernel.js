@@ -208,6 +208,7 @@ var TSOS;
                     // Get the current program to add to the output buffer
                     let runningProg = _PCBReadyQueue.getHead();
                     // Get the first character from memory
+                    // Will return -1 if there is an error and will check for error bounds
                     let charVal = _MemoryAccessor.callRead(params[0]);
                     // Increment variable to go untir 0x00 or error
                     let i = 0;
