@@ -34,7 +34,7 @@ var TSOS;
             if ((keyCode >= 65) && (keyCode <= 90)) { // letter
                 if (keyCode === 67 && controlPressed) {
                     // Kill the running program
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(2 /* Interrupts.PROG_BREAK_IRQ */, []));
                 }
                 else {
                     if (isShifted || capsLockOn) {

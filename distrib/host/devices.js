@@ -54,7 +54,7 @@ var TSOS;
                 // Caps lock code from https://www.educative.io/answers/how-to-detect-the-caps-lock-status-in-javascript
                 var params = new Array(event.which, event.shiftKey, event.getModifierState('CapsLock'), event.ctrlKey);
                 // Enqueue this interrupt on the kernel interrupt queue so that it gets to the Interrupt handler.
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(KEYBOARD_IRQ, params));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(1 /* Interrupts.KEYBOARD_IRQ */, params));
             }
         }
     }

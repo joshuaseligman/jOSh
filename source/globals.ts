@@ -16,18 +16,16 @@ const APP_VERSION: string = "0.0.1 - a work in progress";   // What did you expe
 
 const CPU_CLOCK_INTERVAL: number = 100;   // This is in ms (milliseconds) so 1000 = 1 second.
 
-const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).
-                              // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
-const KEYBOARD_IRQ: number = 1;
-
-const PROG_BREAK_IRQ: number = 2; // IRQ for a BRK (0x00) instruction to stop the program
-
-const MEM_EXCEPTION_IRQ: number = 3; // IRQ for a memory out of bounds error
-
-const SYSCALL_PRINT_INT_IRQ: number = 4; // IRQ for printing an integer
-
-const SYSCALL_PRINT_STR_IRQ: number = 5; // IRQ for printing a string
-
+// Define an enum for cleaner implementation and management of IRQs from now on
+const enum Interrupts {
+   TIMER_IRQ, // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority)
+              // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
+   KEYBOARD_IRQ,
+   PROG_BREAK_IRQ, // IRQ for a BRK (0x00) instruction to stop the program
+   MEM_EXCEPTION_IRQ, // IRQ for a memory out of bounds error
+   SYSCALL_PRINT_INT_IRQ, // IRQ for printing an integer
+   SYSCALL_PRINT_STR_IRQ // IRQ for printing a string
+}
 
 // Flag to determine if the next step should be executed
 let _NextStepRequested: boolean = false;

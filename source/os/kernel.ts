@@ -160,14 +160,14 @@ module TSOS {
             // Note: There is no need to "dismiss" or acknowledge the interrupts in our design here.
             //       Maybe the hardware simulation will grow to support/require that in the future.
             switch (irq) {
-                case TIMER_IRQ:
+                case Interrupts.TIMER_IRQ:
                     this.krnTimerISR();               // Kernel built-in routine for timers (not the clock).
                     break;
-                case KEYBOARD_IRQ:
+                case Interrupts.KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
-                case PROG_BREAK_IRQ:
+                case Interrupts.PROG_BREAK_IRQ:
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
                     
@@ -204,7 +204,7 @@ module TSOS {
                         _OsShell.putPrompt();
                     }
                     break;
-                case MEM_EXCEPTION_IRQ:
+                case Interrupts.MEM_EXCEPTION_IRQ:
                     // Set the CPU to not execute anymore
                     _CPU.isExecuting = false;
 
@@ -240,7 +240,7 @@ module TSOS {
                     _OsShell.putPrompt();
                     break;
 
-                case SYSCALL_PRINT_INT_IRQ:
+                case Interrupts.SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
                     let printedOutput: string = params[0].toString();
                     _Console.putText(printedOutput);
@@ -251,7 +251,7 @@ module TSOS {
 
                     break;
 
-                case SYSCALL_PRINT_STR_IRQ:
+                case Interrupts.SYSCALL_PRINT_STR_IRQ:
                     // Get the current program to add to the output buffer
                     let runningProg: ProcessControlBlock = _PCBReadyQueue.getHead();
 
