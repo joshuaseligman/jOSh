@@ -60,6 +60,11 @@ var _SarcasticMode = false;
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver = null;
 var _hardwareClockID = null;
+// Delcare the variables for the scheduler and dispatcher
+var _Scheduler = null;
+var _Dispatcher = null;
+// The default quantum is 6 CPU cycles
+const DEFAULT_QUANTUM = 6;
 // For testing (and enrichment)...
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.

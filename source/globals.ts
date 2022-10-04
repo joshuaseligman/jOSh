@@ -84,6 +84,13 @@ var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard  = null;
 
 var _hardwareClockID: number = null;
 
+// Delcare the variables for the scheduler and dispatcher
+var _Scheduler: TSOS.Scheduler = null;
+var _Dispatcher: TSOS.Dispatcher = null;
+
+// The default quantum is 6 CPU cycles
+const DEFAULT_QUANTUM: number = 6;
+
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.

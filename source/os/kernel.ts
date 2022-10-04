@@ -32,6 +32,10 @@ module TSOS {
             _StdIn  = _Console;
             _StdOut = _Console;
 
+            // Initialize the scheduler and dispatcher
+            _Scheduler = new Scheduler();
+            _Dispatcher = new Dispatcher();
+
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new DeviceDriverKeyboard();     // Construct it.
