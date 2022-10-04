@@ -69,6 +69,19 @@ var TSOS;
             // run
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Runs the given process ID.");
             this.commandList[this.commandList.length] = sc;
+            //clearmem
+            sc = new TSOS.ShellCommand(this.shellClearMem, "clearmem", "- Clears all memory partitions");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "— Execute all programs at once");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellPs, "ps", "— Display the PID and state of all processes");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> — Kill one process");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "— Kill all processes");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> — Sets the Round Robin quantum (measured in cpu cycles)");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -426,6 +439,23 @@ var TSOS;
                 // Missing the argument for the function
                 _StdOut.putText('Usage: run <pid>  Please supply a prcess id.');
             }
+        }
+        shellClearMem(args) {
+        }
+        shellRunAll(args) {
+        }
+        shellPs(args) {
+            // Iterate through all made PCBs and display their PID and status
+            for (const process of _PCBHistory) {
+                _StdOut.putText(`PID: ${process.pid}; Status: ${process.status}`);
+                _StdOut.advanceLine();
+            }
+        }
+        shellKill(args) {
+        }
+        shellKillAll(args) {
+        }
+        shellQuantum(args) {
         }
     }
     TSOS.Shell = Shell;

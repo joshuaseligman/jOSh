@@ -536,7 +536,7 @@ module TSOS {
 
             } else {
                 // Missing the argument for the function
-                _StdOut.putText('Usage: run <pid>  Please supply a prcess id.')
+                _StdOut.putText('Usage: run <pid>  Please supply a prcess id.');
             }
         }
 
@@ -549,7 +549,11 @@ module TSOS {
         }
 
         public shellPs(args: string[]) {
-
+            // Iterate through all made PCBs and display their PID and status
+            for (const process of _PCBHistory) {
+                _StdOut.putText(`PID: ${process.pid}; Status: ${process.status}`);
+                _StdOut.advanceLine();
+            }
         }
 
         public shellKill(args: string[]) {
