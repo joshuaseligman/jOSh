@@ -545,7 +545,12 @@ module TSOS {
         }
 
         public shellRunAll(args: string[]) {
-
+            // Get all the resident processes so we can add them to the ready queue
+            let residentProcesses: ProcessControlBlock[] = _PCBHistory.filter((pcb) => pcb.status === 'Resident');
+            for (const resident of residentProcesses) {
+                _OsShell.shellRun([resident.pid.toString()]);
+                _StdOut.advanceLine();
+            }
         }
 
         public shellPs(args: string[]) {

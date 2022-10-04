@@ -443,6 +443,12 @@ var TSOS;
         shellClearMem(args) {
         }
         shellRunAll(args) {
+            // Get all the resident processes so we can add them to the ready queue
+            let residentProcesses = _PCBHistory.filter((pcb) => pcb.status === 'Resident');
+            for (const resident of residentProcesses) {
+                _OsShell.shellRun([resident.pid.toString()]);
+                _StdOut.advanceLine();
+            }
         }
         shellPs(args) {
             // Iterate through all made PCBs and display their PID and status
