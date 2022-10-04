@@ -105,6 +105,8 @@ var TSOS;
                     currentPCB.status = 'Running';
                     currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     currentPCB.updateTableEntry();
+                    // Tell the scheduler that another CPU cycle happened so it can determine next steps
+                    _Scheduler.handleCpuSchedule();
                     // Set the flag to false so the user can click again
                     // If the button is disabled, it still will be false
                     _NextStepRequested = false;
@@ -252,6 +254,10 @@ var TSOS;
                         i++;
                         charVal = _MemoryAccessor.callRead(params[0] + i);
                     }
+                    break;
+                case CALL_DISPATCHER_IRQ:
+                    _Dispatcher.contextSwitch();
+                    this.krnTrace('Called dispatcher');
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");

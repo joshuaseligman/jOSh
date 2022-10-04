@@ -30,6 +30,8 @@ const SYSCALL_PRINT_INT_IRQ: number = 5; // IRQ for printing an integer
 
 const SYSCALL_PRINT_STR_IRQ: number = 6; // IRQ for printing a string
 
+const CALL_DISPATCHER_IRQ: number = 7; // IRQ for calling the dispatcher to do a context switch
+
 
 // Flag to determine if the next step should be executed
 let _NextStepRequested: boolean = false;

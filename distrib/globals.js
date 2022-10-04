@@ -21,6 +21,7 @@ const MEM_EXCEPTION_IRQ = 3; // IRQ for a memory out of bounds error
 const INVALID_OPCODE_IRQ = 4; // IRQ for invalid opcode
 const SYSCALL_PRINT_INT_IRQ = 5; // IRQ for printing an integer
 const SYSCALL_PRINT_STR_IRQ = 6; // IRQ for printing a string
+const CALL_DISPATCHER_IRQ = 7; // IRQ for calling the dispatcher to do a context switch
 // Flag to determine if the next step should be executed
 let _NextStepRequested = false;
 //

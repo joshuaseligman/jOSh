@@ -15,8 +15,23 @@ module TSOS {
             this.numCycles = 0;
         }
 
+        public handleCpuSchedule(): void {
+            this.numCycles++;
+
+            if (this.numCycles >= this.curQuantum) {
+                // Only call the dispatcher if we have multiple programs in memory
+                if (_PCBReadyQueue.getSize() > 1) {
+                    // Create a software interrupt to do a context switch
+                    _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+                }
+
+                // Reset the number of cycles because this will not be called again until the dispatcher is done
+                this.numCycles = 0;
+            }
+        }
+
         // Setter for the quantum
-        public setQuantum(newQuantum: number) {
+        public setQuantum(newQuantum: number): void {
             this.curQuantum = newQuantum;
         }
     }
