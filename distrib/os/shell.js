@@ -419,8 +419,6 @@ var TSOS;
                         _PCBReadyQueue.enqueue(newPCB);
                         newPCB.status = 'Ready';
                         newPCB.updateTableEntry();
-                        // Make sue the CPU is executing
-                        _CPU.isExecuting = true;
                         _Kernel.krnTrace(`Started execution of process ${requestedID}.`);
                         _StdOut.putText(`Started execution of process ${requestedID}.`);
                         break;

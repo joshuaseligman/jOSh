@@ -102,11 +102,6 @@ module TSOS {
 
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
-                // Process the first interrupt on the interrupt queue.
-                // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
-                var interrupt = _KernelInterruptQueue.dequeue();
-                this.krnInterruptHandler(interrupt.irq, interrupt.params);
-
                 // The process was interrupted, so we have to update its status
                 let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
                 if (currentPCB !== undefined) {
@@ -114,7 +109,14 @@ module TSOS {
                     currentPCB.updateTableEntry();
                 }
 
-            } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
+                // Process the first interrupt on the interrupt queue.
+                // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
+                var interrupt = _KernelInterruptQueue.dequeue();
+                this.krnInterruptHandler(interrupt.irq, interrupt.params);
+            } else if (!_CPU.isExecuting && _PCBReadyQueue.getSize() > 0) {
+                // No processes are running, so we need to schedule the first one
+                _Scheduler.scheduleFirstProcess();
+            } else if(_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
                 // Get the button for requesting the step
                 let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
 
@@ -319,7 +321,7 @@ module TSOS {
                     break;
                 
                 case CALL_DISPATCHER_IRQ:
-                    _Dispatcher.contextSwitch();
+                    _Dispatcher.contextSwitch(params[0]);
                     this.krnTrace('Called dispatcher')
                     break;
 

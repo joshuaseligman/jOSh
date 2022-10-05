@@ -7,6 +7,10 @@ var TSOS;
             // The number of cycles starts at 0 because nothing is running yet
             this.numCycles = 0;
         }
+        // Calls the dispatcher to schedule the firste process
+        scheduleFirstProcess() {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CALL_DISPATCHER_IRQ, [true]));
+        }
         handleCpuSchedule() {
             this.numCycles++;
             if (this.numCycles >= this.curQuantum) {

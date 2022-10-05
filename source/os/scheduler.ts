@@ -15,6 +15,11 @@ module TSOS {
             this.numCycles = 0;
         }
 
+        // Calls the dispatcher to schedule the firste process
+        public scheduleFirstProcess(): void {
+            _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, [true]));
+        }
+
         public handleCpuSchedule(): void {
             this.numCycles++;
 
