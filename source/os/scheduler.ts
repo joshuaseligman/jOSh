@@ -26,9 +26,13 @@ module TSOS {
 
             this.numCycles++;
 
-            if ((_PCBReadyQueue.getHead() as ProcessControlBlock).status === 'Terminated') {
+            if (_PCBReadyQueue.getSize() > 0 && (_PCBReadyQueue.getHead() as ProcessControlBlock).status === 'Terminated') {
                 // Create a software interrupt to do a context switch
                 _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+
+                // Reset the number of cpu cycles for the current running program
+                this.numCycles = 0;
+
                 // Prevent the cpu from doing another cycle
                 output = false;
             } else if (this.numCycles > this.curQuantum) {

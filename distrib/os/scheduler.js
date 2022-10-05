@@ -15,9 +15,11 @@ var TSOS;
             // Variable for determining if the cpu cycle should execute
             let output = true;
             this.numCycles++;
-            if (_PCBReadyQueue.getHead().status === 'Terminated') {
+            if (_PCBReadyQueue.getSize() > 0 && _PCBReadyQueue.getHead().status === 'Terminated') {
                 // Create a software interrupt to do a context switch
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CALL_DISPATCHER_IRQ, []));
+                // Reset the number of cpu cycles for the current running program
+                this.numCycles = 0;
                 // Prevent the cpu from doing another cycle
                 output = false;
             }

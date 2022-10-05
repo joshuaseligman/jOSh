@@ -176,16 +176,12 @@ var TSOS;
                     }
                     break;
                 case MEM_EXCEPTION_IRQ:
-                    // Set the CPU to not execute anymore
-                    _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
                     let exitedProgram = _PCBReadyQueue.dequeue();
                     exitedProgram.status = 'Terminated';
                     // Get final CPU values and save them in the table
                     exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     exitedProgram.updateTableEntry();
-                    // Reset the CPU
-                    _CPU.init();
                     // Trace the error
                     let outputStr = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${TSOS.Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
                     this.krnTrace(outputStr);
@@ -203,16 +199,12 @@ var TSOS;
                     _OsShell.putPrompt();
                     break;
                 case INVALID_OPCODE_IRQ:
-                    // Set the CPU to not execute anymore
-                    _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
                     let prog = _PCBReadyQueue.dequeue();
                     prog.status = 'Terminated';
                     // Get final CPU values and save them in the table
                     prog.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                     prog.updateTableEntry();
-                    // Reset the CPU
-                    _CPU.init();
                     // Trace the error
                     let errStr = `Process ${prog.pid} terminated with status code 1. Invalid opcode. Requested Opcode: ${TSOS.Utils.getHexString(params[0], 2, false)}`;
                     this.krnTrace(errStr);
@@ -228,6 +220,8 @@ var TSOS;
                     // Set up for the new command
                     _Console.advanceLine();
                     _OsShell.putPrompt();
+                    // Tell the scheduler to call the dispatcher now that there is a terminated program
+                    _Scheduler.handleCpuSchedule();
                     break;
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
