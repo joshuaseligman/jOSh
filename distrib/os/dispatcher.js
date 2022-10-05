@@ -15,14 +15,21 @@ var TSOS;
             else {
                 // Get the process that has been preempted and move it to the back of the queue
                 let preemptedProcess = _PCBReadyQueue.dequeue();
-                preemptedProcess.status = 'Ready';
-                preemptedProcess.updateTableEntry();
-                _PCBReadyQueue.enqueue(preemptedProcess);
+                if (preemptedProcess.status !== 'Terminated') {
+                    preemptedProcess.status = 'Ready';
+                    preemptedProcess.updateTableEntry();
+                    _PCBReadyQueue.enqueue(preemptedProcess);
+                }
                 // Set the next process to be running and update the cpu accordingly
-                let newProcess = _PCBReadyQueue.getHead();
-                newProcess.status = 'Running';
-                _CPU.isExecuting = true;
-                _CPU.setCpuStatus(newProcess.programCounter, newProcess.instructionRegister, newProcess.acc, newProcess.xReg, newProcess.yReg, newProcess.zFlag);
+                if (_PCBReadyQueue.getSize() > 0) {
+                    let newProcess = _PCBReadyQueue.getHead();
+                    newProcess.status = 'Running';
+                    _CPU.isExecuting = true;
+                    _CPU.setCpuStatus(newProcess.programCounter, newProcess.instructionRegister, newProcess.acc, newProcess.xReg, newProcess.yReg, newProcess.zFlag);
+                }
+                else {
+                    _CPU.init();
+                }
             }
         }
     }

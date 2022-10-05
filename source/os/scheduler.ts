@@ -20,19 +20,30 @@ module TSOS {
             _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, [true]));
         }
 
-        public handleCpuSchedule(): void {
+        public handleCpuSchedule(): boolean {
+            // Variable for determining if the cpu cycle should execute
+            let output: boolean = true;
+
             this.numCycles++;
 
-            if (this.numCycles >= this.curQuantum) {
+            if ((_PCBReadyQueue.getHead() as ProcessControlBlock).status === 'Terminated') {
+                // Create a software interrupt to do a context switch
+                _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+                // Prevent the cpu from doing another cycle
+                output = false;
+            } else if (this.numCycles > this.curQuantum) {
                 // Only call the dispatcher if we have multiple programs in memory
                 if (_PCBReadyQueue.getSize() > 1) {
                     // Create a software interrupt to do a context switch
                     _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+                    // Prevent the cpu from doing another cycle
+                    output = false;
                 }
 
                 // Reset the number of cycles because this will not be called again until the dispatcher is done
                 this.numCycles = 0;
             }
+            return output;
         }
 
         // Setter for the quantum

@@ -84,7 +84,7 @@ var TSOS;
             if (_KernelInterruptQueue.getSize() > 0) {
                 // The process was interrupted, so we have to update its status
                 let currentPCB = _PCBReadyQueue.getHead();
-                if (currentPCB !== undefined) {
+                if (currentPCB !== undefined && currentPCB.status !== 'Terminated') {
                     currentPCB.status = 'Ready';
                     currentPCB.updateTableEntry();
                 }
@@ -98,22 +98,23 @@ var TSOS;
                 _Scheduler.scheduleFirstProcess();
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                // Get the button for requesting the step
-                let stepBtn = document.querySelector('#stepBtn');
-                // We can execute a CPU cycle if the step button is disabled (single step off)
-                // or if the button is enabled and the user just clicked it (_NextStepRequested)
-                if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
-                    _CPU.cycle();
-                    // Get the running program and update its value in the PCB table
-                    let currentPCB = _PCBReadyQueue.getHead();
-                    currentPCB.status = 'Running';
-                    currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    currentPCB.updateTableEntry();
-                    // Tell the scheduler that another CPU cycle happened so it can determine next steps
-                    _Scheduler.handleCpuSchedule();
-                    // Set the flag to false so the user can click again
-                    // If the button is disabled, it still will be false
-                    _NextStepRequested = false;
+                // Determine if the time is up for the process and if the cpu should run another cycle
+                if (_Scheduler.handleCpuSchedule()) {
+                    // Get the button for requesting the step
+                    let stepBtn = document.querySelector('#stepBtn');
+                    // We can execute a CPU cycle if the step button is disabled (single step off)
+                    // or if the button is enabled and the user just clicked it (_NextStepRequested)
+                    if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                        _CPU.cycle();
+                        // Get the running program and update its value in the PCB table
+                        let currentPCB = _PCBReadyQueue.getHead();
+                        currentPCB.status = 'Running';
+                        currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                        currentPCB.updateTableEntry();
+                        // Set the flag to false so the user can click again
+                        // If the button is disabled, it still will be false
+                        _NextStepRequested = false;
+                    }
                 }
             }
             else { // If there are no interrupts and there is nothing being executed then just be idle.
@@ -150,17 +151,13 @@ var TSOS;
                     _StdIn.handleInput();
                     break;
                 case PROG_BREAK_IRQ:
-                    // Set the CPU to not execute anymore
-                    _CPU.isExecuting = false;
                     // Get the finished program and set it to terminated
-                    let finishedProgram = _PCBReadyQueue.dequeue();
+                    let finishedProgram = _PCBReadyQueue.getHead();
                     if (finishedProgram !== undefined) {
                         finishedProgram.status = 'Terminated';
                         // Get final CPU values and save them in the table
                         finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                         finishedProgram.updateTableEntry();
-                        // Reset the CPU
-                        _CPU.init();
                         // Trace the terminated program
                         let outputStr = `Process ${finishedProgram.pid} terminated with status code 0.`;
                         this.krnTrace(outputStr);
