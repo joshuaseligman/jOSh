@@ -245,6 +245,19 @@ module TSOS {
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
         }
 
+        // Function to set all of the variables of the cpu at once
+        public setCpuStatus(newPC: number, newIR: number, newAcc: number, newXReg: number, newYReg: number, newZFlag: number): void {
+            // Update the CPU variables state
+            this.PC = newPC;
+            this.IR = newIR;
+            this.Acc = newAcc;
+            this.Xreg = newXReg;
+            this.Yreg = newYReg;
+            this.Zflag = newZFlag;
+
+            this.updateCpuTable();
+        }
+
         // All ALU code below is from Computer Organization and Architecture project
         // https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
 

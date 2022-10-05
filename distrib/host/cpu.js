@@ -209,6 +209,17 @@ var TSOS;
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
         }
+        // Function to set all of the variables of the cpu at once
+        setCpuStatus(newPC, newIR, newAcc, newXReg, newYReg, newZFlag) {
+            // Update the CPU variables state
+            this.PC = newPC;
+            this.IR = newIR;
+            this.Acc = newAcc;
+            this.Xreg = newXReg;
+            this.Yreg = newYReg;
+            this.Zflag = newZFlag;
+            this.updateCpuTable();
+        }
         // All ALU code below is from Computer Organization and Architecture project
         // https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
         // Low-level adder for 2 8-bit numbers
