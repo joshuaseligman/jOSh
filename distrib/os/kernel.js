@@ -96,28 +96,30 @@ var TSOS;
             else if (!_CPU.isExecuting && _PCBReadyQueue.getSize() > 0) {
                 // No processes are running, so we need to schedule the first one
                 _Scheduler.scheduleFirstProcess();
+                this.krnTrace('Scheduling first process');
             }
             else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                // Determine if the time is up for the process and if the cpu should run another cycle
-                if (_Scheduler.handleCpuSchedule()) {
-                    // Get the button for requesting the step
-                    let stepBtn = document.querySelector('#stepBtn');
-                    // We can execute a CPU cycle if the step button is disabled (single step off)
-                    // or if the button is enabled and the user just clicked it (_NextStepRequested)
-                    if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                // Get the button for requesting the step
+                let stepBtn = document.querySelector('#stepBtn');
+                // We can execute a CPU cycle if the step button is disabled (single step off)
+                // or if the button is enabled and the user just clicked it (_NextStepRequested)
+                if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                    // Determine if the time is up for the process and if the cpu should run another cycle
+                    if (_Scheduler.handleCpuSchedule()) {
                         _CPU.cycle();
                         // Get the running program and update its value in the PCB table
                         let currentPCB = _PCBReadyQueue.getHead();
                         currentPCB.status = 'Running';
                         currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                         currentPCB.updateTableEntry();
-                        // Set the flag to false so the user can click again
-                        // If the button is disabled, it still will be false
-                        _NextStepRequested = false;
                     }
+                    // Set the flag to false so the user can click again
+                    // If the button is disabled, it still will be false
+                    _NextStepRequested = false;
                 }
             }
-            else { // If there are no interrupts and there is nothing being executed then just be idle.
+            else {
+                // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
         }

@@ -30,6 +30,7 @@ module TSOS {
                     _CPU.setCpuStatus(newProcess.programCounter, newProcess.instructionRegister, newProcess.acc, newProcess.xReg, newProcess.yReg, newProcess.zFlag);
                 } else {
                     _CPU.init();
+                    _CPU.isExecuting = false;
                 }
             }
 

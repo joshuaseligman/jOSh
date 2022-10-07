@@ -29,6 +29,7 @@ var TSOS;
                 }
                 else {
                     _CPU.init();
+                    _CPU.isExecuting = false;
                 }
             }
         }
