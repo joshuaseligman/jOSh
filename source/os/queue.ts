@@ -44,5 +44,9 @@ module TSOS {
         public getHead() {
             return this.q[0];
         }
+
+        public remove(elem: any) {
+            this.q = this.q.filter((e) => e !== elem);
+        }
     }
 }

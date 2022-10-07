@@ -18,6 +18,7 @@ module TSOS {
         // Calls the dispatcher to schedule the firste process
         public scheduleFirstProcess(): void {
             _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, [true]));
+            this.numCycles = 0;
         }
 
         public handleCpuSchedule(): boolean {
@@ -40,9 +41,10 @@ module TSOS {
                 if (_PCBReadyQueue.getSize() > 1) {
                     // Create a software interrupt to do a context switch
                     _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
-                    // Prevent the cpu from doing another cycle
-                    output = false;
                 }
+
+                // Prevent the cpu from doing another cycle
+                output = false;
 
                 // Reset the number of cycles because this will not be called again until the dispatcher is done
                 this.numCycles = 0;

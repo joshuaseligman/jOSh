@@ -151,77 +151,18 @@ var TSOS;
                     _StdIn.handleInput();
                     break;
                 case PROG_BREAK_IRQ:
-                    // Get the finished program and set it to terminated
-                    let finishedProgram = _PCBReadyQueue.getHead();
-                    if (finishedProgram !== undefined) {
-                        finishedProgram.status = 'Terminated';
-                        // Get final CPU values and save them in the table
-                        finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                        finishedProgram.updateTableEntry();
-                        // Trace the terminated program
-                        let outputStr = `Process ${finishedProgram.pid} terminated with status code 0.`;
-                        this.krnTrace(outputStr);
-                        // Reset the area for the output to be printed
-                        _Console.resetCmdArea();
-                        // Print out the status and all
-                        _Console.advanceLine();
-                        _Console.putText(outputStr);
-                        _Console.advanceLine();
-                        _Console.putText(`Program output: ${finishedProgram.output}`);
-                        // Reset again in case of word wrap
-                        _Console.resetCmdArea();
-                        // Set up for the new command
-                        _Console.advanceLine();
-                        _OsShell.putPrompt();
-                    }
+                    // Terminate the running program
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, '');
                     break;
                 case MEM_EXCEPTION_IRQ:
-                    // Get the finished program and set it to terminated
-                    let exitedProgram = _PCBReadyQueue.dequeue();
-                    exitedProgram.status = 'Terminated';
-                    // Get final CPU values and save them in the table
-                    exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    exitedProgram.updateTableEntry();
                     // Trace the error
-                    let outputStr = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${TSOS.Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
-                    this.krnTrace(outputStr);
-                    // Reset the area for the output to be printed
-                    _Console.resetCmdArea();
-                    // Print out the status and all
-                    _Console.advanceLine();
-                    _Console.putText(outputStr);
-                    _Console.advanceLine();
-                    _Console.putText(`Program output: ${exitedProgram.output}`);
-                    // Reset again in case of word wrap
-                    _Console.resetCmdArea();
-                    // Set up for the new command
-                    _Console.advanceLine();
-                    _OsShell.putPrompt();
+                    let outputStr = ` Memory out of bounds exception. Requested Addr: ${TSOS.Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 1, outputStr);
                     break;
                 case INVALID_OPCODE_IRQ:
-                    // Get the finished program and set it to terminated
-                    let prog = _PCBReadyQueue.dequeue();
-                    prog.status = 'Terminated';
-                    // Get final CPU values and save them in the table
-                    prog.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    prog.updateTableEntry();
-                    // Trace the error
-                    let errStr = `Process ${prog.pid} terminated with status code 1. Invalid opcode. Requested Opcode: ${TSOS.Utils.getHexString(params[0], 2, false)}`;
-                    this.krnTrace(errStr);
-                    // Reset the area for the output to be printed
-                    _Console.resetCmdArea();
-                    // Print out the status and all
-                    _Console.advanceLine();
-                    _Console.putText(errStr);
-                    _Console.advanceLine();
-                    _Console.putText(`Program output: ${prog.output}`);
-                    // Reset again in case of word wrap
-                    _Console.resetCmdArea();
-                    // Set up for the new command
-                    _Console.advanceLine();
-                    _OsShell.putPrompt();
-                    // Tell the scheduler to call the dispatcher now that there is a terminated program
-                    _Scheduler.handleCpuSchedule();
+                    // Generate the error message and call the kill process command
+                    let errStr = `Invalid opcode. Requested Opcode: ${TSOS.Utils.getHexString(params[0], 2, false)}`;
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 1, errStr);
                     break;
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
@@ -277,6 +218,35 @@ var TSOS;
         // - ReadFile
         // - WriteFile
         // - CloseFile
+        krnTerminateProcess(requestedProcess, status, msg) {
+            requestedProcess.status = 'Terminated';
+            if (_PCBReadyQueue.getHead() === requestedProcess) {
+                // Get final CPU values and save them in the table if the program is running
+                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                _Scheduler.handleCpuSchedule();
+            }
+            else {
+                // Otherwise we can just remove the process from the ready queue and the dispatcher will not be affected
+                _PCBReadyQueue.remove(requestedProcess);
+            }
+            // Update the table entry with the terminated status and the updated cpu values
+            requestedProcess.updateTableEntry();
+            // Trace the error
+            let errStr = `Process ${requestedProcess.pid} terminated with status code ${status}. ${msg}`;
+            this.krnTrace(errStr);
+            // Reset the area for the output to be printed
+            _Console.resetCmdArea();
+            // Print out the status and all
+            _Console.advanceLine();
+            _Console.putText(errStr);
+            _Console.advanceLine();
+            _Console.putText(`Program output: ${requestedProcess.output}`);
+            // Reset again in case of word wrap
+            _Console.resetCmdArea();
+            // Set up for the new command
+            _Console.advanceLine();
+            _OsShell.putPrompt();
+        }
         //
         // OS Utility Routines
         //
