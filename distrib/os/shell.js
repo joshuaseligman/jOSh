@@ -438,8 +438,6 @@ var TSOS;
                 _StdOut.putText('Usage: run <pid>  Please supply a prcess id.');
             }
         }
-        shellClearMem(args) {
-        }
         shellRunAll(args) {
             // Get all the resident processes so we can add them to the ready queue
             let residentProcesses = _PCBHistory.filter((pcb) => pcb.status === 'Resident');
@@ -447,6 +445,8 @@ var TSOS;
                 _OsShell.shellRun([resident.pid.toString()]);
                 _StdOut.advanceLine();
             }
+        }
+        shellClearMem(args) {
         }
         shellPs(args) {
             // Iterate through all made PCBs and display their PID and status
@@ -456,6 +456,38 @@ var TSOS;
             }
         }
         shellKill(args) {
+            if (args.length > 0) {
+                // Get the integer process id that was requested
+                let requestedID = parseInt(args[0]);
+                // Process IDs start at 0 and go up to the current id (exclusive)
+                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= TSOS.ProcessControlBlock.CurrentPID) {
+                    _Kernel.krnTrace(`Kill request failed. Invalid PID: ${requestedID}`);
+                    _StdOut.putText(`Failed to kill process. Invalid PID: ${requestedID}`);
+                    return;
+                }
+                // We have a valid PID, so we can find the element safely in the history array
+                let killPCB = _PCBHistory.find((pcb) => pcb.pid === requestedID);
+                switch (killPCB.status) {
+                    // The process is loaded but has not been called to run
+                    case 'Resident':
+                        _Kernel.krnTrace(`Process ${requestedID} is not running.`);
+                        break;
+                    // The process is currently running
+                    case 'Running':
+                    case 'Ready':
+                        _Kernel.krnTrace(`Requesting kill process ${killPCB.pid}`);
+                        _Kernel.krnTerminateProcess(killPCB, 0, '');
+                        break;
+                    // The process has already executed
+                    case 'Terminated':
+                        _StdOut.putText(`Process ${requestedID} is already terminated.`);
+                        break;
+                }
+            }
+            else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: kill <pid>  Please supply a prcess id.');
+            }
         }
         shellKillAll(args) {
         }
