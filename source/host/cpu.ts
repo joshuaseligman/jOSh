@@ -174,7 +174,7 @@ module TSOS {
 
             case 0x00: // BRK
                 // Call an interrupt for the OS to handle to end of the program execution
-                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
+                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_SINGLE_IRQ, []));
                 break;
             
             case 0xEC: // CPX

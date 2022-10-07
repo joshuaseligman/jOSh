@@ -146,7 +146,7 @@ var TSOS;
                     break;
                 case 0x00: // BRK
                     // Call an interrupt for the OS to handle to end of the program execution
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_SINGLE_IRQ, []));
                     break;
                 case 0xEC: // CPX
                     // Convert the operands from little endian format to a plain address as described in 0xAD

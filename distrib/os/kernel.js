@@ -152,9 +152,23 @@ var TSOS;
                     _krnKeyboardDriver.isr(params); // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
-                case PROG_BREAK_IRQ:
+                case PROG_BREAK_SINGLE_IRQ:
                     // Terminate the running program
                     this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, '');
+                    break;
+                case PROG_BREAK_ALL_IRQ:
+                    _StdOut.advanceLine();
+                    if (_PCBReadyQueue.getSize() === 0) {
+                        _StdOut.putText('No programs are running');
+                        _StdOut.advanceLine();
+                    }
+                    else {
+                        this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, 'User halt.', false);
+                        while (_PCBReadyQueue.getSize() > 1) {
+                            this.krnTerminateProcess(_PCBReadyQueue.q[1], 0, 'User halt.', false);
+                        }
+                    }
+                    _OsShell.putPrompt();
                     break;
                 case MEM_EXCEPTION_IRQ:
                     // Trace the error
