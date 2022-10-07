@@ -476,7 +476,7 @@ var TSOS;
                     case 'Running':
                     case 'Ready':
                         _Kernel.krnTrace(`Requesting kill process ${killPCB.pid}`);
-                        _Kernel.krnTerminateProcess(killPCB, 0, '');
+                        _Kernel.krnTerminateProcess(killPCB, 0, '', false);
                         break;
                     // The process has already executed
                     case 'Terminated':
@@ -490,6 +490,11 @@ var TSOS;
             }
         }
         shellKillAll(args) {
+            // Get all the running processes so we can kill them
+            let runningProcesses = _PCBHistory.filter((pcb) => pcb.status === 'Running' || pcb.status === 'Ready');
+            for (const resident of runningProcesses) {
+                _OsShell.shellKill([resident.pid.toString()]);
+            }
         }
         shellQuantum(args) {
             if (args.length > 0) {

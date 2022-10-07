@@ -262,7 +262,7 @@ module TSOS {
         // - CloseFile
 
 
-        public krnTerminateProcess(requestedProcess: ProcessControlBlock, status: number, msg: string): void {
+        public krnTerminateProcess(requestedProcess: ProcessControlBlock, status: number, msg: string, putPrompt: boolean = true): void {
             requestedProcess.status = 'Terminated';
 
             if (_PCBReadyQueue.getHead() === requestedProcess) {
@@ -285,7 +285,9 @@ module TSOS {
             _Console.resetCmdArea();
 
             // Print out the status and all
-            _Console.advanceLine();
+            if (putPrompt) {
+                _Console.advanceLine();
+            }
             _Console.putText(errStr);
             _Console.advanceLine();
             _Console.putText(`Program output: ${requestedProcess.output}`);
@@ -295,7 +297,9 @@ module TSOS {
 
             // Set up for the new command
             _Console.advanceLine();
-            _OsShell.putPrompt();
+            if (putPrompt) {
+                _OsShell.putPrompt();
+            }
         }
 
         //

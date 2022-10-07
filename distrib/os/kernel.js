@@ -220,7 +220,7 @@ var TSOS;
         // - ReadFile
         // - WriteFile
         // - CloseFile
-        krnTerminateProcess(requestedProcess, status, msg) {
+        krnTerminateProcess(requestedProcess, status, msg, putPrompt = true) {
             requestedProcess.status = 'Terminated';
             if (_PCBReadyQueue.getHead() === requestedProcess) {
                 // Get final CPU values and save them in the table if the program is running
@@ -239,7 +239,9 @@ var TSOS;
             // Reset the area for the output to be printed
             _Console.resetCmdArea();
             // Print out the status and all
-            _Console.advanceLine();
+            if (putPrompt) {
+                _Console.advanceLine();
+            }
             _Console.putText(errStr);
             _Console.advanceLine();
             _Console.putText(`Program output: ${requestedProcess.output}`);
@@ -247,7 +249,9 @@ var TSOS;
             _Console.resetCmdArea();
             // Set up for the new command
             _Console.advanceLine();
-            _OsShell.putPrompt();
+            if (putPrompt) {
+                _OsShell.putPrompt();
+            }
         }
         //
         // OS Utility Routines
