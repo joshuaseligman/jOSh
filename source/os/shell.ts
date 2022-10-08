@@ -549,7 +549,7 @@ module TSOS {
             // We need to kill all of the running processes
             _OsShell.shellKillAll([]);
             _MemoryManager.deallocateAll();
-            _StdOut.putText('All memory cleared');
+            _StdOut.putText('All memory cleared.');
         }
         
         public shellPs(args: string[]) {
@@ -599,8 +599,12 @@ module TSOS {
         public shellKillAll(args: string[]) {
             // Get all the running processes so we can kill them
             let runningProcesses: ProcessControlBlock[] = _PCBHistory.filter((pcb) => pcb.status === 'Running' || pcb.status === 'Ready');
-            for (const resident of runningProcesses) {
-                _OsShell.shellKill([resident.pid.toString()]);
+            if (runningProcesses.length === 0) {
+                _StdOut.putText('There are no running programs.');
+            } else {
+                for (const resident of runningProcesses) {
+                    _OsShell.shellKill([resident.pid.toString()]);
+                }
             }
         }
 

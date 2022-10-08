@@ -49,8 +49,8 @@ module TSOS {
                 prog.updateTableEntry();
 
                 // Notify the user of what's happened
-                _Kernel.krnTrace(`Process ${prog.pid} deallocated from memory`)
-                _StdOut.putText(`Process ${prog.pid} deallocated from memory`);
+                _Kernel.krnTrace(`Process ${prog.pid} deallocated from memory.`)
+                _StdOut.putText(`Process ${prog.pid} deallocated from memor.y`);
                 _StdOut.advanceLine();
             }
         }
