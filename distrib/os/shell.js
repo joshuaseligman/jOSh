@@ -515,6 +515,8 @@ var TSOS;
                     _Scheduler.setQuantum(newQuantum);
                     _StdOut.putText(`Quantum set to ${newQuantum}`);
                     _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
+                    // Update the HTML to reflect the new quantum
+                    document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
                 }
                 else {
                     // Print out an error message for an invalid quantum value
