@@ -546,7 +546,10 @@ module TSOS {
         }
 
         public shellClearMem(args: string[]) {
-
+            // We need to kill all of the running processes
+            _OsShell.shellKillAll([]);
+            _MemoryManager.deallocateAll();
+            _StdOut.putText('All memory cleared');
         }
         
         public shellPs(args: string[]) {

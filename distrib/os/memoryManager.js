@@ -27,6 +27,23 @@ var TSOS;
             // Unable to place the program in memory
             return -1;
         }
+        deallocateAll() {
+            // Get the PCBs for programs allocated in memory
+            let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1);
+            for (const prog of allocatedPrograms) {
+                // Clear the segment the program was stored in
+                _MemoryAccessor.clearMemory(prog.baseReg, prog.limitReg);
+                // Update the segment to be deallocated
+                prog.segment = -1;
+                // Make sure the status is terminated
+                prog.status = 'Terminated';
+                prog.updateTableEntry();
+                // Notify the user of what's happened
+                _Kernel.krnTrace(`Process ${prog.pid} deallocated from memory`);
+                _StdOut.putText(`Process ${prog.pid} deallocated from memory`);
+                _StdOut.advanceLine();
+            }
+        }
     }
     TSOS.MemoryManager = MemoryManager;
 })(TSOS || (TSOS = {}));

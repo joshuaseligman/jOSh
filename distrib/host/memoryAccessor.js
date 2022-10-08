@@ -41,6 +41,12 @@ var TSOS;
                 _Memory.write(requestedAddr, val);
             }
         }
+        // Clears memory from the start up to, but not including stop
+        clearMemory(start, stop) {
+            for (let i = start; i < stop; i++) {
+                _Memory.write(i, 0x0);
+            }
+        }
     }
     TSOS.MemoryAccessor = MemoryAccessor;
 })(TSOS || (TSOS = {}));

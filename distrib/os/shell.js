@@ -447,6 +447,10 @@ var TSOS;
             }
         }
         shellClearMem(args) {
+            // We need to kill all of the running processes
+            _OsShell.shellKillAll([]);
+            _MemoryManager.deallocateAll();
+            _StdOut.putText('All memory cleared');
         }
         shellPs(args) {
             // Iterate through all made PCBs and display their PID and status
