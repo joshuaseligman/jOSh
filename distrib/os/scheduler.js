@@ -11,6 +11,8 @@ var TSOS;
         scheduleFirstProcess() {
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CALL_DISPATCHER_IRQ, [true]));
             this.numCycles = 0;
+            // Update the html
+            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
         }
         handleCpuSchedule() {
             // Variable for determining if the cpu cycle should execute
@@ -35,6 +37,8 @@ var TSOS;
                 // Reset the number of cycles because this will not be called again until the dispatcher is done
                 this.numCycles = 0;
             }
+            // Update the html
+            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
             return output;
         }
         // Setter for the quantum

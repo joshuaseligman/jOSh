@@ -19,6 +19,9 @@ module TSOS {
         public scheduleFirstProcess(): void {
             _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, [true]));
             this.numCycles = 0;
+
+            // Update the html
+            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
         }
 
         public handleCpuSchedule(): boolean {
@@ -49,6 +52,9 @@ module TSOS {
                 // Reset the number of cycles because this will not be called again until the dispatcher is done
                 this.numCycles = 0;
             }
+
+            // Update the html
+            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
             return output;
         }
 
