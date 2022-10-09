@@ -186,7 +186,7 @@ module TSOS {
                 case PROG_BREAK_ALL_IRQ:
                     _StdOut.advanceLine();
                     if (_PCBReadyQueue.getSize() === 0) {
-                        _StdOut.putText('No programs are running');
+                        _StdOut.putText('No programs are running.');
                         _StdOut.advanceLine();
                     } else {
                         this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, 'User halt.', false);
