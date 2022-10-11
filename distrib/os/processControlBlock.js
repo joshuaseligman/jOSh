@@ -20,6 +20,9 @@ var TSOS;
             this.status = 'Resident';
             // Output starts off as empty
             this.output = '';
+            // Turnaround time and wait time are both 0
+            this.turnaroundTime = 0;
+            this.waitTime = 0;
             // Add the PCB to the table
             this.createTableEntry();
         }

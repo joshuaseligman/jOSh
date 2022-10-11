@@ -21,11 +21,11 @@ var TSOS;
             _MemoryManager = new TSOS.MemoryManager(); // The memory manager for allocating memory for processes
             _PCBReadyQueue = new TSOS.Queue(); // The queue for the executing process control blocks
             // Initialize the console.
-            _Console = new TSOS.Console(); // The command line interface / console I/O device.
-            _Console.init();
-            // Initialize standard input and output to the _Console.
-            _StdIn = _Console;
-            _StdOut = _Console;
+            _StdOut = new TSOS.Console(); // The command line interface / console I/O device.
+            _StdOut.init();
+            // Initialize standard input and output to the _StdOut.
+            _StdIn = _StdOut;
+            _StdOut = _StdOut;
             // Initialize the scheduler and dispatcher
             _Scheduler = new TSOS.Scheduler();
             _Dispatcher = new TSOS.Dispatcher();
@@ -112,6 +112,15 @@ var TSOS;
                         currentPCB.status = 'Running';
                         currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
                         currentPCB.updateTableEntry();
+                        // Iterate through all of the running and ready processes
+                        for (const process of _PCBReadyQueue.q) {
+                            // Turnaround time increases
+                            process.turnaroundTime++;
+                            // Increment the wait time if they are not currently executing
+                            if (process.status === 'Ready') {
+                                process.waitTime++;
+                            }
+                        }
                     }
                     // Set the flag to false so the user can click again
                     // If the button is disabled, it still will be false
@@ -183,7 +192,7 @@ var TSOS;
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
                     let printedOutput = params[0].toString();
-                    _Console.putText(printedOutput);
+                    _StdOut.putText(printedOutput);
                     // Add it to the buffered output for the program
                     let curProgram = _PCBReadyQueue.getHead();
                     curProgram.output += printedOutput;
@@ -199,7 +208,7 @@ var TSOS;
                     while (charVal !== -1 && charVal !== 0) {
                         // Print the character
                         let printedChar = String.fromCharCode(charVal);
-                        _Console.putText(printedChar);
+                        _StdOut.putText(printedChar);
                         // Add the character to the program's output
                         runningProg.output += printedChar;
                         // Increment i and get the next character
@@ -251,18 +260,22 @@ var TSOS;
             let errStr = `Process ${requestedProcess.pid} terminated with status code ${status}. ${msg}`;
             this.krnTrace(errStr);
             // Reset the area for the output to be printed
-            _Console.resetCmdArea();
+            _StdOut.resetCmdArea();
             // Print out the status and all
             if (putPrompt) {
-                _Console.advanceLine();
+                _StdOut.advanceLine();
             }
-            _Console.putText(errStr);
-            _Console.advanceLine();
-            _Console.putText(`Program output: ${requestedProcess.output}`);
+            _StdOut.putText(errStr);
+            _StdOut.advanceLine();
+            _StdOut.putText(`Program output: ${requestedProcess.output}`);
+            _StdOut.advanceLine();
+            _StdOut.putText(`Turnaround time: ${requestedProcess.turnaroundTime} CPU cycles`);
+            _StdOut.advanceLine();
+            _StdOut.putText(`Wait time: ${requestedProcess.waitTime} CPU cycles`);
             // Reset again in case of word wrap
-            _Console.resetCmdArea();
+            _StdOut.resetCmdArea();
             // Set up for the new command
-            _Console.advanceLine();
+            _StdOut.advanceLine();
             if (putPrompt) {
                 _OsShell.putPrompt();
             }
@@ -288,7 +301,7 @@ var TSOS;
         }
         krnTrapError(msg) {
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            _Console.bsod();
+            _StdOut.bsod();
             this.krnShutdown();
         }
     }

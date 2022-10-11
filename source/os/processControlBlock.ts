@@ -45,6 +45,12 @@ module TSOS {
         // The printed output to keep track of
         public output: string;
 
+        // The total time from submission to termination
+        public turnaroundTime: number;
+
+        // The time spent in the ready state
+        public waitTime: number;
+
         constructor(segment: number, priority: number = 8) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
@@ -69,6 +75,10 @@ module TSOS {
 
             // Output starts off as empty
             this.output = '';
+
+            // Turnaround time and wait time are both 0
+            this.turnaroundTime = 0;
+            this.waitTime = 0;
 
             // Add the PCB to the table
             this.createTableEntry();
