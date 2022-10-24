@@ -475,20 +475,9 @@ module TSOS {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }
 
-                let segment: number = _MemoryManager.allocateProgram(progArr);
-
-                if (segment == -1) {
-                    _Kernel.krnTrace('No space for the program.');
-                    _StdOut.putText('Failed to load program. No available space.');
-                } else {
-                    let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
-                    _PCBHistory.push(newPCB);
-
-                    // Let the user know the program is valid
-                    _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
-                    _StdOut.putText(`Process ID: ${newPCB.pid}`);
-                }
-
+                // Call the kernel process to create a process
+                _Kernel.krnCreateProcess(progArr);
+               
             } else {
                 // Invalid program from bad characters
                 _Kernel.krnTrace('Invalid program. Invalid characters present.');

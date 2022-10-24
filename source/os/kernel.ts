@@ -285,6 +285,24 @@ module TSOS {
         // - WriteFile
         // - CloseFile
 
+        public krnCreateProcess(prog: number[]) {
+            // Try to load a process into memory
+            let segment: number = _MemoryManager.allocateProgram(prog);
+
+            if (segment == -1) {
+                // Trace and print the output for a failed load
+                _Kernel.krnTrace('No space for the program.');
+                _StdOut.putText('Failed to load program. No available space.');
+            } else {
+                // Create the PCB
+                let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
+                _PCBHistory.push(newPCB);
+
+                // Let the user know the program is valid
+                _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
+                _StdOut.putText(`Process ID: ${newPCB.pid}`);
+            }
+        }
 
         public krnTerminateProcess(requestedProcess: ProcessControlBlock, status: number, msg: string, putPrompt: boolean = true): void {
             requestedProcess.status = 'Terminated';

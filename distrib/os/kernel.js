@@ -243,6 +243,23 @@ var TSOS;
         // - ReadFile
         // - WriteFile
         // - CloseFile
+        krnCreateProcess(prog) {
+            // Try to load a process into memory
+            let segment = _MemoryManager.allocateProgram(prog);
+            if (segment == -1) {
+                // Trace and print the output for a failed load
+                _Kernel.krnTrace('No space for the program.');
+                _StdOut.putText('Failed to load program. No available space.');
+            }
+            else {
+                // Create the PCB
+                let newPCB = new TSOS.ProcessControlBlock(segment);
+                _PCBHistory.push(newPCB);
+                // Let the user know the program is valid
+                _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
+                _StdOut.putText(`Process ID: ${newPCB.pid}`);
+            }
+        }
         krnTerminateProcess(requestedProcess, status, msg, putPrompt = true) {
             requestedProcess.status = 'Terminated';
             if (_PCBReadyQueue.getHead() === requestedProcess) {
