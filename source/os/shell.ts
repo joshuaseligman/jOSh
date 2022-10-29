@@ -129,27 +129,27 @@ module TSOS {
 
             sc = new ShellCommand(this.shellRunAll,
                 "runall",
-                "— Execute all programs at once");
+                "- Execute all programs at once");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellPs,
                 "ps",
-                "— Display the PID and state of all processes");
+                "- Display the PID and state of all processes");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellKill,
                 "kill",
-                "<pid> — Kill one process");
+                "<pid> - Kill one process");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellKillAll,
                 "killall",
-                "— Kill all processes");
+                "- Kill all processes");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellQuantum,
                 "quantum",
-                "<int> — Sets the Round Robin quantum (measured in cpu cycles)");
+                "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs

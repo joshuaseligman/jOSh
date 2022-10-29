@@ -72,15 +72,15 @@ var TSOS;
             //clearmem
             sc = new TSOS.ShellCommand(this.shellClearMem, "clearmem", "- Clears all memory partitions");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "— Execute all programs at once");
+            sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "- Execute all programs at once");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellPs, "ps", "— Display the PID and state of all processes");
+            sc = new TSOS.ShellCommand(this.shellPs, "ps", "- Display the PID and state of all processes");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> — Kill one process");
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> - Kill one process");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "— Kill all processes");
+            sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "- Kill all processes");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> — Sets the Round Robin quantum (measured in cpu cycles)");
+            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
