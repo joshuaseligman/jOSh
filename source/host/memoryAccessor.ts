@@ -42,5 +42,12 @@ module TSOS {
                 _Memory.write(requestedAddr, val);
             }
         }
+
+        // Clears memory from the start up to, but not including stop
+        public clearMemory(start: number, stop: number): void {
+            for (let i = start; i < stop; i++) {
+                _Memory.write(i, 0x0);
+            }
+        }
     }
 }

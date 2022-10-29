@@ -39,6 +39,9 @@ var TSOS;
         getHead() {
             return this.q[0];
         }
+        remove(elem) {
+            this.q = this.q.filter((e) => e !== elem);
+        }
     }
     TSOS.Queue = Queue;
 })(TSOS || (TSOS = {}));

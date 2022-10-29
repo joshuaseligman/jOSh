@@ -146,7 +146,7 @@ var TSOS;
                     break;
                 case 0x00: // BRK
                     // Call an interrupt for the OS to handle to end of the program execution
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_IRQ, []));
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PROG_BREAK_SINGLE_IRQ, []));
                     break;
                 case 0xEC: // CPX
                     // Convert the operands from little endian format to a plain address as described in 0xAD
@@ -208,6 +208,17 @@ var TSOS;
             document.querySelector('#cpuXReg').innerHTML = TSOS.Utils.getHexString(this.Xreg, 2, false);
             document.querySelector('#cpuYReg').innerHTML = TSOS.Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
+        }
+        // Function to set all of the variables of the cpu at once
+        setCpuStatus(newPC, newIR, newAcc, newXReg, newYReg, newZFlag) {
+            // Update the CPU variables state
+            this.PC = newPC;
+            this.IR = newIR;
+            this.Acc = newAcc;
+            this.Xreg = newXReg;
+            this.Yreg = newYReg;
+            this.Zflag = newZFlag;
+            this.updateCpuTable();
         }
         // All ALU code below is from Computer Organization and Architecture project
         // https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts

@@ -174,7 +174,7 @@ module TSOS {
 
             case 0x00: // BRK
                 // Call an interrupt for the OS to handle to end of the program execution
-                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_IRQ, []));
+                _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_SINGLE_IRQ, []));
                 break;
             
             case 0xEC: // CPX
@@ -243,6 +243,19 @@ module TSOS {
             document.querySelector('#cpuXReg').innerHTML = Utils.getHexString(this.Xreg, 2, false);
             document.querySelector('#cpuYReg').innerHTML = Utils.getHexString(this.Yreg, 2, false);
             document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
+        }
+
+        // Function to set all of the variables of the cpu at once
+        public setCpuStatus(newPC: number, newIR: number, newAcc: number, newXReg: number, newYReg: number, newZFlag: number): void {
+            // Update the CPU variables state
+            this.PC = newPC;
+            this.IR = newIR;
+            this.Acc = newAcc;
+            this.Xreg = newXReg;
+            this.Yreg = newYReg;
+            this.Zflag = newZFlag;
+
+            this.updateCpuTable();
         }
 
         // All ALU code below is from Computer Organization and Architecture project

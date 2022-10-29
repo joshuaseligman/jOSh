@@ -25,12 +25,16 @@ module TSOS {
             _PCBReadyQueue = new Queue(); // The queue for the executing process control blocks
 
             // Initialize the console.
-            _Console = new Console();             // The command line interface / console I/O device.
-            _Console.init();
+            _StdOut = new Console();             // The command line interface / console I/O device.
+            _StdOut.init();
 
-            // Initialize standard input and output to the _Console.
-            _StdIn  = _Console;
-            _StdOut = _Console;
+            // Initialize standard input and output to the _StdOut.
+            _StdIn  = _StdOut;
+            _StdOut = _StdOut;
+
+            // Initialize the scheduler and dispatcher
+            _Scheduler = new Scheduler();
+            _Dispatcher = new Dispatcher();
 
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
@@ -98,38 +102,55 @@ module TSOS {
 
             // Check for an interrupt, if there are any. Page 560
             if (_KernelInterruptQueue.getSize() > 0) {
-                // Process the first interrupt on the interrupt queue.
-                // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
-                var interrupt = _KernelInterruptQueue.dequeue();
-                this.krnInterruptHandler(interrupt.irq, interrupt.params);
-
                 // The process was interrupted, so we have to update its status
                 let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
-                if (currentPCB !== undefined) {
+                if (currentPCB !== undefined && currentPCB.status !== 'Terminated') {
                     currentPCB.status = 'Ready';
                     currentPCB.updateTableEntry();
                 }
 
+                // Process the first interrupt on the interrupt queue.
+                // TODO (maybe): Implement a priority queue based on the IRQ number/id to enforce interrupt priority.
+                var interrupt = _KernelInterruptQueue.dequeue();
+                this.krnInterruptHandler(interrupt.irq, interrupt.params);
+            } else if (!_CPU.isExecuting && _PCBReadyQueue.getSize() > 0) {
+                // No processes are running, so we need to schedule the first one
+                _Scheduler.scheduleFirstProcess();
+                this.krnTrace('Scheduling first process');
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                // Get the button for requesting the step
-                let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
+                    // Get the button for requesting the step
+                    let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
+    
+                    // We can execute a CPU cycle if the step button is disabled (single step off)
+                    // or if the button is enabled and the user just clicked it (_NextStepRequested)
+                    if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                        // Determine if the time is up for the process and if the cpu should run another cycle
+                        if (_Scheduler.handleCpuSchedule()) {
+                            _CPU.cycle();
+        
+                            // Get the running program and update its value in the PCB table
+                            let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
+                            currentPCB.status = 'Running';
+                            currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                            currentPCB.updateTableEntry();
 
-                // We can execute a CPU cycle if the step button is disabled (single step off)
-                // or if the button is enabled and the user just clicked it (_NextStepRequested)
-                if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
-                    _CPU.cycle();
-
-                    // Get the running program and update its value in the PCB table
-                    let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
-                    currentPCB.status = 'Running';
-                    currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    currentPCB.updateTableEntry();
-
-                    // Set the flag to false so the user can click again
-                    // If the button is disabled, it still will be false
-                    _NextStepRequested = false;
-                }
-            } else {                       // If there are no interrupts and there is nothing being executed then just be idle.
+                            // Iterate through all of the running and ready processes
+                            for (const process of _PCBReadyQueue.q) {
+                                // Turnaround time increases
+                                process.turnaroundTime++;
+                                // Increment the wait time if they are not currently executing
+                                if (process.status === 'Ready') {
+                                    process.waitTime++;
+                                }
+                            }
+                        }
+    
+                        // Set the flag to false so the user can click again
+                        // If the button is disabled, it still will be false
+                        _NextStepRequested = false;
+                    }
+            } else {
+                // If there are no interrupts and there is nothing being executed then just be idle.
                 this.krnTrace("Idle");
             }
         }
@@ -167,119 +188,41 @@ module TSOS {
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
-                case PROG_BREAK_IRQ:
-                    // Set the CPU to not execute anymore
-                    _CPU.isExecuting = false;
-                    
-                    // Get the finished program and set it to terminated
-                    let finishedProgram: ProcessControlBlock = _PCBReadyQueue.dequeue();
-                    if (finishedProgram !== undefined) {
-                        finishedProgram.status = 'Terminated';
-    
-                        // Get final CPU values and save them in the table
-                        finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                        finishedProgram.updateTableEntry();
-    
-                        // Reset the CPU
-                        _CPU.init();
-    
-                        // Trace the terminated program
-                        let outputStr: string = `Process ${finishedProgram.pid} terminated with status code 0.`;
-                        this.krnTrace(outputStr);
-
-                        // Reset the area for the output to be printed
-                        _Console.resetCmdArea();
-
-                        // Print out the status and all
-                        _Console.advanceLine();
-                        _Console.putText(outputStr);
-                        _Console.advanceLine();
-                        _Console.putText(`Program output: ${finishedProgram.output}`);
-
-                        // Reset again in case of word wrap
-                        _Console.resetCmdArea();
-
-                        // Set up for the new command
-                        _Console.advanceLine();
-                        _OsShell.putPrompt();
-                    }
+                case PROG_BREAK_SINGLE_IRQ: 
+                    // Terminate the running program
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, '');                    
                     break;
-                case MEM_EXCEPTION_IRQ:
-                    // Set the CPU to not execute anymore
-                    _CPU.isExecuting = false;
 
-                    // Get the finished program and set it to terminated
-                    let exitedProgram: ProcessControlBlock = _PCBReadyQueue.dequeue();
-                    exitedProgram.status = 'Terminated';
-
-                    // Get final CPU values and save them in the table
-                    exitedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                    exitedProgram.updateTableEntry();
-
-                    // Reset the CPU
-                    _CPU.init();
-                    
-                    // Trace the error
-                    let outputStr: string = `Process ${exitedProgram.pid} terminated with status code 1. Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
-                    this.krnTrace(outputStr);
-                    
-                    // Reset the area for the output to be printed
-                    _Console.resetCmdArea();
-
-                    // Print out the status and all
-                    _Console.advanceLine();
-                    _Console.putText(outputStr);
-                    _Console.advanceLine();
-                    _Console.putText(`Program output: ${exitedProgram.output}`);
-
-                    // Reset again in case of word wrap
-                    _Console.resetCmdArea();
-
-                    // Set up for the new command
-                    _Console.advanceLine();
+                case PROG_BREAK_ALL_IRQ:
+                    _StdOut.advanceLine();
+                    if (_PCBReadyQueue.getSize() === 0) {
+                        _StdOut.putText('No programs are running.');
+                        _StdOut.advanceLine();
+                    } else {
+                        this.krnTerminateProcess(_PCBReadyQueue.getHead(), 0, 'User halt.', false);
+                        while (_PCBReadyQueue.getSize() > 1) {
+                            this.krnTerminateProcess(_PCBReadyQueue.q[1], 0, 'User halt.', false);
+                        }
+                    }
                     _OsShell.putPrompt();
                     break;
 
-                    case INVALID_OPCODE_IRQ:
-                        // Set the CPU to not execute anymore
-                        _CPU.isExecuting = false;
-    
-                        // Get the finished program and set it to terminated
-                        let prog: ProcessControlBlock = _PCBReadyQueue.dequeue();
-                        prog.status = 'Terminated';
-    
-                        // Get final CPU values and save them in the table
-                        prog.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                        prog.updateTableEntry();
-    
-                        // Reset the CPU
-                        _CPU.init();
-                        
-                        // Trace the error
-                        let errStr: string = `Process ${prog.pid} terminated with status code 1. Invalid opcode. Requested Opcode: ${Utils.getHexString(params[0], 2, false)}`;
-                        this.krnTrace(errStr);
-                        
-                        // Reset the area for the output to be printed
-                        _Console.resetCmdArea();
-    
-                        // Print out the status and all
-                        _Console.advanceLine();
-                        _Console.putText(errStr);
-                        _Console.advanceLine();
-                        _Console.putText(`Program output: ${prog.output}`);
-    
-                        // Reset again in case of word wrap
-                        _Console.resetCmdArea();
-    
-                        // Set up for the new command
-                        _Console.advanceLine();
-                        _OsShell.putPrompt();
-                        break;    
+                case MEM_EXCEPTION_IRQ:                
+                    // Trace the error
+                    let outputStr: string = ` Memory out of bounds exception. Requested Addr: ${Utils.getHexString(params[0], 4, true)}; Segment: ${params[1]}`;
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 1, outputStr);
+                    break;
+
+                case INVALID_OPCODE_IRQ:                    
+                    // Generate the error message and call the kill process command
+                    let errStr: string = `Invalid opcode. Requested Opcode: ${Utils.getHexString(params[0], 2, false)}`;
+                    this.krnTerminateProcess(_PCBReadyQueue.getHead(), 1, errStr);
+                    break;    
 
                 case SYSCALL_PRINT_INT_IRQ:
                     // Print the integer to the screen
                     let printedOutput: string = params[0].toString();
-                    _Console.putText(printedOutput);
+                    _StdOut.putText(printedOutput);
 
                     // Add it to the buffered output for the program
                     let curProgram: ProcessControlBlock = _PCBReadyQueue.getHead();
@@ -300,7 +243,7 @@ module TSOS {
                     while (charVal !== -1 && charVal !== 0) {
                         // Print the character
                         let printedChar: string = String.fromCharCode(charVal);
-                        _Console.putText(printedChar);
+                        _StdOut.putText(printedChar);
 
                         // Add the character to the program's output
                         runningProg.output += printedChar;
@@ -309,6 +252,11 @@ module TSOS {
                         i++;
                         charVal = _MemoryAccessor.callRead(params[0] + i);
                     }
+                    break;
+                
+                case CALL_DISPATCHER_IRQ:
+                    _Dispatcher.contextSwitch(params[0]);
+                    this.krnTrace('Called dispatcher')
                     break;
 
                 default:
@@ -337,6 +285,70 @@ module TSOS {
         // - WriteFile
         // - CloseFile
 
+        public krnCreateProcess(prog: number[]) {
+            // Try to load a process into memory
+            let segment: number = _MemoryManager.allocateProgram(prog);
+
+            if (segment == -1) {
+                // Trace and print the output for a failed load
+                _Kernel.krnTrace('No space for the program.');
+                _StdOut.putText('Failed to load program. No available space.');
+            } else {
+                // Create the PCB
+                let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
+                _PCBHistory.push(newPCB);
+
+                // Let the user know the program is valid
+                _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
+                _StdOut.putText(`Process ID: ${newPCB.pid}`);
+            }
+        }
+
+        public krnTerminateProcess(requestedProcess: ProcessControlBlock, status: number, msg: string, putPrompt: boolean = true): void {
+            requestedProcess.status = 'Terminated';
+
+            if (_PCBReadyQueue.getHead() === requestedProcess) {
+                // Get final CPU values and save them in the table if the program is running
+                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                _Scheduler.handleCpuSchedule();
+            } else {
+                // Otherwise we can just remove the process from the ready queue and the dispatcher will not be affected
+                _PCBReadyQueue.remove(requestedProcess);
+            }
+
+            // Update the table entry with the terminated status and the updated cpu values
+            requestedProcess.updateTableEntry();
+            
+            // Trace the error
+            let errStr: string = `Process ${requestedProcess.pid} terminated with status code ${status}. ${msg}`;
+            this.krnTrace(errStr);
+            
+            // Reset the area for the output to be printed
+            _StdOut.resetCmdArea();
+
+            // Print out the status and all
+            if (putPrompt) {
+                _StdOut.advanceLine();
+            }
+            _StdOut.putText(errStr);
+            _StdOut.advanceLine();
+            _StdOut.putText(`Program output: ${requestedProcess.output}`);
+
+            _StdOut.advanceLine();
+
+            _StdOut.putText(`Turnaround time: ${requestedProcess.turnaroundTime} CPU cycles`);
+            _StdOut.advanceLine();
+            _StdOut.putText(`Wait time: ${requestedProcess.waitTime} CPU cycles`);
+
+            // Reset again in case of word wrap
+            _StdOut.resetCmdArea();
+
+            // Set up for the new command
+            _StdOut.advanceLine();
+            if (putPrompt) {
+                _OsShell.putPrompt();
+            }
+        }
 
         //
         // OS Utility Routines
@@ -359,7 +371,7 @@ module TSOS {
 
         public krnTrapError(msg) {
             Control.hostLog("OS ERROR - TRAP: " + msg);
-            _Console.bsod();
+            _StdOut.bsod();
             this.krnShutdown();
         }
     }

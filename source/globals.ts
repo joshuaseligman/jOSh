@@ -20,7 +20,7 @@ const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (inte
                               // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ: number = 1;
 
-const PROG_BREAK_IRQ: number = 2; // IRQ for a BRK (0x00) instruction to stop the program
+const PROG_BREAK_SINGLE_IRQ: number = 2; // IRQ for a BRK (0x00) instruction to stop the program
 
 const MEM_EXCEPTION_IRQ: number = 3; // IRQ for a memory out of bounds error
 
@@ -29,6 +29,10 @@ const INVALID_OPCODE_IRQ: number = 4; // IRQ for invalid opcode
 const SYSCALL_PRINT_INT_IRQ: number = 5; // IRQ for printing an integer
 
 const SYSCALL_PRINT_STR_IRQ: number = 6; // IRQ for printing a string
+
+const CALL_DISPATCHER_IRQ: number = 7; // IRQ for calling the dispatcher to do a context switch
+
+const PROG_BREAK_ALL_IRQ: number = 8; // IRQ for calling a program break for all running programs
 
 
 // Flag to determine if the next step should be executed
@@ -83,6 +87,13 @@ var _SarcasticMode: boolean = false;
 var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard  = null;
 
 var _hardwareClockID: number = null;
+
+// Delcare the variables for the scheduler and dispatcher
+var _Scheduler: TSOS.Scheduler = null;
+var _Dispatcher: TSOS.Dispatcher = null;
+
+// The default quantum is 6 CPU cycles
+const DEFAULT_QUANTUM: number = 6;
 
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .

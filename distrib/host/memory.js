@@ -45,12 +45,14 @@ var TSOS;
                 }
             }
             // Update the classes for highlighting the opcode and operands
-            this.setMemoryCellClasses();
+            if (_PCBReadyQueue.getSize() > 0) {
+                this.setMemoryCellClasses();
+            }
         }
         // Function to highlight the opcode and operands
         setMemoryCellClasses() {
             // The desired address is going to start at the current program counter - 1 (no operands)
-            let desiredAddr = _CPU.PC - 1;
+            let desiredAddr = _MemoryAccessor.getPhysicalAddress(_CPU.PC - 1, _PCBReadyQueue.getHead().baseReg);
             // Initial assumption is that there were no operands
             let numOperands = 0;
             // Determine the location of the opcode and the number of operands
@@ -88,13 +90,13 @@ var TSOS;
                     numOperands = 1;
                     break;
             }
-            // Only show highlights if th CPU is running
-            if (_CPU.isExecuting) {
+            // Only show highlights if th CPU is running and the desired address is a valid address
+            if (_CPU.isExecuting && desiredAddr >= _PCBReadyQueue.getHead().baseReg) {
                 // Set the opcode to highlight as the opcode
-                document.querySelector(`#mem${_MemoryAccessor.getPhysicalAddress(desiredAddr, _PCBReadyQueue.getHead().baseReg)}`).classList.add('opcode');
+                document.querySelector(`#mem${desiredAddr}`).classList.add('opcode');
                 // Set the operands to be highlighted
                 for (let i = desiredAddr + 1; i <= desiredAddr + numOperands; i++) {
-                    document.querySelector(`#mem${_MemoryAccessor.getPhysicalAddress(i, _PCBReadyQueue.getHead().baseReg)}`).classList.add('operand');
+                    document.querySelector(`#mem${i}`).classList.add('operand');
                 }
             }
         }

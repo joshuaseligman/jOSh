@@ -16,11 +16,13 @@ const CPU_CLOCK_INTERVAL = 100; // This is in ms (milliseconds) so 1000 = 1 seco
 const TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).
 // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ = 1;
-const PROG_BREAK_IRQ = 2; // IRQ for a BRK (0x00) instruction to stop the program
+const PROG_BREAK_SINGLE_IRQ = 2; // IRQ for a BRK (0x00) instruction to stop the program
 const MEM_EXCEPTION_IRQ = 3; // IRQ for a memory out of bounds error
 const INVALID_OPCODE_IRQ = 4; // IRQ for invalid opcode
 const SYSCALL_PRINT_INT_IRQ = 5; // IRQ for printing an integer
 const SYSCALL_PRINT_STR_IRQ = 6; // IRQ for printing a string
+const CALL_DISPATCHER_IRQ = 7; // IRQ for calling the dispatcher to do a context switch
+const PROG_BREAK_ALL_IRQ = 8; // IRQ for calling a program break for all running programs
 // Flag to determine if the next step should be executed
 let _NextStepRequested = false;
 //
@@ -60,6 +62,11 @@ var _SarcasticMode = false;
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver = null;
 var _hardwareClockID = null;
+// Delcare the variables for the scheduler and dispatcher
+var _Scheduler = null;
+var _Dispatcher = null;
+// The default quantum is 6 CPU cycles
+const DEFAULT_QUANTUM = 6;
 // For testing (and enrichment)...
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.

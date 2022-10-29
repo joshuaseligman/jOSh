@@ -69,6 +69,19 @@ var TSOS;
             // run
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Runs the given process ID.");
             this.commandList[this.commandList.length] = sc;
+            //clearmem
+            sc = new TSOS.ShellCommand(this.shellClearMem, "clearmem", "- Clears all memory partitions");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRunAll, "runall", "- Execute all programs at once");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellPs, "ps", "- Display the PID and state of all processes");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<pid> - Kill one process");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "- Kill all processes");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -369,18 +382,8 @@ var TSOS;
                 for (let byte = 0; byte < progStrArr.length; byte++) {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }
-                let segment = _MemoryManager.allocateProgram(progArr);
-                if (segment == -1) {
-                    _Kernel.krnTrace('No space for the program.');
-                    _StdOut.putText('Failed to load program. No available space.');
-                }
-                else {
-                    let newPCB = new TSOS.ProcessControlBlock(segment);
-                    _PCBHistory.push(newPCB);
-                    // Let the user know the program is valid
-                    _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
-                    _StdOut.putText(`Process ID: ${newPCB.pid}`);
-                }
+                // Call the kernel process to create a process
+                _Kernel.krnCreateProcess(progArr);
             }
             else {
                 // Invalid program from bad characters
@@ -406,8 +409,6 @@ var TSOS;
                         _PCBReadyQueue.enqueue(newPCB);
                         newPCB.status = 'Ready';
                         newPCB.updateTableEntry();
-                        // Make sue the CPU is executing
-                        _CPU.isExecuting = true;
                         _Kernel.krnTrace(`Started execution of process ${requestedID}.`);
                         _StdOut.putText(`Started execution of process ${requestedID}.`);
                         break;
@@ -425,6 +426,97 @@ var TSOS;
             else {
                 // Missing the argument for the function
                 _StdOut.putText('Usage: run <pid>  Please supply a prcess id.');
+            }
+        }
+        shellRunAll(args) {
+            // Get all the resident processes so we can add them to the ready queue
+            let residentProcesses = _PCBHistory.filter((pcb) => pcb.status === 'Resident');
+            for (const resident of residentProcesses) {
+                _OsShell.shellRun([resident.pid.toString()]);
+                _StdOut.advanceLine();
+            }
+        }
+        shellClearMem(args) {
+            // We need to kill all of the running processes
+            _OsShell.shellKillAll([]);
+            _MemoryManager.deallocateAll();
+            _StdOut.advanceLine();
+            _StdOut.putText('All memory cleared.');
+        }
+        shellPs(args) {
+            // Iterate through all made PCBs and display their PID and status
+            for (const process of _PCBHistory) {
+                _StdOut.putText(`PID: ${process.pid}; Status: ${process.status}`);
+                _StdOut.advanceLine();
+            }
+        }
+        shellKill(args) {
+            if (args.length > 0) {
+                // Get the integer process id that was requested
+                let requestedID = parseInt(args[0]);
+                // Process IDs start at 0 and go up to the current id (exclusive)
+                if (Number.isNaN(requestedID) || requestedID < 0 || requestedID >= TSOS.ProcessControlBlock.CurrentPID) {
+                    _Kernel.krnTrace(`Kill request failed. Invalid PID: ${requestedID}`);
+                    _StdOut.putText(`Failed to kill process. Invalid PID: ${requestedID}`);
+                    return;
+                }
+                // We have a valid PID, so we can find the element safely in the history array
+                let killPCB = _PCBHistory.find((pcb) => pcb.pid === requestedID);
+                switch (killPCB.status) {
+                    // The process is loaded but has not been called to run
+                    case 'Resident':
+                        _Kernel.krnTrace(`Process ${requestedID} is not running.`);
+                        break;
+                    // The process is currently running
+                    case 'Running':
+                    case 'Ready':
+                        _Kernel.krnTrace(`Requesting kill process ${killPCB.pid}`);
+                        _Kernel.krnTerminateProcess(killPCB, 0, '', false);
+                        break;
+                    // The process has already executed
+                    case 'Terminated':
+                        _StdOut.putText(`Process ${requestedID} is already terminated.`);
+                        break;
+                }
+            }
+            else {
+                // Missing the argument for the function
+                _StdOut.putText('Usage: kill <pid>  Please supply a prcess id.');
+            }
+        }
+        shellKillAll(args) {
+            // Get all the running processes so we can kill them
+            let runningProcesses = _PCBHistory.filter((pcb) => pcb.status === 'Running' || pcb.status === 'Ready');
+            if (runningProcesses.length === 0) {
+                _StdOut.putText('There are no running programs.');
+            }
+            else {
+                for (const resident of runningProcesses) {
+                    _OsShell.shellKill([resident.pid.toString()]);
+                }
+            }
+        }
+        shellQuantum(args) {
+            if (args.length > 0) {
+                // Convert the input to an integer. Floating point values are taken care of
+                let newQuantum = parseInt(args[0]);
+                // Check to make sure we have a valid quantum
+                if (newQuantum > 0) {
+                    // Set the quantum and log it
+                    _Scheduler.setQuantum(newQuantum);
+                    _StdOut.putText(`Quantum set to ${newQuantum}`);
+                    _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
+                    // Update the HTML to reflect the new quantum
+                    document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
+                }
+                else {
+                    // Print out an error message for an invalid quantum value
+                    _StdOut.putText('Invalid quantum value. Quantum must be positive.');
+                }
+            }
+            else {
+                // Print out an error message for a missing quantum value
+                _StdOut.putText('Usage: quantum <int>  Please supply a quantum value.');
             }
         }
     }
