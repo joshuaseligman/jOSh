@@ -61,6 +61,7 @@ var _OsShell;
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver = null;
+var _krnDiskSystemDeviceDriver = null;
 var _hardwareClockID = null;
 // Delcare the variables for the scheduler and dispatcher
 var _Scheduler = null;
