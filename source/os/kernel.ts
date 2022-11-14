@@ -355,6 +355,10 @@ module TSOS {
             }
         }
 
+        public krnFormatDisk(): void {
+            _krnDiskSystemDeviceDriver.formatDisk();
+        }
+
         //
         // OS Utility Routines
         //

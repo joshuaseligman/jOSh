@@ -152,6 +152,11 @@ module TSOS {
                 "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellFormat,
+                "format",
+                "- Formats the disk for use");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -619,6 +624,10 @@ module TSOS {
                 // Print out an error message for a missing quantum value
                 _StdOut.putText('Usage: quantum <int>  Please supply a quantum value.');
             }
+        }
+
+        public shellFormat(args: string[]) {
+            _Kernel.krnFormatDisk();
         }
     }
 }

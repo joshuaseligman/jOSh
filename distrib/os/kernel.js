@@ -301,6 +301,9 @@ var TSOS;
                 _OsShell.putPrompt();
             }
         }
+        krnFormatDisk() {
+            _krnDiskSystemDeviceDriver.formatDisk();
+        }
         //
         // OS Utility Routines
         //

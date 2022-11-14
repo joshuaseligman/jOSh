@@ -87,6 +87,18 @@ var _SarcasticMode: boolean = false;
 var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard = null;
 var _krnDiskSystemDeviceDriver: TSOS.DiskSystemDeviceDriver = null;
 
+// 4 total tracks
+const NUM_TRACKS = 4;
+
+// 8 sectors per track
+const NUM_SECTORS = 8;
+
+// 8 blocks per sector
+const NUM_BLOCKS = 8;
+
+// 64 byte blocks
+const BLOCK_SIZE = 64;
+
 var _hardwareClockID: number = null;
 
 // Delcare the variables for the scheduler and dispatcher

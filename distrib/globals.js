@@ -62,6 +62,14 @@ var _SarcasticMode = false;
 // Global Device Driver Objects - page 12
 var _krnKeyboardDriver = null;
 var _krnDiskSystemDeviceDriver = null;
+// 4 total tracks
+const NUM_TRACKS = 4;
+// 8 sectors per track
+const NUM_SECTORS = 8;
+// 8 blocks per sector
+const NUM_BLOCKS = 8;
+// 64 byte blocks
+const BLOCK_SIZE = 64;
 var _hardwareClockID = null;
 // Delcare the variables for the scheduler and dispatcher
 var _Scheduler = null;
