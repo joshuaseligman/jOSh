@@ -69,6 +69,9 @@ module TSOS {
                     }
                 }
             } else {
+                // Add the header to the table here because the table has not been populated yet
+                document.querySelector('#diskTable').innerHTML = '<tr> <th>T:S:B</th> <th>In Use</th> <th>Next T:S:B</th> <th>Data</th> </tr>'
+
                 // We need to create a new row in the table for each block in memory
                 for (let t: number = 0; t < NUM_TRACKS; t++) {
                     for (let s: number = 0; s < NUM_SECTORS; s++) {

@@ -42,12 +42,15 @@ var TSOS;
                             for (let i = 1; i < tableRow.cells.length; i++) {
                                 switch (i) {
                                     case 1:
+                                        // First cell is if the block is in use
                                         tableRow.cells[i].innerHTML = storage.charAt(1);
                                         break;
                                     case 2:
+                                        // Second cell is the next tsb for linked allocation
                                         tableRow.cells[i].innerHTML = storage.charAt(3) + ':' + storage.charAt(5) + ':' + storage.charAt(7);
                                         break;
                                     case 3:
+                                        // Last cell is the 60 bytes of data
                                         tableRow.cells[i].innerHTML = storage.substring(8);
                                         break;
                                 }
@@ -57,6 +60,7 @@ var TSOS;
                 }
             }
             else {
+                document.querySelector('#diskTable').innerHTML = '<tr> <th>T:S:B</th> <th>In Use</th> <th>Next T:S:B</th> <th>Data</th> </tr>';
                 // We need to create a new row in the table for each block in memory
                 for (let t = 0; t < NUM_TRACKS; t++) {
                     for (let s = 0; s < NUM_SECTORS; s++) {
@@ -74,8 +78,9 @@ var TSOS;
                             let inUseElem = document.createElement('td');
                             inUseElem.innerHTML = storage.charAt(1);
                             newRow.appendChild(inUseElem);
-                            // Get the next tsb bytes (6 characters and add the element
+                            // Get the next 3 bytes for the next tsb and add the element
                             let nextTsbElem = document.createElement('td');
+                            // 3 bytes is 6 characters, but only need the second digit of each byte because everything only needs 1 digit
                             nextTsbElem.innerHTML = storage.charAt(3) + ':' + storage.charAt(5) + ':' + storage.charAt(7);
                             newRow.appendChild(nextTsbElem);
                             // Get the rest of the data and add the element

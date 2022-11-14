@@ -172,6 +172,7 @@ hr {
 #diskTable {
   text-align: center;
   font-size: 10pt;
-  margin-left: 5px;
-  margin-right: 5px;
+  width: 98%;
+  margin-left: 1%;
+  margin-right: 1%;
 }
