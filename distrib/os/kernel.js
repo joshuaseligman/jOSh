@@ -306,7 +306,26 @@ var TSOS;
             _StdOut.putText('Successfully formatted the disk.');
         }
         krnCreateFile(fileName) {
-            _StdOut.putText('Called to create file: ' + fileName);
+            // Call the dsDD to create a file on the disk if possible
+            let createFileOutput = _krnDiskSystemDeviceDriver.createFile(fileName);
+            // Print out a response accordingly
+            switch (createFileOutput) {
+                case 0:
+                    _StdOut.putText('Successfully created file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to create the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to create the file. ' + fileName + ' already exists.');
+                    break;
+                case 3:
+                    _StdOut.putText('Failed to create the file. There is no room in the directory.');
+                    break;
+                case 4:
+                    _StdOut.putText('Failed to create the file. There are no available data blocks');
+                    break;
+            }
         }
         //
         // OS Utility Routines
