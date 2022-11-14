@@ -39,6 +39,89 @@ module TSOS {
             this.isFormatted = true;
         }
 
+        // Possible outputs
+        // 0: File created successfully
+        // 1: Disk is not formatted yet
+        // 2: File already exists
+        // 3: No available directory blocks
+        // 4: No available data blocks
+        public createFile(fileName: string): number {
+            // Assume the file is successfully created
+            let out: number = 0;
+
+            if (!this.isFormatted) {
+                out = 1;
+            } else {
+                // Initialize the first open directory spot to be an empty string because nothing is there yet
+                let firstOpenDir: string = '';
+                for (let s = 0; s < NUM_SECTORS && out === 0; s++) {
+                    for (let b = 0; b < NUM_BLOCKS && out === 0; b++) {
+                        if (s === 0 && b === 0) {
+                            // 0:0:0 is for the master boot record
+                            // Directory is 0:0:1 - 0:1:7
+                            continue;
+                        }
+
+                        let blockEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+
+                        // The block is unavailable, so check to make sure the file doesn't already exist
+                        if (blockEntry.charAt(1) === '1') {
+                            // Get the remaining 60 bytes of data
+                            let fileMetadata: string = blockEntry.substring(8);
+
+                            // Work to get the file name by going byte by byte through the data
+                            let fileNameCheck: string = '';
+                            let charIndex = 0;
+                            let endFound: boolean = false;
+
+                            while (charIndex < fileMetadata.length && !endFound) {
+                                // Get the character code stored at the given byte
+                                let nextCharCode: number = parseInt(fileMetadata.substring(charIndex, charIndex + 2), 16);
+                                
+                                if (nextCharCode === 0) {
+                                    // End of file name
+                                    endFound = true;
+                                } else {
+                                    // Continue with the next character in the file name
+                                    fileNameCheck += String.fromCharCode(nextCharCode);
+                                    charIndex += 2;
+                                }
+                            }
+
+                            // Make sure the names do not match
+                            if (fileName === fileNameCheck) {
+                                out = 2;
+                            }
+
+                        } else if (firstOpenDir === '') {
+                            // Set the first open directory space accordingly
+                            firstOpenDir = `0:${s}:${b}`;
+                        }
+                    }
+                }
+
+                if (out === 0) {
+                    if (firstOpenDir === '') {
+                        // Return an error code if no available directory space
+                        out = 3;
+                    } else {
+                        let directoryEntry: string = '01FFFFFF';
+                        for (let i = 0; i < fileName.length; i++) {
+                            directoryEntry += fileName.charCodeAt(i).toString(16).toUpperCase();
+                        }
+                        // Pad the rest with 0s (should be at least 2)
+                        directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
+
+                        // Save it on the disk and update the table
+                        sessionStorage.setItem(firstOpenDir, directoryEntry);
+                        this.updateTable();
+                    }
+                }
+            }
+
+            return out;
+        }
+
         private updateTable(): void {
             if (this.isFormatted) {
                 for (let t: number = 0; t < NUM_TRACKS; t++) {
