@@ -303,6 +303,10 @@ var TSOS;
         }
         krnFormatDisk() {
             _krnDiskSystemDeviceDriver.formatDisk();
+            _StdOut.putText('Successfully formatted the disk.');
+        }
+        krnCreateFile(fileName) {
+            _StdOut.putText('Called to create file: ' + fileName);
         }
         //
         // OS Utility Routines

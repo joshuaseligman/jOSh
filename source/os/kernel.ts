@@ -357,6 +357,11 @@ module TSOS {
 
         public krnFormatDisk(): void {
             _krnDiskSystemDeviceDriver.formatDisk();
+            _StdOut.putText('Successfully formatted the disk.');
+        }
+
+        public krnCreateFile(fileName: string): void {
+            _StdOut.putText('Called to create file: ' + fileName);
         }
 
         //

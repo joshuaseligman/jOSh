@@ -84,6 +84,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats the disk for use");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCreate, "create", "<filename> - Creates a file of the given name");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -522,7 +524,22 @@ var TSOS;
             }
         }
         shellFormat(args) {
+            // Call the kernel to format the disk
             _Kernel.krnFormatDisk();
+        }
+        shellCreate(args) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                }
+                else {
+                    // Call the kernel to create the file of the given name
+                    _Kernel.krnCreateFile(args[0]);
+                }
+            }
+            else {
+                _StdOut.putText('Usage: create <filename>  Please supply a file name.');
+            }
         }
     }
     TSOS.Shell = Shell;
