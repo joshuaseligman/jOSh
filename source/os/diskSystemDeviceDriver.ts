@@ -133,7 +133,7 @@ module TSOS {
 
                         // Add each character of the file name to the directory entry
                         for (let j: number = 0; j < fileName.length; j++) {
-                            directoryEntry += fileName.charCodeAt(j).toString(16).toUpperCase();
+                            directoryEntry += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
                         }
                         // Pad the rest with 0s (should be at least 2)
                         directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
@@ -167,9 +167,42 @@ module TSOS {
                 if (curFileBlock === '') {
                     // File was not found
                     out = 2;
-                } 
+                } else {
+                    let contentsHex: string = '';
+                    for (let i: number = 0; i < contents.length; i++) {
+                        // Add the hex representation of each character to the file contents
+                        contentsHex += contents.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase();
+                    }
+
+                    // Add the EOF operator to the end of the contents hex string
+                    contentsHex += '00';
+
+                    // Separate the first 60 "bytes" of data and the remaining data
+                    let contentsToWrite: string = contentsHex.substring(0, (BLOCK_SIZE - 4) * 2).padEnd((BLOCK_SIZE - 4) * 2, '0');
+                    let remainingContents: string = contentsHex.substring((BLOCK_SIZE + 4) * 2);
+
+                    // Write the contents to the file
+                    sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
+
+                    // Check to see if there is still more to write
+                    if (remainingContents !== '') {
+                        let newTsb: string = this.getFirstAvailableDataBlock();
+                        // Check if the next block was found or not
+                        if (newTsb === '') {
+                            // Remove the last byte to replace with an EOF operator
+                            sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, BLOCK_SIZE * 2 - 2) + '00');
+                            out = 3;
+                        } else {
+                            let updatedFileBlock: string = sessionStorage.getItem(curFileBlock).substring(0, 2) + '0' + newTsb.charAt(0) + '0' + newTsb.charAt(2) + '0' + newTsb.charAt(4) + sessionStorage.getItem(curFileBlock).substring(8);
+                            sessionStorage.setItem(curFileBlock, updatedFileBlock);
+                            curFileBlock = newTsb;
+                        }
+                    }
+                }
             }
 
+            // Update the HTML and return the status code
+            this.updateTable();
             return out;
         }
 
@@ -248,6 +281,24 @@ module TSOS {
             }
             
             return outTsb;
+        }
+
+        public getFirstAvailableDataBlock(): string {
+            // The TSB to return (initialized to nothing)
+            let dataTsb: string = '';
+
+            // Go through each data block
+            for (let t: number = 1; t < NUM_TRACKS && dataTsb === ''; t++) {
+                for (let s: number = 0; s < NUM_SECTORS && dataTsb === ''; s++) {
+                    for (let b: number = 0; b < NUM_BLOCKS && dataTsb === ''; b++) {
+                        // Find the first data block that is not in use
+                        if (sessionStorage.getItem(`${t}:${s}:${b}`).charAt(1) === '0') {
+                            dataTsb = `${t}:${s}:${b}`;
+                        }
+                    }
+                }
+            }
+            return dataTsb;
         }
 
         private updateTable(): void {
