@@ -100,20 +100,49 @@ module TSOS {
                     }
                 }
 
+                let firstOpenData: string = '';
+                // Data blocks start in track 1
+                for (let t: number = 1; t < NUM_TRACKS && firstOpenData === ''; t++) {
+                    for (let s: number = 0; s < NUM_SECTORS && firstOpenData === ''; s++) {
+                        for (let b: number = 0; b < NUM_BLOCKS && firstOpenData === ''; b++) {
+                            // The inUse byte is the first byte, but only need the second digit
+                            let inUse: string = sessionStorage.getItem(`${t}:${s}:${b}`).charAt(1);
+                            // 0 means it is available
+                            if (inUse === '0') {
+                                firstOpenData = `${t}:${s}:${b}`;
+                            }
+                        }
+                    }
+                }
+
                 if (out === 0) {
                     if (firstOpenDir === '') {
                         // Return an error code if no available directory space
                         out = 3;
+                    } else if (firstOpenData === '') {
+                        // Return an error code if no available data blocks
+                        out = 4;
                     } else {
-                        let directoryEntry: string = '01FFFFFF';
-                        for (let i = 0; i < fileName.length; i++) {
-                            directoryEntry += fileName.charCodeAt(i).toString(16).toUpperCase();
+                        // Start with marking the directory entry as unavailable
+                        let directoryEntry: string = '01';
+                        
+                        // Go through every other character in the open data (t:s:b)
+                        for (let i: number = 0; i < firstOpenData.length; i += 2) {
+                            directoryEntry += '0' + firstOpenData.charAt(i);
+                        }
+
+                        // Add each character of the file name to the directory entry
+                        for (let j: number = 0; j < fileName.length; j++) {
+                            directoryEntry += fileName.charCodeAt(j).toString(16).toUpperCase();
                         }
                         // Pad the rest with 0s (should be at least 2)
                         directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
 
                         // Save it on the disk and update the table
                         sessionStorage.setItem(firstOpenDir, directoryEntry);
+
+                        // Mark the data block as unavailable, give it the end of the file, and the data are all 0s
+                        sessionStorage.setItem(firstOpenData, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
                         this.updateTable();
                     }
                 }
