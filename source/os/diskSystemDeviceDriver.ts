@@ -31,7 +31,7 @@ module TSOS {
                     for (let b: number = 0; b < NUM_BLOCKS; b++) {
                         // Set each block to be 0s
                         // 2 * block size is the number of 0s needed because 2 hex digits is 1 byte
-                        sessionStorage.setItem(`${t}:${s}:${b}`, '0'.repeat(2 * BLOCK_SIZE));
+                        sessionStorage.setItem(`${t}:${s}:${b}`, '00FFFFFF' + '0'.repeat((BLOCK_SIZE - 4) * 2));
                     }
                 }
             }
@@ -178,6 +178,9 @@ module TSOS {
                     // Add the EOF operator to the end of the contents hex string
                     contentsHex += '00';
 
+                    // Flag to help determine the next block that is needed. Default to true so we use the blocks already in use before going to a new block
+                    let isUsingNextTsb: boolean = true;
+
                     // Write until there is nothing left to write
                     let remainingContents: string = contentsHex;
                     while (remainingContents.length > 0 && out === 0) {
@@ -192,11 +195,22 @@ module TSOS {
                             // Write the contents to the file
                             sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
 
+                            if (sessionStorage.getItem(curFileBlock).substring(2, 8) === 'FFFFFF') {
+                                isUsingNextTsb = false;
+                            }
+
                             // Check to see if there is still more to write
                             if (remainingContents.length > 0) {
-                                // FIXME ONLY RUN THIS FUNCTION IF THE NEXT TSB IS F:F:F
-                                // OTHERWISE USE THE NEXT TSB
-                                let newTsb: string = this.getFirstAvailableDataBlock();
+                                let newTsb: string = '';
+                                if (isUsingNextTsb) {
+                                    // Use the next block in the link because we know it is already reserved for the given file
+                                    let nextTsbInfo: string = sessionStorage.getItem(curFileBlock).substring(2, 8);
+                                    newTsb = `${nextTsbInfo.charAt(1)}:${nextTsbInfo.charAt(3)}:${nextTsbInfo.charAt(5)}`;
+                                } else {
+                                    // Otherwise, use the next available block
+                                    newTsb = this.getFirstAvailableDataBlock();
+                                }
+
                                 // Check if the next block was found or not
                                 if (newTsb === '') {
                                     // Remove the last byte to replace with an EOF operator
@@ -208,16 +222,21 @@ module TSOS {
                                     sessionStorage.setItem(curFileBlock, updatedFileBlock);
 
                                     // Set the status of the new block to be in use and as the end of the file
-                                    // FIXME Do not overwrite the next TSB
                                     sessionStorage.setItem(newTsb, '01' + sessionStorage.getItem(newTsb).substring(2, 8) + '0'.repeat((BLOCK_SIZE - 4) * 2));
 
                                     // Set the current TSB to the new TSB
                                     curFileBlock = newTsb;
                                 }
                             } else {
-                                // TODO Write how to end the file
-                                // TODO Handle memory leaks
-                                // TODO Write set next TSB to F:F:F
+                                let nextTsb: string = sessionStorage.getItem(curFileBlock).substring(2, 8);
+                                console.log(nextTsb);
+                                while (nextTsb !== 'FFFFFF') {
+                                    let nextKey: string = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                                    sessionStorage.setItem(nextKey, '00' + sessionStorage.getItem(nextKey).substring(2));
+                                    nextTsb = sessionStorage.getItem(nextKey).substring(2, 8);
+                                    console.log(nextTsb)
+                                }
+                                sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 2) + 'FFFFFF' + sessionStorage.getItem(curFileBlock).substring(8));
                             }
                         }
                     }
