@@ -151,6 +151,28 @@ module TSOS {
             return out;
         }
 
+        // Possible outputs
+        // 0: Write successful
+        // 1: Disk is not formatted yet
+        // 2: File not found
+        // 3: Partial write (need more space)
+        public writeFile(fileName: string, contents: string): number {
+            let out: number = 0;
+
+            if (!this.isFormatted) {
+                // Disk is not formatted
+                out = 1;
+            } else {
+                let curFileBlock: string = this.getFirstFileBlock(fileName);
+                if (curFileBlock === '') {
+                    // File was not found
+                    out = 2;
+                } 
+            }
+
+            return out;
+        }
+
         public getFileList(): string[] {
             let fileList: string[] = [];
 
@@ -188,6 +210,44 @@ module TSOS {
             }
 
             return fileList;
+        }
+
+        private getFirstFileBlock(fileName: string): string {
+            let outTsb: string = '';
+
+            for (let s: number = 0; s < NUM_SECTORS && outTsb === ''; s++) {
+                for (let b: number = 0; b < NUM_BLOCKS && outTsb === ''; b++) {
+                    if (s === 0 && b === 0) {
+                        // 0:0:0 is the MBR
+                        continue;
+                    }
+
+                    let directoryEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+
+                    // The hex representation of the name
+                    let fileNameHex: string = directoryEntry.substring(8);
+                    // The real representation of the file name
+                    let fileNameStr: string = '';
+                    let endFound: boolean = false;
+
+                    // Every 2 characters is a byte = real character
+                    for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
+                        let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
+                        if (charCode === 0) {
+                            endFound = true;
+                        } else {
+                            fileNameStr += String.fromCharCode(charCode);
+                        }
+                    }
+
+                    if (fileName === fileNameStr) {
+                        // Establish the key of the first block of the data because we found the file in the directory
+                        outTsb = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
+                    }
+                }
+            }
+            
+            return outTsb;
         }
 
         private updateTable(): void {

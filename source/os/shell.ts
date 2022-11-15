@@ -162,6 +162,11 @@ module TSOS {
                 "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellWriteFile,
+                "write",
+                "<filename> \"<contents>\" - Writes the contents between the quotation marks to a given file");
+            this.commandList[this.commandList.length] = sc;
+
             sc = new ShellCommand(this.shellListFiles,
                 "ls",
                 "- Lists the files on the disk");
@@ -655,6 +660,28 @@ module TSOS {
                 }
             } else {
                 _StdOut.putText('Usage: create <filename>  Please supply a file name.');
+            }
+        }
+
+        public shellWriteFile(args: string[]) {
+            if (args.length === 0) {
+                _StdOut.putText('Usage: write <filename> "<contents>"  Please supply the name of the file and the contents to write.');
+            } else if (args.length === 1) {
+                _StdOut.putText('Usage: write <filename> "<contents>"  Please supply the contents to write.');
+            } else {
+                // Remove the file name from the arguments array
+                let fileName: string = args.shift();
+                // Generate the contents string
+                let contents: string = args.join(' ');
+
+                if (contents.charAt(0) !== '"' || contents.charAt(contents.length - 1) !== '"') {
+                    _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
+                } else {
+                    // Remove the quotation marks from the contents string
+                    contents = contents.substring(1, contents.length - 1);
+                    // Call the kernel to write the contents to the file
+                    _Kernel.krnWriteFile(fileName, contents);
+                }
             }
         }
 

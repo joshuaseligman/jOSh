@@ -327,6 +327,25 @@ var TSOS;
                     break;
             }
         }
+        krnWriteFile(fileName, contents) {
+            // Call the dsDD to write contents to a file on the disk if possible
+            let writeFileOutput = _krnDiskSystemDeviceDriver.writeFile(fileName, contents);
+            // Print out a response accordingly
+            switch (writeFileOutput) {
+                case 0:
+                    _StdOut.putText('Successfully wrote to file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to write to the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to write to the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText('Performed a partial write to file: ' + fileName + '. Not enough data blocks on the disk.');
+                    break;
+            }
+        }
         krnListFiles() {
             // Get the file list from the dsDD
             let fileList = _krnDiskSystemDeviceDriver.getFileList();
