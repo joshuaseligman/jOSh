@@ -203,7 +203,7 @@ var TSOS;
         // 2: File not found
         // 3: Partial write (need more space)
         // 4: Internal error (file block given is available)
-        writeFile(fileName, contents) {
+        writeFile(fileName, contents, isRaw = false) {
             let out = 0;
             if (!this.isFormatted) {
                 // Disk is not formatted
@@ -217,9 +217,16 @@ var TSOS;
                 }
                 else {
                     let contentsHex = '';
-                    for (let i = 0; i < contents.length; i++) {
-                        // Add the hex representation of each character to the file contents
-                        contentsHex += contents.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase();
+                    if (!isRaw) {
+                        // Have to convert the string to hex codes
+                        for (let i = 0; i < contents.length; i++) {
+                            // Add the hex representation of each character to the file contents
+                            contentsHex += contents.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase();
+                        }
+                    }
+                    else {
+                        // The data are already good to be directly written
+                        contentsHex = contents;
                     }
                     // Add the EOF operator to the end of the contents hex string
                     contentsHex += '00';
@@ -366,6 +373,98 @@ var TSOS;
                     sessionStorage.setItem(directoryTsb, sessionStorage.getItem(directoryTsb).substring(0, 8) + newNameHex.padEnd((BLOCK_SIZE - 4) * 2, '0'));
                     this.updateTable();
                 }
+            }
+            return out;
+        }
+        // Possible outputs
+        // 0: Rename successful
+        // 1: Disk is not formatted yet
+        // 2: Current file not found
+        // 3: Destination file name already exists
+        // 4: No available directory blocks to create new file
+        // 5: No available data blocks to create new file
+        // 6: Internal error reading the original file data (link ends before reaching 00 EOF)
+        // 7: Partial write to the new file (need more space)
+        // 8: Internal error writing the new file (file block given is available)
+        copyFile(curFileName, newFileName) {
+            let out = 0;
+            if (!this.isFormatted) {
+                out = 1;
+            }
+            else {
+                let curDirectoryTsb = this.getDirectoryBlockForFile(curFileName);
+                if (curDirectoryTsb === '') {
+                    out = 2;
+                }
+                else {
+                    // Try to create the new file and handle error codes from the file creation
+                    let createNewFileOutput = this.createFile(newFileName);
+                    switch (createNewFileOutput) {
+                        case 1:
+                            // Disk not formatted (already checked, so this should never come up here)
+                            out = 1;
+                            break;
+                        case 2:
+                            // The name of the new file is already in use
+                            out = 3;
+                            break;
+                        case 3:
+                            // The directory is full
+                            out = 4;
+                            break;
+                        case 4:
+                            // There are no available data blocks to give the file
+                            out = 5;
+                            break;
+                    }
+                    // Only continue if no errors so far
+                    if (out === 0) {
+                        // Read the original file and get its contents
+                        let curData = this.readFile(curFileName);
+                        switch (curData[0]) {
+                            case 1:
+                                // Unformatted disk
+                                // Already checked, so should not reach this point
+                                out = 1;
+                                break;
+                            case 2:
+                                // Current file not found
+                                // Already checked, so should not reach this point
+                                out = 2;
+                                break;
+                            case 3:
+                                // Error when reading the file (also should not reach this point)
+                                out = 6;
+                                break;
+                        }
+                        // Continue if no errors thus far
+                        if (out === 0) {
+                            // Convert the number array to base 16 and store it all in a string
+                            let rawDataString = curData[1].map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('');
+                            // Write the raw data to the new file
+                            let writeOutput = this.writeFile(newFileName, rawDataString, true);
+                            switch (writeOutput) {
+                                case 1:
+                                    // Not formatted, but should not reach here
+                                    out = 1;
+                                    break;
+                                case 2:
+                                    // File should always be found because it was just created, but just in case
+                                    out = 2;
+                                    break;
+                                case 3:
+                                    // Partial write because ran out of available data blocks
+                                    out = 7;
+                                    break;
+                                case 4:
+                                    // Internal error (shouldn't be reached)
+                                    out = 8;
+                                    break;
+                            }
+                        }
+                    }
+                }
+                this.updateTable();
             }
             return out;
         }

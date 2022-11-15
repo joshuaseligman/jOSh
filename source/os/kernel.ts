@@ -481,6 +481,42 @@ module TSOS {
             }
         }
 
+        public krnCopyFile(curFileName: string, newFileName: string): void {
+            // Copy the file
+            let copyOutput: number = _krnDiskSystemDeviceDriver.copyFile(curFileName, newFileName);
+
+            // Handle the output codes
+            switch (copyOutput) {
+                case 0:
+                    _StdOut.putText('Successfully copied ' + curFileName + ' to ' + newFileName + '.');
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to copy the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to copy the file. ' + curFileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText('Failed to copy the file. ' + newFileName + ' already exists.');
+                    break;
+                case 4:
+                    _StdOut.putText('Failed to copy the file. There is no room in the directory for the new file.');
+                    break;
+                case 5:
+                    _StdOut.putText('Failed to copy the file. There are no available data blocks on the disk for the new file.');
+                    break;    
+                case 6:
+                    _StdOut.putText("Internal file system error when reading " + curFileName  + ". Please reformat the disk.");
+                    break;
+                case 7:
+                    _StdOut.putText('Performed a partial copy of ' + curFileName + ' to ' + newFileName + '. Not enough available data blocks on the disk.');
+                    break;
+                case 8:
+                    _StdOut.putText("Internal file system error when writing to " + newFileName + ". Please reformat the disk.");
+                    break;
+            }
+        }
+
         //
         // OS Utility Routines
         //

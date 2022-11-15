@@ -184,7 +184,12 @@ module TSOS {
 
             sc = new ShellCommand(this.shellRenameFile,
                 "rename",
-                "<curFileName> <newFileName> - Lists the files on the disk");
+                "<curFileName> <newFileName> - Changes the name of a file");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellCopyFile,
+                "copy",
+                "<curFileName> <newFileName> - Makes a copy of an existing file");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -752,6 +757,29 @@ module TSOS {
                 } else {
                     // Call the kernel routine to rename the file
                     _Kernel.krnRenameFile(args[0], args[1]);
+                }
+            }
+        }
+
+        public shellCopyFile (args: string[]) {
+            // Check to make sure we have the right number of arguments
+            if (args.length === 0) {
+                _StdOut.putText('Usage: copy <curFileName> <newFileName>  Please provide the file to copy and the name of the destination file.');
+            } else if (args.length === 1) {
+                _StdOut.putText('Usage: copy <curFileName> <newFileName>  Please provide the name of the destination file.');
+            } else {
+                if (args[0] === args[1]) {
+                    // Make sure there are 2 unique names
+                    _StdOut.putText('Invalid file name. Must provide 2 unique file names');
+                } else if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
+                    // ~ will be used for swap files, so reserve the character
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                } else if (args[0].length > 59 || args[1].length > 59) {
+                    // The directory block has 60 bytes, but needs a byte (00) for the end of the file name, so 59 characters is max
+                    _StdOut.putText('Invalid file name. File names cannot be longer than 59 characters.');
+                } else {
+                    // Call the kernel routine to copy the file
+                    _Kernel.krnCopyFile(args[0], args[1]);
                 }
             }
         }
