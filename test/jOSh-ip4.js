@@ -322,5 +322,61 @@ function Glados () {
                 TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
             }
         }, 15000)
+
+        setTimeout(() => {
+            _KernelInputQueue.enqueue('f')
+            _KernelInputQueue.enqueue('o')
+            _KernelInputQueue.enqueue('r')
+            _KernelInputQueue.enqueue('m')
+            _KernelInputQueue.enqueue('a')
+            _KernelInputQueue.enqueue('t')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            _KernelInputQueue.enqueue('c')
+            _KernelInputQueue.enqueue('r')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('a')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            _KernelInputQueue.enqueue('w')
+            _KernelInputQueue.enqueue('r')
+            _KernelInputQueue.enqueue('i')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('"')
+            // Fill up all of the data blocks
+            for (let i = 0; i < 64 * 3 * 60 - 1; i++) {
+                _KernelInputQueue.enqueue('A')
+            }
+            _KernelInputQueue.enqueue('"')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            _KernelInputQueue.enqueue('c')
+            _KernelInputQueue.enqueue('r')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('a')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('1')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        }, 20000)
     }
 }

@@ -323,7 +323,7 @@ var TSOS;
                     _StdOut.putText('Failed to create the file. There is no room in the directory.');
                     break;
                 case 4:
-                    _StdOut.putText('Failed to create the file. There are no available data blocks');
+                    _StdOut.putText('Failed to create the file. There are no available data blocks on the disk.');
                     break;
             }
         }
@@ -342,7 +342,7 @@ var TSOS;
                     _StdOut.putText('Failed to write to the file. ' + fileName + ' does not exist.');
                     break;
                 case 3:
-                    _StdOut.putText('Performed a partial write to file: ' + fileName + '. Not enough data blocks on the disk.');
+                    _StdOut.putText('Performed a partial write to file: ' + fileName + '. Not enough available data blocks on the disk.');
                     break;
                 case 4:
                     _StdOut.putText("Internal file system error. Please reformat the disk.");
