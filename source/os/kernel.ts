@@ -294,17 +294,30 @@ module TSOS {
             // Try to load a process into memory
             let segment: number = _MemoryManager.allocateProgram(prog);
 
-            if (segment == -1) {
-                // Trace and print the output for a failed load
-                _Kernel.krnTrace('No space for the program.');
-                _StdOut.putText('Failed to load program. No available space.');
-            } else {
-                // Create the PCB
-                let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
-                _PCBHistory.push(newPCB);
+            // Create the PCB
+            let pcbCreated: boolean = true;
+            let newPCB: ProcessControlBlock = new ProcessControlBlock(segment, prog);
 
+            if (newPCB.segment === -1) {
+                // Try to create a swap file if no room in memory
+                let swapFileOutput: number = this.createSwapFile(newPCB.swapFile, newPCB.program);
+                if (swapFileOutput === 0) {
+                    // Swap file was created, so good there
+                    _PCBHistory.push(newPCB);
+                } else {
+                    // Swap file was not created, so backtrack
+                    _krnDiskSystemDeviceDriver.deleteFile(newPCB.swapFile);
+                    ProcessControlBlock.CurrentPID--;
+                    pcbCreated = false;
+                }
+            } else {
+                // Can add the pcb because it is already in memory
+                _PCBHistory.push(newPCB);
+            }
+
+            if (pcbCreated) {
                 // Let the user know the program is valid
-                _Kernel.krnTrace(`Created PID ${newPCB.pid}`)
+                _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
                 _StdOut.putText(`Process ID: ${newPCB.pid}`);
             }
         }
@@ -358,6 +371,37 @@ module TSOS {
         public krnFormatDisk(): void {
             _krnDiskSystemDeviceDriver.formatDisk();
             _StdOut.putText('Successfully formatted the disk.');
+        }
+
+        public createSwapFile(swapFileName: string, program: number[]): number {
+            let out: number = 0;
+
+            // Call the dsDD to create a file on the disk if possible
+            let createFileOutput: number = _krnDiskSystemDeviceDriver.createFile(swapFileName);
+            switch (createFileOutput) {
+                case 1:
+                    // Disk is not formatted, so cannot work with swap files
+                    _StdOut.putText('Could not create the swap file. Disk is not formatted.');
+                    out = 1;
+                    break;
+                case 2:
+                    // File already exists (should never come up)
+                    _StdOut.putText(`Could not create the swap file. ${swapFileName} already exists.`);
+                    out = 1;
+                    break;
+                case 3:
+                    // No directory room
+                    _StdOut.putText('Failed to create the swap file. There is no room in the directory.');
+                    out = 1;
+                    break;
+                case 4:
+                    // No data room
+                    _StdOut.putText('Failed to create the file. There are no available data blocks on the disk.');
+                    out = 1;
+                    break;
+            }
+
+            return out;
         }
 
         public krnCreateFile(fileName: string): void {

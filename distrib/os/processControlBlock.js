@@ -1,7 +1,7 @@
 var TSOS;
 (function (TSOS) {
     class ProcessControlBlock {
-        constructor(segment, priority = 8) {
+        constructor(segment, prog, priority = 8) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;
@@ -23,6 +23,10 @@ var TSOS;
             // Turnaround time and wait time are both 0
             this.turnaroundTime = 0;
             this.waitTime = 0;
+            // The name of the swap file will be ~<pid>. Since all PIDs are unique, there will be no issue with duplicate swap file names
+            this.swapFile = `~${this.pid}`;
+            // Save the initial program code
+            this.program = prog;
             // Add the PCB to the table
             this.createTableEntry();
         }
