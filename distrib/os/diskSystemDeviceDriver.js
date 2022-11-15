@@ -124,7 +124,7 @@ var TSOS;
                         // Save it on the disk and update the table
                         sessionStorage.setItem(firstOpenDir, directoryEntry);
                         // Mark the data block as unavailable, give it the end of the file, and the data are all 0s
-                        sessionStorage.setItem(firstOpenData, '01' + sessionStorage.getItem(firstOpenData).substring(2, 8) + '0'.repeat((BLOCK_SIZE - 4) * 2));
+                        sessionStorage.setItem(firstOpenData, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
                         this.updateTable();
                     }
                 }
@@ -172,6 +172,8 @@ var TSOS;
                             sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
                             // Check to see if there is still more to write
                             if (remainingContents.length > 0) {
+                                // FIXME ONLY RUN THIS FUNCTION IF THE NEXT TSB IS F:F:F
+                                // OTHERWISE USE THE NEXT TSB
                                 let newTsb = this.getFirstAvailableDataBlock();
                                 // Check if the next block was found or not
                                 if (newTsb === '') {
@@ -184,47 +186,55 @@ var TSOS;
                                     let updatedFileBlock = sessionStorage.getItem(curFileBlock).substring(0, 2) + '0' + newTsb.charAt(0) + '0' + newTsb.charAt(2) + '0' + newTsb.charAt(4) + sessionStorage.getItem(curFileBlock).substring(8);
                                     sessionStorage.setItem(curFileBlock, updatedFileBlock);
                                     // Set the status of the new block to be in use and as the end of the file
-                                    sessionStorage.setItem(newTsb, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
+                                    // FIXME Do not overwrite the next TSB
+                                    sessionStorage.setItem(newTsb, '01' + sessionStorage.getItem(newTsb).substring(2, 8) + '0'.repeat((BLOCK_SIZE - 4) * 2));
                                     // Set the current TSB to the new TSB
                                     curFileBlock = newTsb;
                                 }
                             }
+                            else {
+                                // TODO Write how to end the file
+                                // TODO Handle memory leaks
+                                // TODO Write set next TSB to F:F:F
+                            }
                         }
                     }
                 }
+                // Update the HTML and return the status code
+                this.updateTable();
             }
-            // Update the HTML and return the status code
-            this.updateTable();
             return out;
         }
         getFileList() {
             let fileList = [];
-            for (let s = 0; s < NUM_SECTORS; s++) {
-                for (let b = 0; b < NUM_BLOCKS; b++) {
-                    if (s === 0 && b === 0) {
-                        // Skip 0:0:0 (Master boot record)
-                        continue;
-                    }
-                    // Get the directory entry
-                    let directoryEntry = sessionStorage.getItem(`0:${s}:${b}`);
-                    // Make sure the directory entry is in use
-                    if (directoryEntry.charAt(1) === '1') {
-                        // The hex representation of the name
-                        let fileNameHex = directoryEntry.substring(8);
-                        // The real representation of the file name
-                        let fileName = '';
-                        let endFound = false;
-                        // Every 2 characters is a byte = real character
-                        for (let i = 0; i < fileNameHex.length && !endFound; i += 2) {
-                            let charCode = parseInt(fileNameHex.substring(i, i + 2), 16);
-                            if (charCode === 0) {
-                                endFound = true;
-                            }
-                            else {
-                                fileName += String.fromCharCode(charCode);
-                            }
+            if (this.isFormatted) {
+                for (let s = 0; s < NUM_SECTORS; s++) {
+                    for (let b = 0; b < NUM_BLOCKS; b++) {
+                        if (s === 0 && b === 0) {
+                            // Skip 0:0:0 (Master boot record)
+                            continue;
                         }
-                        fileList.push(fileName);
+                        // Get the directory entry
+                        let directoryEntry = sessionStorage.getItem(`0:${s}:${b}`);
+                        // Make sure the directory entry is in use
+                        if (directoryEntry.charAt(1) === '1') {
+                            // The hex representation of the name
+                            let fileNameHex = directoryEntry.substring(8);
+                            // The real representation of the file name
+                            let fileName = '';
+                            let endFound = false;
+                            // Every 2 characters is a byte = real character
+                            for (let i = 0; i < fileNameHex.length && !endFound; i += 2) {
+                                let charCode = parseInt(fileNameHex.substring(i, i + 2), 16);
+                                if (charCode === 0) {
+                                    endFound = true;
+                                }
+                                else {
+                                    fileName += String.fromCharCode(charCode);
+                                }
+                            }
+                            fileList.push(fileName);
+                        }
                     }
                 }
             }

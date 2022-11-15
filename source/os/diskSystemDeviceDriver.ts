@@ -194,6 +194,8 @@ module TSOS {
 
                             // Check to see if there is still more to write
                             if (remainingContents.length > 0) {
+                                // FIXME ONLY RUN THIS FUNCTION IF THE NEXT TSB IS F:F:F
+                                // OTHERWISE USE THE NEXT TSB
                                 let newTsb: string = this.getFirstAvailableDataBlock();
                                 // Check if the next block was found or not
                                 if (newTsb === '') {
@@ -206,54 +208,60 @@ module TSOS {
                                     sessionStorage.setItem(curFileBlock, updatedFileBlock);
 
                                     // Set the status of the new block to be in use and as the end of the file
-                                    sessionStorage.setItem(newTsb, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
+                                    // FIXME Do not overwrite the next TSB
+                                    sessionStorage.setItem(newTsb, '01' + sessionStorage.getItem(newTsb).substring(2, 8) + '0'.repeat((BLOCK_SIZE - 4) * 2));
 
                                     // Set the current TSB to the new TSB
                                     curFileBlock = newTsb;
                                 }
+                            } else {
+                                // TODO Write how to end the file
+                                // TODO Handle memory leaks
+                                // TODO Write set next TSB to F:F:F
                             }
                         }
                     }
                 }
+                // Update the HTML and return the status code
+                this.updateTable();
             }
-
-            // Update the HTML and return the status code
-            this.updateTable();
             return out;
         }
 
         public getFileList(): string[] {
             let fileList: string[] = [];
 
-            for (let s: number = 0; s < NUM_SECTORS; s++) {
-                for (let b: number = 0; b < NUM_BLOCKS; b++) {
-                    if (s === 0 && b === 0) {
-                        // Skip 0:0:0 (Master boot record)
-                        continue;
-                    }
-
-                    // Get the directory entry
-                    let directoryEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
-
-                    // Make sure the directory entry is in use
-                    if (directoryEntry.charAt(1) === '1') {
-                        // The hex representation of the name
-                        let fileNameHex: string = directoryEntry.substring(8);
-                        // The real representation of the file name
-                        let fileName: string = '';
-                        let endFound: boolean = false;
-
-                        // Every 2 characters is a byte = real character
-                        for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
-                            let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
-                            if (charCode === 0) {
-                                endFound = true;
-                            } else {
-                                fileName += String.fromCharCode(charCode);
-                            }
+            if (this.isFormatted) {
+                for (let s: number = 0; s < NUM_SECTORS; s++) {
+                    for (let b: number = 0; b < NUM_BLOCKS; b++) {
+                        if (s === 0 && b === 0) {
+                            // Skip 0:0:0 (Master boot record)
+                            continue;
                         }
 
-                        fileList.push(fileName);
+                        // Get the directory entry
+                        let directoryEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+
+                        // Make sure the directory entry is in use
+                        if (directoryEntry.charAt(1) === '1') {
+                            // The hex representation of the name
+                            let fileNameHex: string = directoryEntry.substring(8);
+                            // The real representation of the file name
+                            let fileName: string = '';
+                            let endFound: boolean = false;
+
+                            // Every 2 characters is a byte = real character
+                            for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
+                                let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
+                                if (charCode === 0) {
+                                    endFound = true;
+                                } else {
+                                    fileName += String.fromCharCode(charCode);
+                                }
+                            }
+
+                            fileList.push(fileName);
+                        }
                     }
                 }
             }
