@@ -402,6 +402,20 @@ var TSOS;
                     break;
             }
         }
+        krnRenameFile(oldFileName, newFileName) {
+            let renameOutput = _krnDiskSystemDeviceDriver.renameFile(oldFileName, newFileName);
+            switch (renameOutput) {
+                case 0:
+                    _StdOut.putText('Successfully renamed ' + oldFileName + ' to ' + newFileName + '.');
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to rename the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to rename the file. ' + oldFileName + ' does not exist.');
+                    break;
+            }
+        }
         //
         // OS Utility Routines
         //

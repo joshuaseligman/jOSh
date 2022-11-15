@@ -182,6 +182,11 @@ module TSOS {
                 "- Lists the files on the disk");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellRenameFile,
+                "rename",
+                "<curFileName> <newFileName> - Lists the files on the disk");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -728,6 +733,26 @@ module TSOS {
                 }
             } else {
                 _StdOut.putText('Usage: delete <filename>  Please provide the name of the file.');
+            }
+        }
+
+        public shellRenameFile(args: string[]) {
+            // Check to make sure we have the right number of arguments
+            if (args.length === 0) {
+                _StdOut.putText('Usage: rename <curFileName> <newFileName>  Please provide the file to rename and its new name.');
+            } else if (args.length === 1) {
+                _StdOut.putText('Usage: rename <curFileName> <newFileName>  Please provide a new name for the file.');
+            } else {
+                if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
+                    // ~ will be used for swap files, so reserve the character
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                } else if (args[0].length > 59 || args[1].length > 59) {
+                    // The directory block has 60 bytes, but needs a byte (00) for the end of the file name, so 59 characters is max
+                    _StdOut.putText('Invalid file name. File names cannot be longer than 59 characters.');
+                } else {
+                    // Call the kernel routine to rename the file
+                    _Kernel.krnRenameFile(args[0], args[1]);
+                }
             }
         }
     }

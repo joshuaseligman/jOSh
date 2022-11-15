@@ -340,6 +340,35 @@ var TSOS;
             }
             return out;
         }
+        // Possible outputs
+        // 0: Rename successful
+        // 1: Disk is not formatted yet
+        // 2: File not found
+        renameFile(oldFileName, newFileName) {
+            let out = 0;
+            if (!this.isFormatted) {
+                // Disk is not formatted
+                out = 1;
+            }
+            else {
+                let directoryTsb = this.getDirectoryBlockForFile(oldFileName);
+                if (directoryTsb === '') {
+                    // The file to rename doesn't exist
+                    out = 2;
+                }
+                else {
+                    let newNameHex = '';
+                    for (let i = 0; i < newFileName.length; i++) {
+                        // Add the byte of character data to the new name hex
+                        newNameHex += newFileName.charCodeAt(i).toString(16).toUpperCase().padStart(2, '0');
+                    }
+                    // Set the new name to the directory entry
+                    sessionStorage.setItem(directoryTsb, sessionStorage.getItem(directoryTsb).substring(0, 8) + newNameHex.padEnd((BLOCK_SIZE - 4) * 2, '0'));
+                    this.updateTable();
+                }
+            }
+            return out;
+        }
         getFileList() {
             let fileList = [];
             if (this.isFormatted) {
