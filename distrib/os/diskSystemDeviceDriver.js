@@ -155,24 +155,38 @@ var TSOS;
                     let outHexArr = [];
                     // Continue until the end of the file or an error
                     while (!endFound && out[0] === 0) {
-                        // Get the data in the current block
-                        let curData = sessionStorage.getItem(curFileBlock).substring(8);
-                        // Go through the block one byte at a time
-                        for (let i = 0; i < curData.length && !endFound; i += 2) {
-                            let hexChar = curData.substring(i, i + 2);
-                            if (hexChar === '00') {
-                                // The end of the file has been found
-                                endFound = true;
+                        // Make sure the block is valid
+                        if (curFileBlock !== 'F:F:F') {
+                            // Make sure the block is not available
+                            if (sessionStorage.getItem(curFileBlock).charAt(1) === '1') {
+                                // Get the data in the current block
+                                let curData = sessionStorage.getItem(curFileBlock).substring(8);
+                                // Go through the block one byte at a time
+                                for (let i = 0; i < curData.length && !endFound; i += 2) {
+                                    let hexChar = curData.substring(i, i + 2);
+                                    if (hexChar === '00') {
+                                        // The end of the file has been found
+                                        endFound = true;
+                                    }
+                                    else {
+                                        // Add the character code to the array
+                                        outHexArr.push(parseInt(hexChar, 16));
+                                    }
+                                }
+                                // Go to the next block if needed
+                                if (!endFound) {
+                                    let nextTsb = sessionStorage.getItem(curFileBlock).substring(2, 8);
+                                    curFileBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                                }
                             }
                             else {
-                                // Add the character code to the array
-                                outHexArr.push(parseInt(hexChar, 16));
+                                // Trying to read from an available block
+                                out[0] = 4;
                             }
                         }
-                        // Go to the next block if needed
-                        if (!endFound) {
-                            let nextTsb = sessionStorage.getItem(curFileBlock).substring(2, 8);
-                            curFileBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                        else {
+                            // Error if the block is not valid (no end of file marker)
+                            out[0] = 4;
                         }
                     }
                     // Only add the hex data if the read was successful
