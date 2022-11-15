@@ -446,6 +446,10 @@ module TSOS {
             }
         }
 
+        public krnDeleteFile(fileName: string): void {
+            let fileDeleteOutput: number = _krnDiskSystemDeviceDriver.deleteFile(fileName);
+        }
+
         //
         // OS Utility Routines
         //

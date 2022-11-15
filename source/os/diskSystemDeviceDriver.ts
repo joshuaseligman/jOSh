@@ -320,6 +320,23 @@ module TSOS {
             return out;
         }
 
+        // Possible outputs
+        // 0: Delete successful
+        // 1: Disk is not formatted yet
+        // 2: File not found
+        // 3: Internal error (file block given is available)
+        public deleteFile(fileName: string): number {
+            let out: number = 0;
+
+            // if (!this.isFormatted) {
+            //     out = 1;
+            // } else if () {
+
+            // }
+
+            return out;
+        }
+
         public getFileList(): string[] {
             let fileList: string[] = [];
 
@@ -361,17 +378,17 @@ module TSOS {
             return fileList;
         }
 
-        private getFirstDataBlockForFile(fileName: string): string {
-            let outTsb: string = '';
+        private getDirectoryBlockForFile(fileName: string): string {
+            let out: string = '';
 
-            for (let s: number = 0; s < NUM_SECTORS && outTsb === ''; s++) {
-                for (let b: number = 0; b < NUM_BLOCKS && outTsb === ''; b++) {
+            for (let s: number = 0; s < NUM_SECTORS && out === ''; s++) {
+                for (let b: number = 0; b < NUM_BLOCKS && out === ''; b++) {
                     if (s === 0 && b === 0) {
-                        // 0:0:0 is the MBR
+                        // Skip the MBR
                         continue;
                     }
-
-                    let directoryEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+                    let directoryTsb: string = `0:${s}:${b}`;
+                    let directoryEntry: string = sessionStorage.getItem(directoryTsb);
 
                     // The hex representation of the name
                     let fileNameHex: string = directoryEntry.substring(8);
@@ -390,10 +407,23 @@ module TSOS {
                     }
 
                     if (fileName === fileNameStr) {
-                        // Establish the key of the first block of the data because we found the file in the directory
-                        outTsb = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
+                        out = directoryTsb;
                     }
                 }
+            }
+            return out;
+        }
+
+        private getFirstDataBlockForFile(fileName: string): string {
+            let outTsb: string = '';
+
+            // Get the directory location in storage
+            let directoryTsb: string = this.getDirectoryBlockForFile(fileName);
+            // Make sure the file exists before getting the data block
+            if (directoryTsb !== '') {
+                let directoryEntry: string = sessionStorage.getItem(directoryTsb);
+                // Establish the key of the first block of the data because we found the file in the directory
+                outTsb = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
             }
             
             return outTsb;

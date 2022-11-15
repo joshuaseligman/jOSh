@@ -171,6 +171,11 @@ module TSOS {
                 "write",
                 "<filename> \"<contents>\" - Writes the contents between the quotation marks to a given file");
             this.commandList[this.commandList.length] = sc;
+            
+            sc = new ShellCommand(this.shellDeleteFile,
+                "delete",
+                "<filename> - Deletes a file from the disk");
+            this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellListFiles,
                 "ls",
@@ -710,6 +715,19 @@ module TSOS {
                 }
             } else {
                 _StdOut.putText('Usage: read <filename>  Please provide the name of the file.');
+            }
+        }
+
+        public shellDeleteFile(args: string[]) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // Swap files cannot be deleted by the user
+                    _StdOut.putText('Cannot delete a swap file.');
+                } else {
+                    _Kernel.krnDeleteFile(args[0]);
+                }
+            } else {
+                _StdOut.putText('Usage: delete <filename>  Please provide the name of the file.');
             }
         }
     }

@@ -385,6 +385,9 @@ var TSOS;
                     break;
             }
         }
+        krnDeleteFile(fileName) {
+            let fileDeleteOutput = _krnDiskSystemDeviceDriver.deleteFile(fileName);
+        }
         //
         // OS Utility Routines
         //
