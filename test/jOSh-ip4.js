@@ -297,6 +297,30 @@ function Glados () {
                 _KernelInputQueue.enqueue(i.toString())
                 TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
             }
+
+            let stringToWrite = 'write test0 "This string is exactly 120 characters, which should take up 3 blocks. 2 with data and 1 with all 0s because we need EOF."';
+            for (let i = 0; i < stringToWrite.length; i++) {
+                _KernelInputQueue.enqueue(stringToWrite.charAt(i));
+            }
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
         }, 6000)
+
+        setTimeout(() => {
+            let stringToWrite = 'write test0 "Hello world"';
+            for (let i = 0; i < stringToWrite.length; i++) {
+                _KernelInputQueue.enqueue(stringToWrite.charAt(i));
+            }
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        }, 10000)
+
+        setTimeout(() => {
+            for (let i = 0; i <= 62; i++) {
+                let stringToWrite = `write test${i} "This string is exactly 180 characters, which should take up 4 blocks. 3 with data and 1 with 0s because we need EOF to mark the end of the file. There should be a partial write now"`
+                for (let j = 0; j < stringToWrite.length; j++) {
+                    _KernelInputQueue.enqueue(stringToWrite.charAt(j));
+                }
+                TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+            }
+        }, 15000)
     }
 }

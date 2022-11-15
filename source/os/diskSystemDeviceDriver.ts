@@ -190,7 +190,7 @@ module TSOS {
                         } else {
                             // Separate the first 60 "bytes" of data and the remaining data
                             let contentsToWrite: string = remainingContents.substring(0, (BLOCK_SIZE - 4) * 2).padEnd((BLOCK_SIZE - 4) * 2, '0');
-                            remainingContents = remainingContents.substring((BLOCK_SIZE + 4) * 2);
+                            remainingContents = remainingContents.substring((BLOCK_SIZE - 4) * 2);
 
                             // Write the contents to the file
                             sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
@@ -228,14 +228,21 @@ module TSOS {
                                     curFileBlock = newTsb;
                                 }
                             } else {
-                                let nextTsb: string = sessionStorage.getItem(curFileBlock).substring(2, 8);
-                                console.log(nextTsb);
-                                while (nextTsb !== 'FFFFFF') {
-                                    let nextKey: string = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
-                                    sessionStorage.setItem(nextKey, '00' + sessionStorage.getItem(nextKey).substring(2));
-                                    nextTsb = sessionStorage.getItem(nextKey).substring(2, 8);
-                                    console.log(nextTsb)
+                                // Memory leak prevention. If writing to fewer blocks, we have to set the rest of the chain to be not in use anymore
+                                if (isUsingNextTsb) {
+                                    // Get the first tsb that is not being used
+                                    let nextTsb: string = sessionStorage.getItem(curFileBlock).substring(2, 8);
+                                    // Continue to the end of the chain
+                                    while (nextTsb !== 'FFFFFF') {
+                                        // Translate the 3 bytes to a key
+                                        let nextKey: string = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                                        // Set the tsb to available
+                                        sessionStorage.setItem(nextKey, '00' + sessionStorage.getItem(nextKey).substring(2));
+                                        // Continue down the chain
+                                        nextTsb = sessionStorage.getItem(nextKey).substring(2, 8);
+                                    }
                                 }
+                                // Set the last block used to be the end of the file by closing the chain
                                 sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 2) + 'FFFFFF' + sessionStorage.getItem(curFileBlock).substring(8));
                             }
                         }
