@@ -156,6 +156,7 @@ module TSOS {
         // 1: Disk is not formatted yet
         // 2: File not found
         // 3: Partial write (need more space)
+        // 4: Internal error (file block given is available)
         public writeFile(fileName: string, contents: string): number {
             let out: number = 0;
 
@@ -163,7 +164,7 @@ module TSOS {
                 // Disk is not formatted
                 out = 1;
             } else {
-                let curFileBlock: string = this.getFirstFileBlock(fileName);
+                let curFileBlock: string = this.getFirstDataBlockForFile(fileName);
                 if (curFileBlock === '') {
                     // File was not found
                     out = 2;
@@ -177,25 +178,40 @@ module TSOS {
                     // Add the EOF operator to the end of the contents hex string
                     contentsHex += '00';
 
-                    // Separate the first 60 "bytes" of data and the remaining data
-                    let contentsToWrite: string = contentsHex.substring(0, (BLOCK_SIZE - 4) * 2).padEnd((BLOCK_SIZE - 4) * 2, '0');
-                    let remainingContents: string = contentsHex.substring((BLOCK_SIZE + 4) * 2);
-
-                    // Write the contents to the file
-                    sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
-
-                    // Check to see if there is still more to write
-                    if (remainingContents !== '') {
-                        let newTsb: string = this.getFirstAvailableDataBlock();
-                        // Check if the next block was found or not
-                        if (newTsb === '') {
-                            // Remove the last byte to replace with an EOF operator
-                            sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, BLOCK_SIZE * 2 - 2) + '00');
-                            out = 3;
+                    // Write until there is nothing left to write
+                    let remainingContents: string = contentsHex;
+                    while (remainingContents.length > 0 && out === 0) {
+                        if (sessionStorage.getItem(curFileBlock).charAt(1) === '0') {
+                            // The block should always be available
+                            out = 4;
                         } else {
-                            let updatedFileBlock: string = sessionStorage.getItem(curFileBlock).substring(0, 2) + '0' + newTsb.charAt(0) + '0' + newTsb.charAt(2) + '0' + newTsb.charAt(4) + sessionStorage.getItem(curFileBlock).substring(8);
-                            sessionStorage.setItem(curFileBlock, updatedFileBlock);
-                            curFileBlock = newTsb;
+                            // Separate the first 60 "bytes" of data and the remaining data
+                            let contentsToWrite: string = remainingContents.substring(0, (BLOCK_SIZE - 4) * 2).padEnd((BLOCK_SIZE - 4) * 2, '0');
+                            remainingContents = remainingContents.substring((BLOCK_SIZE + 4) * 2);
+
+                            // Write the contents to the file
+                            sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, 8) + contentsToWrite);
+
+                            // Check to see if there is still more to write
+                            if (remainingContents.length > 0) {
+                                let newTsb: string = this.getFirstAvailableDataBlock();
+                                // Check if the next block was found or not
+                                if (newTsb === '') {
+                                    // Remove the last byte to replace with an EOF operator
+                                    sessionStorage.setItem(curFileBlock, sessionStorage.getItem(curFileBlock).substring(0, BLOCK_SIZE * 2 - 2) + '00');
+                                    out = 3;
+                                } else {
+                                    // Update the current file block with the new link
+                                    let updatedFileBlock: string = sessionStorage.getItem(curFileBlock).substring(0, 2) + '0' + newTsb.charAt(0) + '0' + newTsb.charAt(2) + '0' + newTsb.charAt(4) + sessionStorage.getItem(curFileBlock).substring(8);
+                                    sessionStorage.setItem(curFileBlock, updatedFileBlock);
+
+                                    // Set the status of the new block to be in use and as the end of the file
+                                    sessionStorage.setItem(newTsb, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
+
+                                    // Set the current TSB to the new TSB
+                                    curFileBlock = newTsb;
+                                }
+                            }
                         }
                     }
                 }
@@ -245,7 +261,7 @@ module TSOS {
             return fileList;
         }
 
-        private getFirstFileBlock(fileName: string): string {
+        private getFirstDataBlockForFile(fileName: string): string {
             let outTsb: string = '';
 
             for (let s: number = 0; s < NUM_SECTORS && outTsb === ''; s++) {
