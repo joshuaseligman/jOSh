@@ -162,6 +162,11 @@ module TSOS {
                 "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellReadFile,
+                "read",
+                "<filename> - Reads a file");
+            this.commandList[this.commandList.length] = sc;
+
             sc = new ShellCommand(this.shellWriteFile,
                 "write",
                 "<filename> \"<contents>\" - Writes the contents between the quotation marks to a given file");
@@ -677,16 +682,35 @@ module TSOS {
                 if (contents.charAt(0) !== '"' || contents.charAt(contents.length - 1) !== '"') {
                     _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
                 } else {
-                    // Remove the quotation marks from the contents string
-                    contents = contents.substring(1, contents.length - 1);
-                    // Call the kernel to write the contents to the file
-                    _Kernel.krnWriteFile(fileName, contents);
+                    if (args[0].charAt(0) === '~') {
+                        // Prevent the user from touching the swap files
+                        _StdOut.putText('Cannot write to a swap file.');
+                    } else {
+                        // Remove the quotation marks from the contents string
+                        contents = contents.substring(1, contents.length - 1);
+                        // Call the kernel to write the contents to the file
+                        _Kernel.krnWriteFile(fileName, contents);
+                    }
                 }
             }
         }
 
         public shellListFiles(args: string[]) {
             _Kernel.krnListFiles();
+        }
+
+        public shellReadFile(args: string[]) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // Swap files are inaccessible
+                    _StdOut.putText('Cannot read from a swap file.');
+                } else {
+                    // Call the kernel routine to read the file
+                    _Kernel.krnReadFile(args[0]);
+                }
+            } else {
+                _StdOut.putText('Usage: read <filename>  Please provide the name of the file.');
+            }
         }
     }
 }

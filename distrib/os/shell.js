@@ -86,6 +86,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellCreate, "create", "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellReadFile, "read", "<filename> - Reads a file");
+            this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellWriteFile, "write", "<filename> \"<contents>\" - Writes the contents between the quotation marks to a given file");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "- Lists the files on the disk");
@@ -566,15 +568,36 @@ var TSOS;
                     _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
                 }
                 else {
-                    // Remove the quotation marks from the contents string
-                    contents = contents.substring(1, contents.length - 1);
-                    // Call the kernel to write the contents to the file
-                    _Kernel.krnWriteFile(fileName, contents);
+                    if (args[0].charAt(0) === '~') {
+                        // Prevent the user from touching the swap files
+                        _StdOut.putText('Cannot write to a swap file.');
+                    }
+                    else {
+                        // Remove the quotation marks from the contents string
+                        contents = contents.substring(1, contents.length - 1);
+                        // Call the kernel to write the contents to the file
+                        _Kernel.krnWriteFile(fileName, contents);
+                    }
                 }
             }
         }
         shellListFiles(args) {
             _Kernel.krnListFiles();
+        }
+        shellReadFile(args) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // Swap files are inaccessible
+                    _StdOut.putText('Cannot read from a swap file.');
+                }
+                else {
+                    // Call the kernel routine to read the file
+                    _Kernel.krnReadFile(args[0]);
+                }
+            }
+            else {
+                _StdOut.putText('Usage: read <filename>  Please provide the name of the file.');
+            }
         }
     }
     TSOS.Shell = Shell;

@@ -131,6 +131,58 @@ var TSOS;
             }
             return out;
         }
+        // Possible outputs at index 0
+        // 0: Read successful (will contain a second element with the array of character codes)
+        // 1: Disk is not formatted yet
+        // 2: File not found
+        // 3: Internal error (link ends before reaching 00 EOF)
+        readFile(fileName) {
+            let out = [0];
+            if (!this.isFormatted) {
+                // Make sure the disk is formatted first
+                out[0] = 1;
+            }
+            else {
+                let curFileBlock = this.getFirstDataBlockForFile(fileName);
+                if (curFileBlock === '') {
+                    // File is not found if the file block is an empty string
+                    out[0] = 2;
+                }
+                else {
+                    // Boolean to represent the end of the file
+                    let endFound = false;
+                    // The character codes that need to be printed
+                    let outHexArr = [];
+                    // Continue until the end of the file or an error
+                    while (!endFound && out[0] === 0) {
+                        // Get the data in the current block
+                        let curData = sessionStorage.getItem(curFileBlock).substring(8);
+                        // Go through the block one byte at a time
+                        for (let i = 0; i < curData.length && !endFound; i += 2) {
+                            let hexChar = curData.substring(i, i + 2);
+                            if (hexChar === '00') {
+                                // The end of the file has been found
+                                endFound = true;
+                            }
+                            else {
+                                // Add the character code to the array
+                                outHexArr.push(parseInt(hexChar, 16));
+                            }
+                        }
+                        // Go to the next block if needed
+                        if (!endFound) {
+                            let nextTsb = sessionStorage.getItem(curFileBlock).substring(2, 8);
+                            curFileBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                        }
+                    }
+                    // Only add the hex data if the read was successful
+                    if (out[0] === 0) {
+                        out.push(outHexArr);
+                    }
+                }
+            }
+            return out;
+        }
         // Possible outputs
         // 0: Write successful
         // 1: Disk is not formatted yet

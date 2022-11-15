@@ -363,6 +363,27 @@ var TSOS;
                 }
             }
         }
+        krnReadFile(fileName) {
+            // Read the file and get the results
+            let fileReadOutput = _krnDiskSystemDeviceDriver.readFile(fileName);
+            switch (fileReadOutput[0]) {
+                case 0:
+                    // File read was successful so print the contents
+                    for (let i = 0; i < fileReadOutput[1].length; i++) {
+                        _StdOut.putText(String.fromCharCode(fileReadOutput[1][i]));
+                    }
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to read from the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to read from the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
+        }
         //
         // OS Utility Routines
         //
