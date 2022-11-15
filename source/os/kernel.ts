@@ -384,6 +384,16 @@ module TSOS {
             }
         }
 
+        public krnListFiles(): void {
+            // Get the file list from the dsDD
+            let fileList: string[] = _krnDiskSystemDeviceDriver.getFileList();
+            // Print out each file name
+            for (let i: number = 0; i < fileList.length; i++) {
+                _StdOut.putText('  ' + fileList[i]);
+                _StdOut.advanceLine();
+            }
+        }
+
         //
         // OS Utility Routines
         //

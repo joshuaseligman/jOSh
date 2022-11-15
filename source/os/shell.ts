@@ -162,6 +162,11 @@ module TSOS {
                 "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellListFiles,
+                "ls",
+                "- Lists the files on the disk");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -651,6 +656,10 @@ module TSOS {
             } else {
                 _StdOut.putText('Usage: create <filename>  Please supply a file name.');
             }
+        }
+
+        public shellListFiles(args: string[]) {
+            _Kernel.krnListFiles();
         }
     }
 }

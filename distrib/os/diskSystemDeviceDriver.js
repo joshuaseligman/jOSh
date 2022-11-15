@@ -115,6 +115,7 @@ var TSOS;
                         for (let i = 0; i < firstOpenData.length; i += 2) {
                             directoryEntry += '0' + firstOpenData.charAt(i);
                         }
+                        // Add each character of the file name to the directory entry
                         for (let j = 0; j < fileName.length; j++) {
                             directoryEntry += fileName.charCodeAt(j).toString(16).toUpperCase();
                         }
@@ -122,13 +123,46 @@ var TSOS;
                         directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
                         // Save it on the disk and update the table
                         sessionStorage.setItem(firstOpenDir, directoryEntry);
-                        // Mark the data block as unavailbale, give it the end of the file, and the data are all 0s
+                        // Mark the data block as unavailable, give it the end of the file, and the data are all 0s
                         sessionStorage.setItem(firstOpenData, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
                         this.updateTable();
                     }
                 }
             }
             return out;
+        }
+        getFileList() {
+            let fileList = [];
+            for (let s = 0; s < NUM_SECTORS; s++) {
+                for (let b = 0; b < NUM_BLOCKS; b++) {
+                    if (s === 0 && b === 0) {
+                        // Skip 0:0:0 (Master boot record)
+                        continue;
+                    }
+                    // Get the directory entry
+                    let directoryEntry = sessionStorage.getItem(`0:${s}:${b}`);
+                    // Make sure the directory entry is in use
+                    if (directoryEntry.charAt(1) === '1') {
+                        // The hex representation of the name
+                        let fileNameHex = directoryEntry.substring(8);
+                        // The real representation of the file name
+                        let fileName = '';
+                        let endFound = false;
+                        // Every 2 characters is a byte = real character
+                        for (let i = 0; i < fileNameHex.length && !endFound; i += 2) {
+                            let charCode = parseInt(fileNameHex.substring(i, i + 2), 16);
+                            if (charCode === 0) {
+                                endFound = true;
+                            }
+                            else {
+                                fileName += String.fromCharCode(charCode);
+                            }
+                        }
+                        fileList.push(fileName);
+                    }
+                }
+            }
+            return fileList;
         }
         updateTable() {
             if (this.isFormatted) {

@@ -151,6 +151,45 @@ module TSOS {
             return out;
         }
 
+        public getFileList(): string[] {
+            let fileList: string[] = [];
+
+            for (let s: number = 0; s < NUM_SECTORS; s++) {
+                for (let b: number = 0; b < NUM_BLOCKS; b++) {
+                    if (s === 0 && b === 0) {
+                        // Skip 0:0:0 (Master boot record)
+                        continue;
+                    }
+
+                    // Get the directory entry
+                    let directoryEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+
+                    // Make sure the directory entry is in use
+                    if (directoryEntry.charAt(1) === '1') {
+                        // The hex representation of the name
+                        let fileNameHex: string = directoryEntry.substring(8);
+                        // The real representation of the file name
+                        let fileName: string = '';
+                        let endFound: boolean = false;
+
+                        // Every 2 characters is a byte = real character
+                        for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
+                            let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
+                            if (charCode === 0) {
+                                endFound = true;
+                            } else {
+                                fileName += String.fromCharCode(charCode);
+                            }
+                        }
+
+                        fileList.push(fileName);
+                    }
+                }
+            }
+
+            return fileList;
+        }
+
         private updateTable(): void {
             if (this.isFormatted) {
                 for (let t: number = 0; t < NUM_TRACKS; t++) {

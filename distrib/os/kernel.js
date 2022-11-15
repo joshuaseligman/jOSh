@@ -327,6 +327,15 @@ var TSOS;
                     break;
             }
         }
+        krnListFiles() {
+            // Get the file list from the dsDD
+            let fileList = _krnDiskSystemDeviceDriver.getFileList();
+            // Print out each file name
+            for (let i = 0; i < fileList.length; i++) {
+                _StdOut.putText('  ' + fileList[i]);
+                _StdOut.advanceLine();
+            }
+        }
         //
         // OS Utility Routines
         //

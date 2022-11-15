@@ -86,6 +86,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellCreate, "create", "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "- Lists the files on the disk");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             // Display the initial prompt.
@@ -545,6 +547,9 @@ var TSOS;
             else {
                 _StdOut.putText('Usage: create <filename>  Please supply a file name.');
             }
+        }
+        shellListFiles(args) {
+            _Kernel.krnListFiles();
         }
     }
     TSOS.Shell = Shell;
