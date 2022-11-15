@@ -600,5 +600,112 @@ function Glados () {
             _KernelInputQueue.enqueue('2')
             TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
         }, 27000)
+
+        setTimeout(() => {
+            _KernelInputQueue.enqueue('f')
+            _KernelInputQueue.enqueue('o')
+            _KernelInputQueue.enqueue('r')
+            _KernelInputQueue.enqueue('m')
+            _KernelInputQueue.enqueue('a')
+            _KernelInputQueue.enqueue('t')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            for (let i = 0; i <= 62; i++) {
+                _KernelInputQueue.enqueue('c')
+                _KernelInputQueue.enqueue('r')
+                _KernelInputQueue.enqueue('e')
+                _KernelInputQueue.enqueue('a')
+                _KernelInputQueue.enqueue('t')
+                _KernelInputQueue.enqueue('e')
+                _KernelInputQueue.enqueue(' ')
+                _KernelInputQueue.enqueue('t')
+                _KernelInputQueue.enqueue('e')
+                _KernelInputQueue.enqueue('s')
+                _KernelInputQueue.enqueue('t')
+                _KernelInputQueue.enqueue(i.toString())
+                TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+            }
+
+            _KernelInputQueue.enqueue('c')
+            _KernelInputQueue.enqueue('o')
+            _KernelInputQueue.enqueue('p')
+            _KernelInputQueue.enqueue('y')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('1')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('j')
+            _KernelInputQueue.enqueue('O')
+            _KernelInputQueue.enqueue('S')
+            _KernelInputQueue.enqueue('h')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        }, 30000)
+
+        setTimeout(() => {
+            _KernelInputQueue.enqueue('d')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('l')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('0')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            let stringToWrite = 'write test1 "' + 'A'.repeat(60 * 200) + '"'
+            for (let i = 0; i < stringToWrite.length; i++) {
+                _KernelInputQueue.enqueue(stringToWrite.charAt(i))
+            }
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            _KernelInputQueue.enqueue('c')
+            _KernelInputQueue.enqueue('o')
+            _KernelInputQueue.enqueue('p')
+            _KernelInputQueue.enqueue('y')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('1')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('j')
+            _KernelInputQueue.enqueue('O')
+            _KernelInputQueue.enqueue('S')
+            _KernelInputQueue.enqueue('h')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        }, 33000)
+
+        setTimeout(() => {
+            let stringToWrite = 'write test1 "' + 'A'.repeat(60 * 100) + '"'
+            for (let i = 0; i < stringToWrite.length; i++) {
+                _KernelInputQueue.enqueue(stringToWrite.charAt(i))
+            }
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+
+            _KernelInputQueue.enqueue('c')
+            _KernelInputQueue.enqueue('o')
+            _KernelInputQueue.enqueue('p')
+            _KernelInputQueue.enqueue('y')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('e')
+            _KernelInputQueue.enqueue('s')
+            _KernelInputQueue.enqueue('t')
+            _KernelInputQueue.enqueue('1')
+            _KernelInputQueue.enqueue(' ')
+            _KernelInputQueue.enqueue('j')
+            _KernelInputQueue.enqueue('O')
+            _KernelInputQueue.enqueue('S')
+            _KernelInputQueue.enqueue('h')
+            TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        }, 36000)
     }
 }
