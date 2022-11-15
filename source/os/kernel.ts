@@ -408,10 +408,14 @@ module TSOS {
         public krnListFiles(): void {
             // Get the file list from the dsDD
             let fileList: string[] = _krnDiskSystemDeviceDriver.getFileList();
-            // Print out each file name
-            for (let i: number = 0; i < fileList.length; i++) {
-                _StdOut.putText('  ' + fileList[i]);
-                _StdOut.advanceLine();
+            if (fileList.length === 0) {
+                _StdOut.putText('There are no files to list.')
+            } else {
+                // Print out each file name
+                for (let i: number = 0; i < fileList.length; i++) {
+                    _StdOut.putText('  ' + fileList[i]);
+                    _StdOut.advanceLine();
+                }
             }
         }
 
