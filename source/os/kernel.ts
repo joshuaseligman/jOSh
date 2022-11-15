@@ -432,6 +432,7 @@ module TSOS {
                     for (let i: number = 0; i < fileReadOutput[1].length; i++) {
                         _StdOut.putText(String.fromCharCode(fileReadOutput[1][i]));
                     }
+                    _StdOut.advanceLine();
                     break;
                     case 1:
                         _StdOut.putText('Failed to read from the file. The disk is not formatted.');
