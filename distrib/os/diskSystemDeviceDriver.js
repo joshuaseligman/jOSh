@@ -302,10 +302,42 @@ var TSOS;
         // 3: Internal error (file block given is available)
         deleteFile(fileName) {
             let out = 0;
-            // if (!this.isFormatted) {
-            //     out = 1;
-            // } else if () {
-            // }
+            if (!this.isFormatted) {
+                // Disk is not formatted yet
+                out = 1;
+            }
+            else {
+                let directoryTsb = this.getDirectoryBlockForFile(fileName);
+                if (directoryTsb === '') {
+                    // The file does not exist, so cannot be deleted
+                    out = 2;
+                }
+                else {
+                    let directoryEntry = sessionStorage.getItem(directoryTsb);
+                    if (directoryEntry.charAt(1) === '0') {
+                        out = 3;
+                    }
+                    else {
+                        let curDataTsb = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
+                        // Mark the directory entry as available
+                        sessionStorage.setItem(directoryTsb, '00' + directoryEntry.substring(2));
+                        while (curDataTsb !== 'F:F:F' && out == 0) {
+                            let dataEntry = sessionStorage.getItem(curDataTsb);
+                            if (dataEntry.charAt(1) === '0') {
+                                out = 3;
+                            }
+                            else {
+                                // Set the data entry to be available
+                                sessionStorage.setItem(curDataTsb, '00' + dataEntry.substring(2));
+                                // Go to the next link
+                                curDataTsb = `${dataEntry.charAt(3)}:${dataEntry.charAt(5)}:${dataEntry.charAt(7)}`;
+                            }
+                        }
+                    }
+                }
+                // Update the table on the webpage
+                this.updateTable();
+            }
             return out;
         }
         getFileList() {
@@ -353,23 +385,26 @@ var TSOS;
                     }
                     let directoryTsb = `0:${s}:${b}`;
                     let directoryEntry = sessionStorage.getItem(directoryTsb);
-                    // The hex representation of the name
-                    let fileNameHex = directoryEntry.substring(8);
-                    // The real representation of the file name
-                    let fileNameStr = '';
-                    let endFound = false;
-                    // Every 2 characters is a byte = real character
-                    for (let i = 0; i < fileNameHex.length && !endFound; i += 2) {
-                        let charCode = parseInt(fileNameHex.substring(i, i + 2), 16);
-                        if (charCode === 0) {
-                            endFound = true;
+                    // Make sure the directory entry is in use first
+                    if (directoryEntry.charAt(1) === '1') {
+                        // The hex representation of the name
+                        let fileNameHex = directoryEntry.substring(8);
+                        // The real representation of the file name
+                        let fileNameStr = '';
+                        let endFound = false;
+                        // Every 2 characters is a byte = real character
+                        for (let i = 0; i < fileNameHex.length && !endFound; i += 2) {
+                            let charCode = parseInt(fileNameHex.substring(i, i + 2), 16);
+                            if (charCode === 0) {
+                                endFound = true;
+                            }
+                            else {
+                                fileNameStr += String.fromCharCode(charCode);
+                            }
                         }
-                        else {
-                            fileNameStr += String.fromCharCode(charCode);
+                        if (fileName === fileNameStr) {
+                            out = directoryTsb;
                         }
-                    }
-                    if (fileName === fileNameStr) {
-                        out = directoryTsb;
                     }
                 }
             }

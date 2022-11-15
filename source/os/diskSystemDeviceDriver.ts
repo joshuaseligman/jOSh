@@ -328,11 +328,41 @@ module TSOS {
         public deleteFile(fileName: string): number {
             let out: number = 0;
 
-            // if (!this.isFormatted) {
-            //     out = 1;
-            // } else if () {
+            if (!this.isFormatted) {
+                // Disk is not formatted yet
+                out = 1;
+            } else {
+                let directoryTsb: string = this.getDirectoryBlockForFile(fileName);
+                if (directoryTsb === '') {
+                    // The file does not exist, so cannot be deleted
+                    out = 2;
+                } else {
+                    let directoryEntry: string = sessionStorage.getItem(directoryTsb);
+                    if (directoryEntry.charAt(1) === '0') {
+                        out = 3;
+                    } else {
+                        let curDataTsb: string = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
+                        // Mark the directory entry as available
+                        sessionStorage.setItem(directoryTsb, '00' + directoryEntry.substring(2));
 
-            // }
+                        while (curDataTsb !== 'F:F:F' && out == 0) {
+                            let dataEntry: string = sessionStorage.getItem(curDataTsb);
+                            
+                            if (dataEntry.charAt(1) === '0') {
+                                out = 3;
+                            } else {
+                                // Set the data entry to be available
+                                sessionStorage.setItem(curDataTsb, '00' + dataEntry.substring(2));
+    
+                                // Go to the next link
+                                curDataTsb = `${dataEntry.charAt(3)}:${dataEntry.charAt(5)}:${dataEntry.charAt(7)}`;
+                            }
+                        }
+                    }
+                }
+                // Update the table on the webpage
+                this.updateTable();
+            }
 
             return out;
         }
@@ -390,24 +420,27 @@ module TSOS {
                     let directoryTsb: string = `0:${s}:${b}`;
                     let directoryEntry: string = sessionStorage.getItem(directoryTsb);
 
-                    // The hex representation of the name
-                    let fileNameHex: string = directoryEntry.substring(8);
-                    // The real representation of the file name
-                    let fileNameStr: string = '';
-                    let endFound: boolean = false;
-
-                    // Every 2 characters is a byte = real character
-                    for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
-                        let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
-                        if (charCode === 0) {
-                            endFound = true;
-                        } else {
-                            fileNameStr += String.fromCharCode(charCode);
+                    // Make sure the directory entry is in use first
+                    if (directoryEntry.charAt(1) === '1') {
+                        // The hex representation of the name
+                        let fileNameHex: string = directoryEntry.substring(8);
+                        // The real representation of the file name
+                        let fileNameStr: string = '';
+                        let endFound: boolean = false;
+    
+                        // Every 2 characters is a byte = real character
+                        for (let i: number = 0; i < fileNameHex.length && !endFound; i += 2) {
+                            let charCode: number = parseInt(fileNameHex.substring(i, i + 2), 16);
+                            if (charCode === 0) {
+                                endFound = true;
+                            } else {
+                                fileNameStr += String.fromCharCode(charCode);
+                            }
                         }
-                    }
-
-                    if (fileName === fileNameStr) {
-                        out = directoryTsb;
+    
+                        if (fileName === fileNameStr) {
+                            out = directoryTsb;
+                        }
                     }
                 }
             }

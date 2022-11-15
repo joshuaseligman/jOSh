@@ -387,6 +387,20 @@ var TSOS;
         }
         krnDeleteFile(fileName) {
             let fileDeleteOutput = _krnDiskSystemDeviceDriver.deleteFile(fileName);
+            switch (fileDeleteOutput) {
+                case 0:
+                    _StdOut.putText('Successfully deleted file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to delete the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to delete the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
         }
         //
         // OS Utility Routines

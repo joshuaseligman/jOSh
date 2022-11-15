@@ -434,12 +434,12 @@ module TSOS {
                     }
                     _StdOut.advanceLine();
                     break;
-                    case 1:
-                        _StdOut.putText('Failed to read from the file. The disk is not formatted.');
-                        break;
-                    case 2:
-                        _StdOut.putText('Failed to read from the file. ' + fileName + ' does not exist.');
-                        break;
+                case 1:
+                    _StdOut.putText('Failed to read from the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to read from the file. ' + fileName + ' does not exist.');
+                    break;
                 case 3:
                     _StdOut.putText("Internal file system error. Please reformat the disk.");
                     break;
@@ -448,6 +448,21 @@ module TSOS {
 
         public krnDeleteFile(fileName: string): void {
             let fileDeleteOutput: number = _krnDiskSystemDeviceDriver.deleteFile(fileName);
+
+            switch (fileDeleteOutput) {
+                case 0:
+                    _StdOut.putText('Successfully deleted file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to delete the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to delete the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
         }
 
         //
