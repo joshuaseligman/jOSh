@@ -327,14 +327,16 @@ var TSOS;
             }
         }
         krnSwap(pcb) {
+            // Check for an available segment in memory
             if (!_MemoryManager.hasAvailableSegment()) {
+                // Roll out the most recently run process
                 _Kernel.krnRollOut(_PCBReadyQueue.getTail());
             }
+            // Roll in the given process
             _Kernel.krnRollIn(pcb);
         }
         krnRollOut(pcb) {
             // Create the swap file for the process
-            // TODO What if this goes wrong?
             if (pcb.status === 'Ready') {
                 _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
             }
@@ -356,8 +358,18 @@ var TSOS;
             pcb.updateTableEntry();
         }
         krnFormatDisk() {
-            _krnDiskSystemDeviceDriver.formatDisk();
-            _StdOut.putText('Successfully formatted the disk.');
+            // Get the files on the disk
+            let files = _krnDiskSystemDeviceDriver.getFileList();
+            // Check if there is a swap file
+            if (files !== null && files.find(file => file.charAt(0) === '~')) {
+                // Cannot format if there are swap files on the disk
+                _StdOut.putText('Disk cannot be formatted. Swap files found on the disk.');
+            }
+            else {
+                // Otherwise can format the disk
+                _krnDiskSystemDeviceDriver.formatDisk();
+                _StdOut.putText('Successfully formatted the disk.');
+            }
         }
         createSwapFileForSegment(swapFileName, segment) {
             // Get the program from memory

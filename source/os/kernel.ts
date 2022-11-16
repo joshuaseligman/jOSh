@@ -417,8 +417,17 @@ module TSOS {
         }
 
         public krnFormatDisk(): void {
-            _krnDiskSystemDeviceDriver.formatDisk();
-            _StdOut.putText('Successfully formatted the disk.');
+            // Get the files on the disk
+            let files: string[] = _krnDiskSystemDeviceDriver.getFileList();
+            // Check if there is a swap file
+            if (files !== null && files.find(file => file.charAt(0) === '~')) {
+                // Cannot format if there are swap files on the disk
+                _StdOut.putText('Disk cannot be formatted. Swap files found on the disk.');
+            } else {
+                // Otherwise can format the disk
+                _krnDiskSystemDeviceDriver.formatDisk();
+                _StdOut.putText('Successfully formatted the disk.');
+            }
         }
 
         public createSwapFileForSegment(swapFileName: string, segment: number) {
