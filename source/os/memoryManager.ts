@@ -4,7 +4,7 @@ module TSOS {
         // Places the program into memory and returns the segment the program was placed in
         public allocateProgram(program: number[]): number {
             // Get the PCBs for programs allocated in memory
-            let allocatedPrograms: TSOS.ProcessControlBlock[] = _PCBHistory.filter(pcb => pcb.segment !== -1);
+            let allocatedPrograms: TSOS.ProcessControlBlock[] = _PCBHistory.filter(pcb => pcb.segment !== -1 && pcb.segment !== 4);
 
             // We can immediately flash the program if fewer than 3 programs have been allocated so far
             if (allocatedPrograms.length < 3) {
@@ -31,6 +31,12 @@ module TSOS {
 
             // Unable to place the program in memory
             return -1;
+        }
+
+        public deallocateProcess(pcb: ProcessControlBlock, toDisk: boolean): void {
+            // Update the segment and the base/limit pairs and location
+            pcb.segment = (toDisk) ? 4 : -1;
+            pcb.updateTableEntry();
         }
 
         public deallocateAll(): void {

@@ -252,10 +252,10 @@ var TSOS;
             let segment = _MemoryManager.allocateProgram(prog);
             // Create the PCB
             let pcbCreated = true;
-            let newPCB = new TSOS.ProcessControlBlock(segment, prog);
+            let newPCB = new TSOS.ProcessControlBlock(segment);
             if (newPCB.segment === -1) {
                 // Try to create a swap file if no room in memory
-                let swapFileOutput = this.createSwapFile(newPCB.swapFile, newPCB.program);
+                let swapFileOutput = this.createSwapFile(newPCB.swapFile, prog);
                 if (swapFileOutput === 0) {
                     // A segment of 4 is being used to represent the disk
                     newPCB.segment = 4;
@@ -322,9 +322,23 @@ var TSOS;
                 _OsShell.putPrompt();
             }
         }
+        rollOut(pcb) {
+            // Create the swap file for the process
+            _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            // Free it up in the pcb
+            _MemoryManager.deallocateProcess(pcb, pcb.status === 'Ready');
+            // Update the table
+            pcb.updateTableEntry();
+        }
         krnFormatDisk() {
             _krnDiskSystemDeviceDriver.formatDisk();
             _StdOut.putText('Successfully formatted the disk.');
+        }
+        createSwapFileForSegment(swapFileName, segment) {
+            // Get the program from memory
+            let program = _MemoryAccessor.memoryDump(_BaseLimitPairs[segment][0], _BaseLimitPairs[segment][1]);
+            // Create the swap file
+            this.createSwapFile(swapFileName, program);
         }
         createSwapFile(swapFileName, program) {
             let out = 0;

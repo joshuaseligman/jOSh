@@ -16,9 +16,13 @@ var TSOS;
                 // Get the process that has been preempted and move it to the back of the queue
                 let preemptedProcess = _PCBReadyQueue.dequeue();
                 if (preemptedProcess.status !== 'Terminated') {
+                    // If there is another program, we need to roll this one out of memory
                     preemptedProcess.status = 'Ready';
                     preemptedProcess.updateTableEntry();
                     _PCBReadyQueue.enqueue(preemptedProcess);
+                }
+                if (_PCBReadyQueue.getSize() > 3) {
+                    _Kernel.rollOut(preemptedProcess);
                 }
                 // Set the next process to be running and update the cpu accordingly
                 if (_PCBReadyQueue.getSize() > 0) {

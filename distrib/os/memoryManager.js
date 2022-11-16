@@ -4,7 +4,7 @@ var TSOS;
         // Places the program into memory and returns the segment the program was placed in
         allocateProgram(program) {
             // Get the PCBs for programs allocated in memory
-            let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1);
+            let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1 && pcb.segment !== 4);
             // We can immediately flash the program if fewer than 3 programs have been allocated so far
             if (allocatedPrograms.length < 3) {
                 // The index for the base and limit registers will be the length of the array
@@ -26,6 +26,11 @@ var TSOS;
             }
             // Unable to place the program in memory
             return -1;
+        }
+        deallocateProcess(pcb, toDisk) {
+            // Update the segment and the base/limit pairs and location
+            pcb.segment = (toDisk) ? 4 : -1;
+            pcb.updateTableEntry();
         }
         deallocateAll() {
             // Get the PCBs for programs allocated in memory

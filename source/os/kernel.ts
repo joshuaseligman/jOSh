@@ -296,11 +296,11 @@ module TSOS {
 
             // Create the PCB
             let pcbCreated: boolean = true;
-            let newPCB: ProcessControlBlock = new ProcessControlBlock(segment, prog);
+            let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
 
             if (newPCB.segment === -1) {
                 // Try to create a swap file if no room in memory
-                let swapFileOutput: number = this.createSwapFile(newPCB.swapFile, newPCB.program);
+                let swapFileOutput: number = this.createSwapFile(newPCB.swapFile, prog);
                 if (swapFileOutput === 0) {
                     // A segment of 4 is being used to represent the disk
                     newPCB.segment = 4;
@@ -376,9 +376,28 @@ module TSOS {
             }
         }
 
+        public rollOut(pcb: ProcessControlBlock): void {
+            // Create the swap file for the process
+            _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            
+            // Free it up in the pcb
+            _MemoryManager.deallocateProcess(pcb, pcb.status === 'Ready');
+
+            // Update the table
+            pcb.updateTableEntry();
+        }
+
         public krnFormatDisk(): void {
             _krnDiskSystemDeviceDriver.formatDisk();
             _StdOut.putText('Successfully formatted the disk.');
+        }
+
+        public createSwapFileForSegment(swapFileName: string, segment: number) {
+            // Get the program from memory
+            let program: number[] = _MemoryAccessor.memoryDump(_BaseLimitPairs[segment][0], _BaseLimitPairs[segment][1]);
+
+            // Create the swap file
+            this.createSwapFile(swapFileName, program);
         }
 
         public createSwapFile(swapFileName: string, program: number[]): number {

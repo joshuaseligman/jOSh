@@ -41,6 +41,17 @@ var TSOS;
                 _Memory.write(requestedAddr, val);
             }
         }
+        // Gets a chunk of memory
+        memoryDump(baseAddr, limitAddr) {
+            // Initialize to nothing
+            let dump = [];
+            // Go through the requested range of addresses
+            for (let addr = baseAddr; addr < limitAddr; addr++) {
+                // Push the value to the array
+                dump.push(_Memory.read(addr));
+            }
+            return dump;
+        }
         // Clears memory from the start up to, but not including stop
         clearMemory(start, stop) {
             for (let i = start; i < stop; i++) {

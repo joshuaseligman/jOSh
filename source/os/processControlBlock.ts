@@ -54,10 +54,7 @@ module TSOS {
         // The name of the swap file
         public swapFile: string;
 
-        // The program to store
-        public program: number[];
-
-        constructor(segment: number, prog: number[], priority: number = 8) {
+        constructor(segment: number, priority: number = 8) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;
@@ -88,9 +85,6 @@ module TSOS {
 
             // The name of the swap file will be ~<pid>. Since all PIDs are unique, there will be no issue with duplicate swap file names
             this.swapFile = `~${this.pid}`;
-
-            // Save the initial program code
-            this.program = prog;
         }
 
         // Function to handle the table row entry for the PCB
