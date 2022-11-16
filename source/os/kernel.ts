@@ -585,7 +585,7 @@ module TSOS {
             }
         }
 
-        public krnListFiles(): void {
+        public krnListFiles(includeHiddenFiles: boolean): void {
             // Get the file list from the dsDD
             let fileList: string[] = _krnDiskSystemDeviceDriver.getFileList();
             if (fileList === null) {
@@ -595,8 +595,11 @@ module TSOS {
             } else {
                 // Print out each file name
                 for (let i: number = 0; i < fileList.length; i++) {
-                    _StdOut.putText('  ' + fileList[i]);
-                    _StdOut.advanceLine();
+                    // List the file if hidden files is on or if the file doesn't start with a . or a ~
+                    if (includeHiddenFiles || !(fileList[i].charAt(0) === '.' || fileList[i].charAt(0) === '~')) {
+                        _StdOut.putText('  ' + fileList[i]);
+                        _StdOut.advanceLine();
+                    }
                 }
             }
         }

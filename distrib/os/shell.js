@@ -92,7 +92,7 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellDeleteFile, "delete", "<filename> - Deletes a file from the disk");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "- Lists the files on the disk");
+            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "[-a] - Lists the files on the disk (-a includes hidden files)");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellRenameFile, "rename", "<curFileName> <newFileName> - Changes the name of a file");
             this.commandList[this.commandList.length] = sc;
@@ -584,7 +584,13 @@ var TSOS;
             }
         }
         shellListFiles(args) {
-            _Kernel.krnListFiles();
+            // Include hidden files if the flag is given
+            if (args.length > 0 && args[0] === '-a') {
+                _Kernel.krnListFiles(true);
+            }
+            else {
+                _Kernel.krnListFiles(false);
+            }
         }
         shellReadFile(args) {
             if (args.length > 0) {

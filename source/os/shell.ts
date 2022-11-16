@@ -179,7 +179,7 @@ module TSOS {
 
             sc = new ShellCommand(this.shellListFiles,
                 "ls",
-                "- Lists the files on the disk");
+                "[-a] - Lists the files on the disk (-a includes hidden files)");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellRenameFile,
@@ -707,7 +707,12 @@ module TSOS {
         }
 
         public shellListFiles(args: string[]) {
-            _Kernel.krnListFiles();
+            // Include hidden files if the flag is given
+            if (args.length > 0 && args[0] === '-a') {
+                _Kernel.krnListFiles(true);
+            } else {
+                _Kernel.krnListFiles(false);
+            }
         }
 
         public shellReadFile(args: string[]) {

@@ -515,7 +515,7 @@ var TSOS;
                     break;
             }
         }
-        krnListFiles() {
+        krnListFiles(includeHiddenFiles) {
             // Get the file list from the dsDD
             let fileList = _krnDiskSystemDeviceDriver.getFileList();
             if (fileList === null) {
@@ -527,8 +527,11 @@ var TSOS;
             else {
                 // Print out each file name
                 for (let i = 0; i < fileList.length; i++) {
-                    _StdOut.putText('  ' + fileList[i]);
-                    _StdOut.advanceLine();
+                    // List the file if hidden files is on or if the file doesn't start with a . or a ~
+                    if (includeHiddenFiles || !(fileList[i].charAt(0) === '.' || fileList[i].charAt(0) === '~')) {
+                        _StdOut.putText('  ' + fileList[i]);
+                        _StdOut.advanceLine();
+                    }
                 }
             }
         }
