@@ -91,13 +91,10 @@ module TSOS {
 
             // Save the initial program code
             this.program = prog;
-
-            // Add the PCB to the table
-            this.createTableEntry();
         }
 
         // Function to handle the table row entry for the PCB
-        private createTableEntry(): void {
+        public createTableEntry(): void {
             // Create the row for the pcb info to be placed in
             let newRow: HTMLTableRowElement = document.createElement('tr');
             newRow.id = `pid${this.pid}`;
@@ -119,7 +116,7 @@ module TSOS {
 
             // Create the segment element
             let segmentElem: HTMLTableCellElement = document.createElement('td');
-            segmentElem.innerHTML = this.seg.toString();
+            segmentElem.innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
             newRow.appendChild(segmentElem);
 
             // Create the base register element
@@ -127,10 +124,10 @@ module TSOS {
             baseElem.innerHTML = (this.baseReg !== -1) ? Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             newRow.appendChild(baseElem);
 
-             // Create the limit register element
-             let limitElem: HTMLTableCellElement = document.createElement('td');
-             limitElem.innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
-             newRow.appendChild(limitElem);
+            // Create the limit register element
+            let limitElem: HTMLTableCellElement = document.createElement('td');
+            limitElem.innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
+            newRow.appendChild(limitElem);
 
             // Create the PC element
             let pcElem: HTMLTableCellElement = document.createElement('td');
@@ -191,7 +188,7 @@ module TSOS {
             tableEntry.cells[2].innerHTML = this.location;
 
             // Update the segment and the base/limit registers
-            tableEntry.cells[3].innerHTML = (this.segment === -1) ? 'N/A' : this.segment.toString();
+            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
             tableEntry.cells[4].innerHTML = (this.baseReg !== -1) ? Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             tableEntry.cells[5].innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
 
@@ -224,6 +221,11 @@ module TSOS {
                 // Program is in memory
                 [this.baseReg, this.limitReg] = _BaseLimitPairs[this.seg];
                 this.location = 'MEMORY';
+                break;
+            case 4:
+                // Program is on the disk
+                [this.baseReg, this.limitReg] = [-1, -1];
+                this.location = 'DISK';
                 break;
             case -1:
                 // Program has been deallocated

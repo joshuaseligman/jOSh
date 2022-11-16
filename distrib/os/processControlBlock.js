@@ -27,8 +27,6 @@ var TSOS;
             this.swapFile = `~${this.pid}`;
             // Save the initial program code
             this.program = prog;
-            // Add the PCB to the table
-            this.createTableEntry();
         }
         // Function to handle the table row entry for the PCB
         createTableEntry() {
@@ -49,7 +47,7 @@ var TSOS;
             newRow.appendChild(locationElem);
             // Create the segment element
             let segmentElem = document.createElement('td');
-            segmentElem.innerHTML = this.seg.toString();
+            segmentElem.innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
             newRow.appendChild(segmentElem);
             // Create the base register element
             let baseElem = document.createElement('td');
@@ -107,7 +105,7 @@ var TSOS;
             // Update the location
             tableEntry.cells[2].innerHTML = this.location;
             // Update the segment and the base/limit registers
-            tableEntry.cells[3].innerHTML = (this.segment === -1) ? 'N/A' : this.segment.toString();
+            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
             tableEntry.cells[4].innerHTML = (this.baseReg !== -1) ? TSOS.Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             tableEntry.cells[5].innerHTML = (this.limitReg !== -1) ? TSOS.Utils.getHexString(this.limitReg, 3, false) : 'N/A';
             // Update each of the CPU fields
@@ -135,6 +133,11 @@ var TSOS;
                     // Program is in memory
                     [this.baseReg, this.limitReg] = _BaseLimitPairs[this.seg];
                     this.location = 'MEMORY';
+                    break;
+                case 4:
+                    // Program is on the disk
+                    [this.baseReg, this.limitReg] = [-1, -1];
+                    this.location = 'DISK';
                     break;
                 case -1:
                     // Program has been deallocated

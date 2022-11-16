@@ -257,7 +257,10 @@ var TSOS;
                 // Try to create a swap file if no room in memory
                 let swapFileOutput = this.createSwapFile(newPCB.swapFile, newPCB.program);
                 if (swapFileOutput === 0) {
-                    // Swap file was created, so good there
+                    // A segment of 4 is being used to represent the disk
+                    newPCB.segment = 4;
+                    // The swap file was made, so the PCB can be recorded
+                    newPCB.createTableEntry();
                     _PCBHistory.push(newPCB);
                 }
                 else {
@@ -269,6 +272,7 @@ var TSOS;
             else {
                 // Can add the pcb because it is already in memory
                 _PCBHistory.push(newPCB);
+                newPCB.createTableEntry();
             }
             if (pcbCreated) {
                 // Let the user know the program is valid
