@@ -43,7 +43,7 @@ var TSOS;
         }
         deallocateAll() {
             // Get the PCBs for programs allocated in memory
-            let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1);
+            let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1 && pcb.segment !== 3);
             for (const prog of allocatedPrograms) {
                 // Clear the segment the program was stored in
                 _MemoryAccessor.clearMemory(prog.baseReg, prog.limitReg);

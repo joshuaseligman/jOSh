@@ -290,6 +290,15 @@ module TSOS {
         // - WriteFile
         // - CloseFile
 
+        public krnClearMemory(): void {
+            if (_CPU.isExecuting) {
+                _StdOut.putText('Cannot clear memory when the CPU is executing.');
+            } else {
+                _MemoryManager.deallocateAll();
+                _StdOut.putText('All memory cleared.');
+            }
+        }
+
         public krnCreateProcess(prog: number[]) {
             // Try to load a process into memory
             let segment: number = _MemoryManager.allocateProgram(prog);

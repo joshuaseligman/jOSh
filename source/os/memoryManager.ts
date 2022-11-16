@@ -51,7 +51,7 @@ module TSOS {
 
         public deallocateAll(): void {
             // Get the PCBs for programs allocated in memory
-            let allocatedPrograms: TSOS.ProcessControlBlock[] = _PCBHistory.filter(pcb => pcb.segment !== -1);
+            let allocatedPrograms: TSOS.ProcessControlBlock[] = _PCBHistory.filter(pcb => pcb.segment !== -1 && pcb.segment !== 3);
 
             for (const prog of allocatedPrograms) {
                 // Clear the segment the program was stored in
