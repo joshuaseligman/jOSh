@@ -322,12 +322,27 @@ var TSOS;
                 _OsShell.putPrompt();
             }
         }
-        rollOut(pcb) {
+        krnRollOut(pcb) {
             // Create the swap file for the process
-            _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            // TODO What if this goes wrong?
+            if (pcb.status === 'Ready') {
+                _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            }
             // Free it up in the pcb
             _MemoryManager.deallocateProcess(pcb, pcb.status === 'Ready');
             // Update the table
+            pcb.updateTableEntry();
+        }
+        krnRollIn(pcb) {
+            let swapRead = _krnDiskSystemDeviceDriver.readFileRaw(pcb.swapFile, 0x100);
+            _krnDiskSystemDeviceDriver.deleteFile(pcb.swapFile);
+            if (swapRead[0] === 0) {
+                let newSegment = _MemoryManager.allocateProgram(swapRead[1]);
+                pcb.segment = newSegment;
+            }
+            else {
+                console.log(swapRead[0]);
+            }
             pcb.updateTableEntry();
         }
         krnFormatDisk() {
@@ -367,7 +382,9 @@ var TSOS;
                     break;
             }
             if (out === 0) {
-                let programStr = program.map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('');
+                // Convert the binary into a hex string of length 256 bytes
+                let programStr = program.map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('').padEnd(0x100 * 2, '0');
+                // Write the data to the swap file
                 let writeOutput = _krnDiskSystemDeviceDriver.writeFile(swapFileName, programStr, true);
                 switch (writeOutput) {
                     case 1:

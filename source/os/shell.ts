@@ -510,7 +510,7 @@ module TSOS {
                 progInput.value = program.toUpperCase();
 
                 let progStrArr: string[] = progInput.value.split(' ');
-                let progArr: number[] = new Array<number>(0x100);
+                let progArr: number[] = [];
                 for (let byte: number = 0; byte < progStrArr.length; byte++) {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }

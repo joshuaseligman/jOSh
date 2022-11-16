@@ -394,7 +394,7 @@ var TSOS;
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
                 let progStrArr = progInput.value.split(' ');
-                let progArr = new Array(0x100);
+                let progArr = [];
                 for (let byte = 0; byte < progStrArr.length; byte++) {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }

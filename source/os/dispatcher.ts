@@ -23,14 +23,16 @@ module TSOS {
                     _PCBReadyQueue.enqueue(preemptedProcess);
                 }
 
-                if (_PCBReadyQueue.getSize() > 3) {
-                    _Kernel.rollOut(preemptedProcess);
-                 }
-
                 // Set the next process to be running and update the cpu accordingly
                 if (_PCBReadyQueue.getSize() > 0) {
                     let newProcess: ProcessControlBlock = _PCBReadyQueue.getHead();
+                    if (newProcess.segment === 4) {
+                        _Kernel.krnRollOut(preemptedProcess);
+                        _Kernel.krnRollIn(newProcess);
+                    }
+
                     newProcess.status = 'Running';
+                    newProcess.updateTableEntry();
                     _CPU.isExecuting = true;
                     _CPU.setCpuStatus(newProcess.programCounter, newProcess.instructionRegister, newProcess.acc, newProcess.xReg, newProcess.yReg, newProcess.zFlag);
                 } else {

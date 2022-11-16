@@ -6,10 +6,19 @@ var TSOS;
             // Get the PCBs for programs allocated in memory
             let allocatedPrograms = _PCBHistory.filter(pcb => pcb.segment !== -1 && pcb.segment !== 4);
             // We can immediately flash the program if fewer than 3 programs have been allocated so far
-            if (allocatedPrograms.length < 3) {
-                // The index for the base and limit registers will be the length of the array
-                _MemoryAccessor.flashProgram(program, _BaseLimitPairs[allocatedPrograms.length][0]);
-                return allocatedPrograms.length;
+            if (allocatedPrograms.length <= 3) {
+                // Determine the open segment
+                let segmentAvailability = [true, true, true];
+                for (let i = 0; i < allocatedPrograms.length; i++) {
+                    segmentAvailability[allocatedPrograms[i].segment] = false;
+                }
+                for (let j = 0; j < segmentAvailability.length; j++) {
+                    if (segmentAvailability[j]) {
+                        // Flash the data to the open segment
+                        _MemoryAccessor.flashProgram(program, _BaseLimitPairs[j][0]);
+                        return j;
+                    }
+                }
             }
             for (const allcatedProg of allocatedPrograms) {
                 // Check to see if there is a terminated program still allocated in memory

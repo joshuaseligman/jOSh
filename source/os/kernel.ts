@@ -376,14 +376,29 @@ module TSOS {
             }
         }
 
-        public rollOut(pcb: ProcessControlBlock): void {
+        public krnRollOut(pcb: ProcessControlBlock): void {
             // Create the swap file for the process
-            _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            // TODO What if this goes wrong?
+            if (pcb.status === 'Ready') {
+                _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+            }
             
             // Free it up in the pcb
             _MemoryManager.deallocateProcess(pcb, pcb.status === 'Ready');
 
             // Update the table
+            pcb.updateTableEntry();
+        }
+
+        public krnRollIn(pcb: ProcessControlBlock): void {
+            let swapRead: any[] = _krnDiskSystemDeviceDriver.readFileRaw(pcb.swapFile, 0x100);
+            _krnDiskSystemDeviceDriver.deleteFile(pcb.swapFile);
+            if (swapRead[0] === 0) {
+                let newSegment: number = _MemoryManager.allocateProgram(swapRead[1]);
+                pcb.segment = newSegment;
+            } else {
+                console.log(swapRead[0])
+            }
             pcb.updateTableEntry();
         }
 
@@ -429,7 +444,10 @@ module TSOS {
             }
 
             if (out === 0) {
-                let programStr: string = program.map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('');
+                // Convert the binary into a hex string of length 256 bytes
+                let programStr: string = program.map((e: number) => e.toString(16).toUpperCase().padStart(2, '0')).join('').padEnd(0x100 * 2, '0');
+
+                // Write the data to the swap file
                 let writeOutput: number = _krnDiskSystemDeviceDriver.writeFile(swapFileName, programStr, true);
                 switch (writeOutput) {
                     case 1:
