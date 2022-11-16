@@ -352,6 +352,37 @@ var TSOS;
                     out = 1;
                     break;
             }
+            if (out === 0) {
+                let programStr = program.map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('');
+                let writeOutput = _krnDiskSystemDeviceDriver.writeFile(swapFileName, programStr, true);
+                switch (writeOutput) {
+                    case 1:
+                        // Should never be reached
+                        _StdOut.putText('Could not write to the swap file. Disk is not formatted.');
+                        out = 1;
+                        break;
+                    case 2:
+                        // Also should never be reached
+                        _StdOut.putText('Failed to write to the swap file. ' + swapFileName + ' does not exist.');
+                        out = 1;
+                        break;
+                    case 3:
+                        // Should never be reached because we allocated the space ahead of time to make sure there is enough room
+                        _StdOut.putText('Performed a partial write to swap file: ' + swapFileName + '. Not enough available data blocks on the disk.');
+                        out = 1;
+                        break;
+                    case 4:
+                        // Should never be reached if everything is implemented correctly
+                        _StdOut.putText("Internal file system error. Please reformat the disk.");
+                        out = 1;
+                        break;
+                }
+                if (out === 1) {
+                    // If something went wrong, make sure that the file gets deleted because it will not be used
+                    // Do not care about output, just get it done
+                    _krnDiskSystemDeviceDriver.deleteFile(swapFileName);
+                }
+            }
             return out;
         }
         krnCreateFile(fileName) {
