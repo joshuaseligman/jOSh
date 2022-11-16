@@ -302,8 +302,8 @@ module TSOS {
                 // Try to create a swap file if no room in memory
                 let swapFileOutput: number = this.createSwapFile(newPCB.swapFile, prog);
                 if (swapFileOutput === 0) {
-                    // A segment of 4 is being used to represent the disk
-                    newPCB.segment = 4;
+                    // A segment of 3 is being used to represent the disk
+                    newPCB.segment = 3;
 
                     // The swap file was made, so the PCB can be recorded
                     newPCB.createTableEntry();
@@ -342,6 +342,11 @@ module TSOS {
                 _PCBReadyQueue.remove(requestedProcess);
             }
 
+            if (requestedProcess.segment === 3) {
+                _krnDiskSystemDeviceDriver.deleteFile(requestedProcess.swapFile);
+                requestedProcess.segment = -1;
+            }
+
             // Update the table entry with the terminated status and the updated cpu values
             requestedProcess.updateTableEntry();
             
@@ -376,9 +381,18 @@ module TSOS {
             }
         }
 
+        public krnSwap(pcb: ProcessControlBlock): void {
+            // Check for an available segment in memory
+            if (!_MemoryManager.hasAvailableSegment()) {
+                // Roll out the most recently run process
+                _Kernel.krnRollOut(_PCBReadyQueue.getTail());
+            }
+            // Roll in the given process
+            _Kernel.krnRollIn(pcb);
+        }
+
         public krnRollOut(pcb: ProcessControlBlock): void {
             // Create the swap file for the process
-            // TODO What if this goes wrong?
             if (pcb.status === 'Ready') {
                 _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
             }

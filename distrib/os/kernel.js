@@ -257,8 +257,8 @@ var TSOS;
                 // Try to create a swap file if no room in memory
                 let swapFileOutput = this.createSwapFile(newPCB.swapFile, prog);
                 if (swapFileOutput === 0) {
-                    // A segment of 4 is being used to represent the disk
-                    newPCB.segment = 4;
+                    // A segment of 3 is being used to represent the disk
+                    newPCB.segment = 3;
                     // The swap file was made, so the PCB can be recorded
                     newPCB.createTableEntry();
                     _PCBHistory.push(newPCB);
@@ -296,6 +296,10 @@ var TSOS;
                 // Otherwise we can just remove the process from the ready queue and the dispatcher will not be affected
                 _PCBReadyQueue.remove(requestedProcess);
             }
+            if (requestedProcess.segment === 3) {
+                _krnDiskSystemDeviceDriver.deleteFile(requestedProcess.swapFile);
+                requestedProcess.segment = -1;
+            }
             // Update the table entry with the terminated status and the updated cpu values
             requestedProcess.updateTableEntry();
             // Trace the error
@@ -321,6 +325,12 @@ var TSOS;
             if (putPrompt) {
                 _OsShell.putPrompt();
             }
+        }
+        krnSwap(pcb) {
+            if (!_MemoryManager.hasAvailableSegment()) {
+                _Kernel.krnRollOut(_PCBReadyQueue.getTail());
+            }
+            _Kernel.krnRollIn(pcb);
         }
         krnRollOut(pcb) {
             // Create the swap file for the process

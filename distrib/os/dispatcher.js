@@ -24,9 +24,8 @@ var TSOS;
                 // Set the next process to be running and update the cpu accordingly
                 if (_PCBReadyQueue.getSize() > 0) {
                     let newProcess = _PCBReadyQueue.getHead();
-                    if (newProcess.segment === 4) {
-                        _Kernel.krnRollOut(preemptedProcess);
-                        _Kernel.krnRollIn(newProcess);
+                    if (newProcess.segment === 3) {
+                        _Kernel.krnSwap(newProcess);
                     }
                     newProcess.status = 'Running';
                     newProcess.updateTableEntry();

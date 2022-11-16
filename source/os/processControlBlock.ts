@@ -110,7 +110,7 @@ module TSOS {
 
             // Create the segment element
             let segmentElem: HTMLTableCellElement = document.createElement('td');
-            segmentElem.innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
+            segmentElem.innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             newRow.appendChild(segmentElem);
 
             // Create the base register element
@@ -182,7 +182,7 @@ module TSOS {
             tableEntry.cells[2].innerHTML = this.location;
 
             // Update the segment and the base/limit registers
-            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 4) ? 'N/A' : this.seg.toString();
+            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             tableEntry.cells[4].innerHTML = (this.baseReg !== -1) ? Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             tableEntry.cells[5].innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
 
@@ -216,7 +216,7 @@ module TSOS {
                 [this.baseReg, this.limitReg] = _BaseLimitPairs[this.seg];
                 this.location = 'MEMORY';
                 break;
-            case 4:
+            case 3:
                 // Program is on the disk
                 [this.baseReg, this.limitReg] = [-1, -1];
                 this.location = 'DISK';
