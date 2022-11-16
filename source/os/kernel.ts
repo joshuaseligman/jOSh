@@ -318,6 +318,23 @@ module TSOS {
                     newPCB.createTableEntry();
                     _PCBHistory.push(newPCB);
                 } else {
+                    switch (swapFileOutput) {
+                        case 1:
+                            _StdOut.putText('Could not load process to disk. Disk is not formatted.');
+                            break;    
+                        case 3:
+                            _StdOut.putText('Could not load process to disk. Not enough directory space.');
+                            break;
+                        case 4:
+                        case 6:
+                            _StdOut.putText('Could not load process to disk. Not enough data space.');
+                            break;
+                        case 2:
+                        case 5:
+                        case 7:
+                            this.krnTrapError('Error creating swap file.');
+                            break;
+                    }
                     // Swap file was not created, so backtrack a little
                     ProcessControlBlock.CurrentPID--;
                     pcbCreated = false;
@@ -330,10 +347,10 @@ module TSOS {
 
             if (pcbCreated) {
                 // Let the user know the program is valid
-                _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
+                this.krnTrace(`Created PID ${newPCB.pid}`);
                 _StdOut.putText(`Process ID: ${newPCB.pid}`);
             } else {
-                _Kernel.krnTrace('Failed to load program.');
+                this.krnTrace('Failed to load program.');
                 _StdOut.advanceLine();
                 _StdOut.putText('Program was not loaded.');
             }
@@ -394,16 +411,20 @@ module TSOS {
             // Check for an available segment in memory
             if (!_MemoryManager.hasAvailableSegment()) {
                 // Roll out the most recently run process
-                _Kernel.krnRollOut(_PCBReadyQueue.getTail());
+                this.krnRollOut(_PCBReadyQueue.getTail());
             }
             // Roll in the given process
-            _Kernel.krnRollIn(pcb);
+            this.krnRollIn(pcb);
         }
 
         public krnRollOut(pcb: ProcessControlBlock): void {
             // Create the swap file for the process
             if (pcb.status === 'Ready') {
-                _Kernel.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+                let fileCreationStatus: number = this.createSwapFileForSegment(pcb.swapFile, pcb.segment);
+                if (fileCreationStatus !== 0) {
+                    // BSOD if any error
+                    this.krnTrapError('Error from creating a swap file.');
+                }
             }
             
             // Free it up in the pcb
@@ -414,13 +435,15 @@ module TSOS {
         }
 
         public krnRollIn(pcb: ProcessControlBlock): void {
+            // Read the swap file from the disk
             let swapRead: any[] = _krnDiskSystemDeviceDriver.readFileRaw(pcb.swapFile, 0x100);
             _krnDiskSystemDeviceDriver.deleteFile(pcb.swapFile);
             if (swapRead[0] === 0) {
                 let newSegment: number = _MemoryManager.allocateProgram(swapRead[1]);
                 pcb.segment = newSegment;
             } else {
-                console.log(swapRead[0])
+                // Nothing bad should ever happen from reading, but do a BSOD in case
+                this.krnTrapError('Error from reading a swap file.');
             }
             pcb.updateTableEntry();
         }
@@ -439,14 +462,23 @@ module TSOS {
             }
         }
 
-        public createSwapFileForSegment(swapFileName: string, segment: number) {
+        public createSwapFileForSegment(swapFileName: string, segment: number): number {
             // Get the program from memory
             let program: number[] = _MemoryAccessor.memoryDump(_BaseLimitPairs[segment][0], _BaseLimitPairs[segment][1]);
 
-            // Create the swap file
-            this.createSwapFile(swapFileName, program);
+            // Create the swap file and return the error status
+            return this.createSwapFile(swapFileName, program);
         }
 
+        // Possible outputs:
+        // 0: Successful
+        // 1: Disk not formatted
+        // 2: File already exists
+        // 3: No directory room
+        // 4: No data room
+        // 5: File does not exist
+        // 6: Partial write
+        // 7: Internal error
         public createSwapFile(swapFileName: string, program: number[]): number {
             let out: number = 0;
 
@@ -455,23 +487,19 @@ module TSOS {
             switch (createFileOutput) {
                 case 1:
                     // Disk is not formatted, so cannot work with swap files
-                    _StdOut.putText('Could not create the swap file. Disk is not formatted.');
                     out = 1;
                     break;
                 case 2:
                     // File already exists (should never come up)
-                    _StdOut.putText(`Could not create the swap file. ${swapFileName} already exists.`);
-                    out = 1;
+                    out = 2;
                     break;
                 case 3:
                     // No directory room
-                    _StdOut.putText('Failed to create the swap file. There is no room in the directory.');
-                    out = 1;
+                    out = 3;
                     break;
                 case 4:
                     // No data room
-                    _StdOut.putText('Failed to create the swap file. There are not enough available data blocks on the disk.');
-                    out = 1;
+                    out = 4;
                     break;
             }
 
@@ -483,24 +511,20 @@ module TSOS {
                 let writeOutput: number = _krnDiskSystemDeviceDriver.writeFile(swapFileName, programStr, true);
                 switch (writeOutput) {
                     case 1:
-                        // Should never be reached
-                        _StdOut.putText('Could not write to the swap file. Disk is not formatted.');
+                        // Disk not formatted should never be reached
                         out = 1;
                         break;
                     case 2:
-                        // Also should never be reached
-                        _StdOut.putText('Failed to write to the swap file. ' + swapFileName + ' does not exist.');
-                        out = 1;
+                        // File not found should also never be reached
+                        out = 5;
                         break;
                     case 3:
-                        // Should never be reached because we allocated the space ahead of time to make sure there is enough room
-                        _StdOut.putText('Performed a partial write to swap file: ' + swapFileName + '. Not enough available data blocks on the disk.');
-                        out = 1;
+                        // Partial write should never be reached because we allocated the space ahead of time to make sure there is enough room
+                        out = 6;
                         break;
                     case 4:
-                        // Should never be reached if everything is implemented correctly
-                        _StdOut.putText("Internal file system error. Please reformat the disk.");
-                        out = 1;
+                        // Internal error should never be reached if everything is implemented correctly
+                        out = 7;
                         break;
                 }
                 if (out === 1) {
