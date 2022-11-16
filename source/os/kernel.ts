@@ -495,7 +495,9 @@ module TSOS {
         public krnListFiles(): void {
             // Get the file list from the dsDD
             let fileList: string[] = _krnDiskSystemDeviceDriver.getFileList();
-            if (fileList.length === 0) {
+            if (fileList === null) {
+                _StdOut.putText('Cannot list files. The disk is not formatted.');
+            } else if (fileList.length === 0) {
                 _StdOut.putText('There are no files to list.')
             } else {
                 // Print out each file name

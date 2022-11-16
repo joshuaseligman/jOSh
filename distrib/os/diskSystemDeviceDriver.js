@@ -603,6 +603,10 @@ var TSOS;
                     }
                 }
             }
+            else {
+                // Set the list to something that marks it as the disk not being formatted
+                fileList = null;
+            }
             return fileList;
         }
         getDirectoryBlockForFile(fileName) {
