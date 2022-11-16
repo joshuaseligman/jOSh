@@ -261,8 +261,7 @@ var TSOS;
                     _PCBHistory.push(newPCB);
                 }
                 else {
-                    // Swap file was not created, so backtrack
-                    _krnDiskSystemDeviceDriver.deleteFile(newPCB.swapFile);
+                    // Swap file was not created, so backtrack a little
                     TSOS.ProcessControlBlock.CurrentPID--;
                     pcbCreated = false;
                 }
@@ -275,6 +274,11 @@ var TSOS;
                 // Let the user know the program is valid
                 _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
                 _StdOut.putText(`Process ID: ${newPCB.pid}`);
+            }
+            else {
+                _Kernel.krnTrace('Failed to load program.');
+                _StdOut.advanceLine();
+                _StdOut.putText('Program was not loaded.');
             }
         }
         krnTerminateProcess(requestedProcess, status, msg, putPrompt = true) {
@@ -321,7 +325,7 @@ var TSOS;
         createSwapFile(swapFileName, program) {
             let out = 0;
             // Call the dsDD to create a file on the disk if possible
-            let createFileOutput = _krnDiskSystemDeviceDriver.createFile(swapFileName);
+            let createFileOutput = _krnDiskSystemDeviceDriver.createFileWithInitialSize(swapFileName, program.length);
             switch (createFileOutput) {
                 case 1:
                     // Disk is not formatted, so cannot work with swap files
@@ -340,7 +344,7 @@ var TSOS;
                     break;
                 case 4:
                     // No data room
-                    _StdOut.putText('Failed to create the file. There are no available data blocks on the disk.');
+                    _StdOut.putText('Failed to create the swap file. There are not enough available data blocks on the disk.');
                     out = 1;
                     break;
             }

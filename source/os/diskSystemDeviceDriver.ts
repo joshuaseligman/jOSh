@@ -151,6 +151,119 @@ module TSOS {
             return out;
         }
 
+        // 0: File created successfully
+        // 1: Disk is not formatted yet
+        // 2: File already exists
+        // 3: No available directory blocks
+        // 4: Not enough available data blocks
+        public createFileWithInitialSize(fileName: string, sizeInBytes: number): number {
+            let out: number = 0;
+
+            if (!this.isFormatted) {
+                out = 1;
+            } else {
+                // Initialize the first open directory spot to be an empty string because nothing is there yet
+                let firstOpenDir: string = '';
+                for (let s = 0; s < NUM_SECTORS && out === 0; s++) {
+                    for (let b = 0; b < NUM_BLOCKS && out === 0; b++) {
+                        if (s === 0 && b === 0) {
+                            // 0:0:0 is for the master boot record
+                            // Directory is 0:0:1 - 0:1:7
+                            continue;
+                        }
+
+                        let blockEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+
+                        // The block is unavailable, so check to make sure the file doesn't already exist
+                        if (blockEntry.charAt(1) === '1') {
+                            // Get the remaining 60 bytes of data
+                            let fileMetadata: string = blockEntry.substring(8);
+
+                            // Work to get the file name by going byte by byte through the data
+                            let fileNameCheck: string = '';
+                            let charIndex = 0;
+                            let endFound: boolean = false;
+
+                            while (charIndex < fileMetadata.length && !endFound) {
+                                // Get the character code stored at the given byte
+                                let nextCharCode: number = parseInt(fileMetadata.substring(charIndex, charIndex + 2), 16);
+                                
+                                if (nextCharCode === 0) {
+                                    // End of file name
+                                    endFound = true;
+                                } else {
+                                    // Continue with the next character in the file name
+                                    fileNameCheck += String.fromCharCode(nextCharCode);
+                                    charIndex += 2;
+                                }
+                            }
+
+                            // Make sure the names do not match
+                            if (fileName === fileNameCheck) {
+                                out = 2;
+                            }
+
+                        } else if (firstOpenDir === '') {
+                            // Set the first open directory space accordingly
+                            firstOpenDir = `0:${s}:${b}`;
+                        }
+                    }
+                }
+
+                // The number of blocks needed is the size needed divided by the amount of data space per block
+                let numBlocksNeeded: number = Math.ceil(sizeInBytes / (BLOCK_SIZE - 4));
+                let availableBlocks: string[] = this.getAvailableDataBlocks(numBlocksNeeded);
+
+                if (out === 0) {
+                    if (firstOpenDir === '') {
+                        // There are no open directory spots
+                        out = 3;
+                    } else if (availableBlocks.length < numBlocksNeeded) {
+                        // Make sure there are enough available data blocks to meet the request
+                        out = 4;
+                    } else {
+                        // Start with marking the directory entry as unavailable
+                        let directoryEntry: string = '01';
+                        
+                        // Go through every other character in the first open data block (t:s:b)
+                        for (let i: number = 0; i < availableBlocks[0].length; i += 2) {
+                            directoryEntry += '0' + availableBlocks[0].charAt(i);
+                        }
+
+                        // Add each character of the file name to the directory entry
+                        for (let j: number = 0; j < fileName.length; j++) {
+                            directoryEntry += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
+                        }
+                        // Pad the rest with 0s (should be at least 2)
+                        directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
+
+                        // Save it on the disk and update the table
+                        sessionStorage.setItem(firstOpenDir, directoryEntry);
+
+                        // Mark the data block as unavailable, give it the next block, and the data are all 0s
+                        for (let k: number = 0; k < availableBlocks.length; k++) {
+                            let newDataEntry: string = '01';
+
+                            if (k === availableBlocks.length - 1) {
+                                // Last block is the end of the file
+                                newDataEntry += 'FFFFFF'
+                            } else {
+                                // Get the TSB of the next block
+                                for (let l: number = 0; l < availableBlocks[k + 1].length; l += 2) {
+                                    newDataEntry += '0' + availableBlocks[k + 1].charAt(l);
+                                }
+                            }
+                            // Update the disk accordingly
+                            sessionStorage.setItem(availableBlocks[k], newDataEntry.padEnd(BLOCK_SIZE * 2, '0'));
+                        }
+                        this.updateTable();
+                    }
+                }
+            }
+
+            return out;
+        }
+
         // Possible outputs at index 0
         // 0: Read successful (will contain a second element with the array of character codes)
         // 1: Disk is not formatted yet
@@ -609,6 +722,24 @@ module TSOS {
                 }
             }
             return dataTsb;
+        }
+
+        public getAvailableDataBlocks(numBlocks: number): string[] {
+            // Start off with knowing about no open data blocks
+            let availableBlocks: string[] = [];
+
+            for (let t: number = 1; t < NUM_TRACKS && availableBlocks.length < numBlocks; t++) {
+                for (let s: number = 0; s < NUM_SECTORS && availableBlocks.length < numBlocks; s++) {
+                    for (let b: number = 0; b < NUM_BLOCKS && availableBlocks.length < numBlocks; b++) {
+                        // Find the next data block that is not in use and store it
+                        if (sessionStorage.getItem(`${t}:${s}:${b}`).charAt(1) === '0') {
+                            availableBlocks.push(`${t}:${s}:${b}`);
+                        }
+                    }
+                }
+            }
+
+            return availableBlocks;
         }
 
         private updateTable(): void {
