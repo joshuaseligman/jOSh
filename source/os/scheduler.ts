@@ -20,7 +20,7 @@ module TSOS {
             this.curAlgo = SchedulingAlgo.ROUND_ROBIN;
         }
 
-        // Calls the dispatcher to schedule the firste process
+        // Calls the dispatcher to schedule the first process
         public scheduleFirstProcess(): void {
             _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, [true]));
             this.numCycles = 0;
@@ -44,7 +44,7 @@ module TSOS {
 
                 // Prevent the cpu from doing another cycle
                 output = false;
-            } else if (this.numCycles > this.curQuantum) {
+            } else if (this.curAlgo === SchedulingAlgo.ROUND_ROBIN && this.numCycles > this.curQuantum) {
                 // Only call the dispatcher if we have multiple programs in memory
                 if (_PCBReadyQueue.getSize() > 1) {
                     // Create a software interrupt to do a context switch
@@ -83,7 +83,18 @@ module TSOS {
             } else if (newAlgo === SchedulingAlgo.FCFS) {
                 // FCFS is RR with a super large quantum value
                 this.setQuantum(Number.MAX_VALUE);
+            } else if (newAlgo === SchedulingAlgo.PRIORITY) {
+                this.setQuantum(-1);
             }
+
+            if (_PCBReadyQueue.getSize() > 1) {
+                // Create a software interrupt to do a context switch to work with the current scheduling algorithm
+                _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+            }
+
+            // Reset num cycles to 0
+            this.numCycles = 0;
+            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
         }
     }
 }

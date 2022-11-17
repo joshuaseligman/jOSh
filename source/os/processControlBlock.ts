@@ -54,7 +54,7 @@ module TSOS {
         // The name of the swap file
         public swapFile: string;
 
-        constructor(segment: number, priority: number = 8) {
+        constructor(segment: number, priority: number) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;

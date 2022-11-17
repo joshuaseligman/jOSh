@@ -1,7 +1,7 @@
 var TSOS;
 (function (TSOS) {
     class ProcessControlBlock {
-        constructor(segment, priority = 8) {
+        constructor(segment, priority) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;

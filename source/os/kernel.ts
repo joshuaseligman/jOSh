@@ -260,7 +260,7 @@ module TSOS {
                     break;
                 
                 case CALL_DISPATCHER_IRQ:
-                    _Dispatcher.contextSwitch(params[0]);
+                    _Dispatcher.contextSwitch(params[0], _Scheduler.getCurAlgo());
                     this.krnTrace('Called dispatcher')
                     break;
 
@@ -299,13 +299,13 @@ module TSOS {
             }
         }
 
-        public krnCreateProcess(prog: number[]) {
+        public krnCreateProcess(prog: number[], priority: number) {
             // Try to load a process into memory
             let segment: number = _MemoryManager.allocateProgram(prog);
 
             // Create the PCB
             let pcbCreated: boolean = true;
-            let newPCB: ProcessControlBlock = new ProcessControlBlock(segment);
+            let newPCB: ProcessControlBlock = new ProcessControlBlock(segment, priority);
 
             if (newPCB.segment === -1) {
                 // Try to create a swap file if no room in memory

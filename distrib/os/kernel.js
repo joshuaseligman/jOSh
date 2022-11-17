@@ -221,7 +221,7 @@ var TSOS;
                     }
                     break;
                 case CALL_DISPATCHER_IRQ:
-                    _Dispatcher.contextSwitch(params[0]);
+                    _Dispatcher.contextSwitch(params[0], _Scheduler.getCurAlgo());
                     this.krnTrace('Called dispatcher');
                     break;
                 default:
@@ -256,12 +256,12 @@ var TSOS;
                 _StdOut.putText('All memory cleared.');
             }
         }
-        krnCreateProcess(prog) {
+        krnCreateProcess(prog, priority) {
             // Try to load a process into memory
             let segment = _MemoryManager.allocateProgram(prog);
             // Create the PCB
             let pcbCreated = true;
-            let newPCB = new TSOS.ProcessControlBlock(segment);
+            let newPCB = new TSOS.ProcessControlBlock(segment, priority);
             if (newPCB.segment === -1) {
                 // Try to create a swap file if no room in memory
                 let swapFileOutput = this.createSwapFile(newPCB.swapFile, prog);

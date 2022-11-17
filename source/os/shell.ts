@@ -112,7 +112,7 @@ module TSOS {
             // load
             sc = new ShellCommand(this.shellLoad,
                 "load",
-                "- Loads the user program into memory.");
+                "[<priority>]- Loads the user program into memory with the given priority (8 is default)");
             this.commandList[this.commandList.length] = sc;
 
             // run
@@ -525,9 +525,19 @@ module TSOS {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }
 
-                // Call the kernel process to create a process
-                _Kernel.krnCreateProcess(progArr);
-               
+                // 8 is default priority value
+                let priority: number = 8;
+                if (args.length > 0) {
+                    priority = parseInt(args[0]);
+                }
+
+                if (isNaN(priority) || priority < 0) {
+                    // Make sure we have a valid input
+                    _StdOut.putText('Invalid priority. Priority must be a integer value greater than or equal to 0.')
+                } else {
+                    // Call the kernel process to create a process
+                    _Kernel.krnCreateProcess(progArr, priority);
+                }
             } else {
                 // Invalid program from bad characters
                 _Kernel.krnTrace('Invalid program. Invalid characters present.');
