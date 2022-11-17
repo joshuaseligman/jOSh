@@ -6,6 +6,7 @@ var TSOS;
             this.curQuantum = DEFAULT_QUANTUM;
             // The number of cycles starts at 0 because nothing is running yet
             this.numCycles = 0;
+            this.curAlgo = SchedulingAlgo.ROUND_ROBIN;
         }
         // Calls the dispatcher to schedule the firste process
         scheduleFirstProcess() {
@@ -44,6 +45,22 @@ var TSOS;
         // Setter for the quantum
         setQuantum(newQuantum) {
             this.curQuantum = newQuantum;
+            // Update the HTML to reflect the new quantum
+            document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
+        }
+        getCurAlgo() {
+            return this.curAlgo;
+        }
+        setCurAlgo(newAlgo) {
+            this.curAlgo = newAlgo;
+            if (newAlgo === SchedulingAlgo.ROUND_ROBIN) {
+                // Set the quantum back to default when switching to round robin
+                this.setQuantum(DEFAULT_QUANTUM);
+            }
+            else if (newAlgo === SchedulingAlgo.FCFS) {
+                // FCFS is RR with a super large quantum value
+                this.setQuantum(Number.MAX_VALUE);
+            }
         }
     }
     TSOS.Scheduler = Scheduler;

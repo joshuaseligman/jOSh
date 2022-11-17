@@ -192,6 +192,16 @@ module TSOS {
                 "<curFileName> <newFileName> - Makes a copy of an existing file");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellGetSchedule,
+                "getschedule",
+                "- Returns the CPU scheduling algorithm being used");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellSetSchedule,
+                "setschedule",
+                "<rr|fcfs|priority> - Sets the CPU scheduling algorithm to the one provided");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -644,9 +654,6 @@ module TSOS {
                     _Scheduler.setQuantum(newQuantum);
                     _StdOut.putText(`Quantum set to ${newQuantum}`);
                     _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
-
-                    // Update the HTML to reflect the new quantum
-                    document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
                 } else {
                     // Print out an error message for an invalid quantum value
                     _StdOut.putText('Invalid quantum value. Quantum must be positive.');
@@ -665,7 +672,7 @@ module TSOS {
             if (args.length > 0 && args[0] === '-quick') {
                 quick = true;
             }
-            
+
             // Call the kernel to format the disk
             _Kernel.krnFormatDisk(quick);
         }
@@ -770,7 +777,7 @@ module TSOS {
             }
         }
 
-        public shellCopyFile (args: string[]) {
+        public shellCopyFile(args: string[]) {
             // Check to make sure we have the right number of arguments
             if (args.length === 0) {
                 _StdOut.putText('Usage: copy <curFileName> <newFileName>  Please provide the file to copy and the name of the destination file.');
@@ -790,6 +797,47 @@ module TSOS {
                     // Call the kernel routine to copy the file
                     _Kernel.krnCopyFile(args[0], args[1]);
                 }
+            }
+        }
+
+        public shellGetSchedule(args: string[]) {
+            let algo: SchedulingAlgo = _Scheduler.getCurAlgo();
+            
+            _StdOut.putText("The scheduler is using ");
+            switch (algo) {
+                case SchedulingAlgo.ROUND_ROBIN:
+                    _StdOut.putText("round robin scheduling.");
+                    break;
+                case SchedulingAlgo.FCFS:
+                    _StdOut.putText("first come, first serve scheduling.");
+                    break;
+                case SchedulingAlgo.PRIORITY:
+                    _StdOut.putText("priority scheduling.");
+                    break;
+            }        
+        }
+
+        public shellSetSchedule(args: string[]) {
+            if (args.length > 0) {
+                switch (args[0]) {
+                    case 'rr':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.ROUND_ROBIN);
+                        _StdOut.putText('Scheduling algorithm updated to round robin.');
+                        break;
+                    case 'fcfs':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.FCFS);
+                        _StdOut.putText('Scheduling algorithm updated to first come, first serve.');
+                        break;
+                    case 'priority':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.PRIORITY);
+                        _StdOut.putText('Scheduling algorithm updated to priority.');
+                        break;
+                    default:
+                        _StdOut.putText("Invalid scheduling algorithm. Must be rr, fcfs, or priority.");
+                        break;
+                }
+            } else {
+                _StdOut.putText('Usage: setschedule <rr|fcfs|priority>  Please provide the scheduling algorithm to use.');
             }
         }
     }

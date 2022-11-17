@@ -101,12 +101,19 @@ const BLOCK_SIZE = 64;
 
 var _hardwareClockID: number = null;
 
-// Delcare the variables for the scheduler and dispatcher
+// Declare the variables for the scheduler and dispatcher
 var _Scheduler: TSOS.Scheduler = null;
 var _Dispatcher: TSOS.Dispatcher = null;
 
 // The default quantum is 6 CPU cycles
 const DEFAULT_QUANTUM: number = 6;
+
+// Create an enum to use for representing the scheduling algorithm choices
+enum SchedulingAlgo {
+   ROUND_ROBIN,
+   FCFS,
+   PRIORITY
+}
 
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .

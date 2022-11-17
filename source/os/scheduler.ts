@@ -7,12 +7,17 @@ module TSOS {
         // The number of CPU cycles used for the current program in round robin
         private numCycles: number;
 
+        // Initialize the 
+        private curAlgo: SchedulingAlgo;
+
         constructor() {
             // Current quantum starts with the default
             this.curQuantum = DEFAULT_QUANTUM;
 
             // The number of cycles starts at 0 because nothing is running yet
             this.numCycles = 0;
+
+            this.curAlgo = SchedulingAlgo.ROUND_ROBIN;
         }
 
         // Calls the dispatcher to schedule the firste process
@@ -61,6 +66,24 @@ module TSOS {
         // Setter for the quantum
         public setQuantum(newQuantum: number): void {
             this.curQuantum = newQuantum;
+            // Update the HTML to reflect the new quantum
+            document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
+        }
+
+        public getCurAlgo(): SchedulingAlgo {
+            return this.curAlgo;
+        }
+
+        public setCurAlgo(newAlgo: SchedulingAlgo) {
+            this.curAlgo = newAlgo;
+
+            if (newAlgo === SchedulingAlgo.ROUND_ROBIN) {
+                // Set the quantum back to default when switching to round robin
+                this.setQuantum(DEFAULT_QUANTUM);
+            } else if (newAlgo === SchedulingAlgo.FCFS) {
+                // FCFS is RR with a super large quantum value
+                this.setQuantum(Number.MAX_VALUE);
+            }
         }
     }
 }

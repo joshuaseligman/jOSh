@@ -1,6 +1,6 @@
 module TSOS {
     export class Dispatcher {
-
+        
         // Function to perform a context switch
         public contextSwitch(firstProcess: boolean): void {
             if (firstProcess) {

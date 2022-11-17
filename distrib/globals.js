@@ -71,11 +71,18 @@ const NUM_BLOCKS = 8;
 // 64 byte blocks
 const BLOCK_SIZE = 64;
 var _hardwareClockID = null;
-// Delcare the variables for the scheduler and dispatcher
+// Declare the variables for the scheduler and dispatcher
 var _Scheduler = null;
 var _Dispatcher = null;
 // The default quantum is 6 CPU cycles
 const DEFAULT_QUANTUM = 6;
+// Create an enum to use for representing the scheduling algorithm choices
+var SchedulingAlgo;
+(function (SchedulingAlgo) {
+    SchedulingAlgo[SchedulingAlgo["ROUND_ROBIN"] = 0] = "ROUND_ROBIN";
+    SchedulingAlgo[SchedulingAlgo["FCFS"] = 1] = "FCFS";
+    SchedulingAlgo[SchedulingAlgo["PRIORITY"] = 2] = "PRIORITY";
+})(SchedulingAlgo || (SchedulingAlgo = {}));
 // For testing (and enrichment)...
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.
