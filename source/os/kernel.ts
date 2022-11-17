@@ -448,7 +448,7 @@ module TSOS {
             pcb.updateTableEntry();
         }
 
-        public krnFormatDisk(): void {
+        public krnFormatDisk(quick: boolean): void {
             // Get the files on the disk
             let files: string[] = _krnDiskSystemDeviceDriver.getFileList();
             // Check if there is a swap file
@@ -457,7 +457,7 @@ module TSOS {
                 _StdOut.putText('Disk cannot be formatted. Swap files found on the disk.');
             } else {
                 // Otherwise can format the disk
-                _krnDiskSystemDeviceDriver.formatDisk();
+                _krnDiskSystemDeviceDriver.formatDisk(quick);
                 _StdOut.putText('Successfully formatted the disk.');
             }
         }

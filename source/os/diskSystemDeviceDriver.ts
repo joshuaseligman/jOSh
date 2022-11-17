@@ -25,13 +25,19 @@ module TSOS {
             // More?
         }
 
-        public formatDisk() {
+        public formatDisk(quick: boolean) {
             for (let t: number = 0; t < NUM_TRACKS; t++) {
                 for (let s: number = 0; s < NUM_SECTORS; s++) {
                     for (let b: number = 0; b < NUM_BLOCKS; b++) {
-                        // Set each block to be 0s
-                        // 2 * block size is the number of 0s needed because 2 hex digits is 1 byte
-                        sessionStorage.setItem(`${t}:${s}:${b}`, '00FFFFFF' + '0'.repeat((BLOCK_SIZE - 4) * 2));
+                        // If a quick format is called and the disk has not been formatted before, it will be the same as a low-level format (to set up the session storage)
+                        if (quick && this.isFormatted) {
+                            // Only set the overhead to make the block free. the data can stay where it is
+                            sessionStorage.setItem(`${t}:${s}:${b}`, '00FFFFFF' + sessionStorage.getItem(`${t}:${s}:${b}`).substring(8));
+                        } else {
+                            // Set each block to be 0s
+                            // 2 * (block size - 4) is the number of 0s needed because 2 hex digits is 1 byte and we are starting with a 4 byte overhead
+                            sessionStorage.setItem(`${t}:${s}:${b}`, '00FFFFFF' + '0'.repeat((BLOCK_SIZE - 4) * 2));
+                        }
                     }
                 }
             }

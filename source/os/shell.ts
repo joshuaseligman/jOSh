@@ -154,7 +154,7 @@ module TSOS {
 
             sc = new ShellCommand(this.shellFormat,
                 "format",
-                "- Formats the disk for use");
+                "[-quick] - Performs a low-level format of the disk for use (-quick performs a quick format instead)");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellCreate,
@@ -658,8 +658,16 @@ module TSOS {
         }
 
         public shellFormat(args: string[]) {
+            // Assume low level format
+            let quick: boolean = false;
+
+            // The flag changes it to want to do a quick format
+            if (args.length > 0 && args[0] === '-quick') {
+                quick = true;
+            }
+            
             // Call the kernel to format the disk
-            _Kernel.krnFormatDisk();
+            _Kernel.krnFormatDisk(quick);
         }
 
         public shellCreate(args: string[]) {

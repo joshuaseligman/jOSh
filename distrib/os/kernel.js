@@ -389,7 +389,7 @@ var TSOS;
             }
             pcb.updateTableEntry();
         }
-        krnFormatDisk() {
+        krnFormatDisk(quick) {
             // Get the files on the disk
             let files = _krnDiskSystemDeviceDriver.getFileList();
             // Check if there is a swap file
@@ -399,7 +399,7 @@ var TSOS;
             }
             else {
                 // Otherwise can format the disk
-                _krnDiskSystemDeviceDriver.formatDisk();
+                _krnDiskSystemDeviceDriver.formatDisk(quick);
                 _StdOut.putText('Successfully formatted the disk.');
             }
         }

@@ -82,7 +82,7 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats the disk for use");
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "[-quick] - Performs a low-level format of the disk for use (-quick performs a quick format instead)");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellCreate, "create", "<filename> - Creates a file of the given name");
             this.commandList[this.commandList.length] = sc;
@@ -532,8 +532,14 @@ var TSOS;
             }
         }
         shellFormat(args) {
+            // Assume low level format
+            let quick = false;
+            // The flag changes it to want to do a quick format
+            if (args.length > 0 && args[0] === '-quick') {
+                quick = true;
+            }
             // Call the kernel to format the disk
-            _Kernel.krnFormatDisk();
+            _Kernel.krnFormatDisk(quick);
         }
         shellCreate(args) {
             if (args.length > 0) {
