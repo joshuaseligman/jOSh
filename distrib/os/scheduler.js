@@ -8,7 +8,7 @@ var TSOS;
             this.numCycles = 0;
             this.curAlgo = SchedulingAlgo.ROUND_ROBIN;
         }
-        // Calls the dispatcher to schedule the firste process
+        // Calls the dispatcher to schedule the first process
         scheduleFirstProcess() {
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CALL_DISPATCHER_IRQ, [true]));
             this.numCycles = 0;
@@ -56,13 +56,16 @@ var TSOS;
             if (newAlgo === SchedulingAlgo.ROUND_ROBIN) {
                 // Set the quantum back to default when switching to round robin
                 this.setQuantum(DEFAULT_QUANTUM);
+                document.querySelector('#algoVal').innerHTML = 'RR';
             }
             else if (newAlgo === SchedulingAlgo.FCFS) {
                 // FCFS is RR with a super large quantum value
                 this.setQuantum(Number.MAX_VALUE);
+                document.querySelector('#algoVal').innerHTML = 'FCFS';
             }
             else if (newAlgo === SchedulingAlgo.PRIORITY) {
                 this.setQuantum(-1);
+                document.querySelector('#algoVal').innerHTML = 'Priority';
             }
             if (_PCBReadyQueue.getSize() > 1) {
                 // Create a software interrupt to do a context switch to work with the current scheduling algorithm

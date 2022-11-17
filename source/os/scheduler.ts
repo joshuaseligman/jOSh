@@ -80,11 +80,15 @@ module TSOS {
             if (newAlgo === SchedulingAlgo.ROUND_ROBIN) {
                 // Set the quantum back to default when switching to round robin
                 this.setQuantum(DEFAULT_QUANTUM);
+
+                document.querySelector('#algoVal').innerHTML = 'RR';
             } else if (newAlgo === SchedulingAlgo.FCFS) {
                 // FCFS is RR with a super large quantum value
                 this.setQuantum(Number.MAX_VALUE);
+                document.querySelector('#algoVal').innerHTML = 'FCFS';
             } else if (newAlgo === SchedulingAlgo.PRIORITY) {
                 this.setQuantum(-1);
+                document.querySelector('#algoVal').innerHTML = 'Priority';
             }
 
             if (_PCBReadyQueue.getSize() > 1) {
