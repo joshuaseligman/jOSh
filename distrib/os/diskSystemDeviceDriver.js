@@ -74,12 +74,23 @@ var TSOS;
                         for (let i = 0; i < firstOpenData.length; i += 2) {
                             directoryEntry += '0' + firstOpenData.charAt(i);
                         }
+                        let fileNameHex = '';
                         // Add each character of the file name to the directory entry
                         for (let j = 0; j < fileName.length; j++) {
-                            directoryEntry += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
+                            fileNameHex += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
                         }
-                        // Pad the rest with 0s (should be at least 2)
-                        directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
+                        // Pad the rest with 0s
+                        fileNameHex = fileNameHex.padEnd(MAX_FILE_NAME_LENGTH * 2, '0');
+                        // Make sure the file name has 00 in it to mark the end of the name
+                        // We saved room for this when choosing the value for MAX_FILE_NAME_LENGTH
+                        fileNameHex += '00';
+                        directoryEntry += fileNameHex;
+                        // Get the date and store it in hex
+                        let date = TSOS.Utils.getDate(false).split('/');
+                        date = date.map((elem) => parseInt(elem).toString(16).toUpperCase());
+                        directoryEntry += date.join('');
+                        // We are initially using 2 block on the disk (1 for directory and 1 for data)
+                        directoryEntry += '02';
                         // Save it on the disk and update the table
                         sessionStorage.setItem(firstOpenDir, directoryEntry);
                         // Mark the data block as unavailable, give it the end of the file, and the data are all 0s
@@ -325,6 +336,8 @@ var TSOS;
         // 4: Internal error (file block given is available)
         writeFile(fileName, contents, isRaw = false) {
             let out = 0;
+            // All files are using at least 2 blocks (1 for directory and 1 for data)
+            let numBlocksUsed = 2;
             if (!this.isFormatted) {
                 // Disk is not formatted
                 out = 1;
@@ -395,6 +408,8 @@ var TSOS;
                                     // Set the current TSB to the new TSB
                                     curFileBlock = newTsb;
                                 }
+                                // Increment the number of blocks being used
+                                numBlocksUsed++;
                             }
                             else {
                                 // Memory leak prevention. If writing to fewer blocks, we have to set the rest of the chain to be not in use anymore
@@ -416,6 +431,11 @@ var TSOS;
                             }
                         }
                     }
+                }
+                if (out === 0 || out === 3) {
+                    // Update the number of blocks in the directory entry
+                    let fileDirTsb = this.getDirectoryBlockForFile(fileName);
+                    sessionStorage.setItem(fileDirTsb, sessionStorage.getItem(fileDirTsb).substring(0, (BLOCK_SIZE - 1) * 2) + numBlocksUsed.toString(16).toUpperCase().padStart(2, '0'));
                 }
                 // Update the HTML and return the status code
                 this.updateTable();

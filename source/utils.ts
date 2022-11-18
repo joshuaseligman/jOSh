@@ -44,10 +44,16 @@ module TSOS {
             return retVal;
         }
 
-        public static getDate(): string {
+        public static getDate(includeTime: boolean = true): string {
             // Gets the current date and time and returns it in a string for easy use throughout the project
             let now = new Date();
-            return now.toLocaleString();
+            if (includeTime) {
+                // This has the time
+                return now.toLocaleString();
+            } else {
+                // This is just the day
+                return now.toLocaleDateString();
+            }
         }
 
         // Function for converting a number to a hex string

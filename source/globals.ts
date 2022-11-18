@@ -88,16 +88,19 @@ var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard = null;
 var _krnDiskSystemDeviceDriver: TSOS.DiskSystemDeviceDriver = null;
 
 // 4 total tracks
-const NUM_TRACKS = 4;
+const NUM_TRACKS: number = 4;
 
 // 8 sectors per track
-const NUM_SECTORS = 8;
+const NUM_SECTORS: number = 8;
 
 // 8 blocks per sector
-const NUM_BLOCKS = 8;
+const NUM_BLOCKS: number = 8;
 
 // 64 byte blocks
-const BLOCK_SIZE = 64;
+const BLOCK_SIZE: number = 64;
+
+// 64 - 4 (overhead) - 1 (end of name) - 4 (6 digits for date and 2 for size)
+const MAX_FILE_NAME_LENGTH: number = 55;
 
 var _hardwareClockID: number = null;
 

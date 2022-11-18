@@ -692,9 +692,8 @@ module TSOS {
                 if (args[0].charAt(0) === '~') {
                     // ~ will be used for swap files, so reserve the character
                     _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
-                } else if (args[0].length > 59) {
-                    // The directory block has 60 bytes, but needs a byte for the end of the file name, so 59 characters is max
-                    _StdOut.putText('Invalid file name. File names cannot be longer than 59 characters.');
+                } else if (args[0].length > MAX_FILE_NAME_LENGTH) {
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
                 } else {
                     // Call the kernel to create the file of the given name
                     _Kernel.krnCreateFile(args[0]);
@@ -777,9 +776,8 @@ module TSOS {
                 if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
                     // ~ will be used for swap files, so reserve the character
                     _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
-                } else if (args[0].length > 59 || args[1].length > 59) {
-                    // The directory block has 60 bytes, but needs a byte (00) for the end of the file name, so 59 characters is max
-                    _StdOut.putText('Invalid file name. File names cannot be longer than 59 characters.');
+                } else if (args[0].length > MAX_FILE_NAME_LENGTH || args[1].length > MAX_FILE_NAME_LENGTH) {
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
                 } else {
                     // Call the kernel routine to rename the file
                     _Kernel.krnRenameFile(args[0], args[1]);
@@ -800,9 +798,9 @@ module TSOS {
                 } else if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
                     // ~ will be used for swap files, so reserve the character
                     _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
-                } else if (args[0].length > 59 || args[1].length > 59) {
+                } else if (args[0].length > MAX_FILE_NAME_LENGTH || args[1].length > MAX_FILE_NAME_LENGTH) {
                     // The directory block has 60 bytes, but needs a byte (00) for the end of the file name, so 59 characters is max
-                    _StdOut.putText('Invalid file name. File names cannot be longer than 59 characters.');
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
                 } else {
                     // Call the kernel routine to copy the file
                     _Kernel.krnCopyFile(args[0], args[1]);
