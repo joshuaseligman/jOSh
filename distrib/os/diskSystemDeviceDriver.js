@@ -612,7 +612,20 @@ var TSOS;
                                     fileName += String.fromCharCode(charCode);
                                 }
                             }
-                            fileList.push(fileName);
+                            // Grab the file metadata
+                            let fileMetaData = directoryEntry.substring((BLOCK_SIZE - 4) * 2);
+                            // Get the date the file was created
+                            let dateCreated = '';
+                            dateCreated += parseInt(fileMetaData.charAt(0), 16);
+                            dateCreated += '/';
+                            dateCreated += parseInt(fileMetaData.substring(1, 3), 16);
+                            dateCreated += '/';
+                            dateCreated += parseInt(fileMetaData.substring(3, 6), 16);
+                            // Get the size in bytes
+                            let size = (parseInt(fileMetaData.substring(6), 16) * BLOCK_SIZE) + ' bytes';
+                            // Create the file entry
+                            let fileEntry = [fileName, dateCreated, size];
+                            fileList.push(fileEntry);
                         }
                     }
                 }

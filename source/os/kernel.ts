@@ -450,9 +450,9 @@ module TSOS {
 
         public krnFormatDisk(quick: boolean): void {
             // Get the files on the disk
-            let files: string[] = _krnDiskSystemDeviceDriver.getFileList();
+            let files: string[][] = _krnDiskSystemDeviceDriver.getFileList();
             // Check if there is a swap file
-            if (files !== null && files.find(file => file.charAt(0) === '~')) {
+            if (files !== null && files.find(file => file[0].charAt(0) === '~')) {
                 // Cannot format if there are swap files on the disk
                 _StdOut.putText('Disk cannot be formatted. Swap files found on the disk.');
             } else {
@@ -585,19 +585,25 @@ module TSOS {
             }
         }
 
-        public krnListFiles(includeHiddenFiles: boolean): void {
+        public krnListFiles(showAll: boolean): void {
             // Get the file list from the dsDD
-            let fileList: string[] = _krnDiskSystemDeviceDriver.getFileList();
+            let fileList: string[][] = _krnDiskSystemDeviceDriver.getFileList();
             if (fileList === null) {
                 _StdOut.putText('Cannot list files. The disk is not formatted.');
             } else if (fileList.length === 0) {
                 _StdOut.putText('There are no files to list.')
             } else {
+                console.log(fileList);
                 // Print out each file name
                 for (let i: number = 0; i < fileList.length; i++) {
                     // List the file if hidden files is on or if the file doesn't start with a . or a ~
-                    if (includeHiddenFiles || !(fileList[i].charAt(0) === '.' || fileList[i].charAt(0) === '~')) {
-                        _StdOut.putText('  ' + fileList[i]);
+                    if (showAll || !(fileList[i][0].charAt(0) === '.' || fileList[i][0].charAt(0) === '~')) {
+                        // Print the file name
+                        _StdOut.putText('  ' + fileList[i][0]);
+                        // Only print the additional metadata if the -a flag was used
+                        if (showAll) {
+                            _StdOut.putText('  ' + fileList[i][1] + '  ' + fileList[i][2]);
+                        }
                         _StdOut.advanceLine();
                     }
                 }
