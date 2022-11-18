@@ -112,52 +112,17 @@ var TSOS;
                 out = 1;
             }
             else {
-                // Initialize the first open directory spot to be an empty string because nothing is there yet
-                let firstOpenDir = '';
-                for (let s = 0; s < NUM_SECTORS && out === 0; s++) {
-                    for (let b = 0; b < NUM_BLOCKS && out === 0; b++) {
-                        if (s === 0 && b === 0) {
-                            // 0:0:0 is for the master boot record
-                            // Directory is 0:0:1 - 0:1:7
-                            continue;
-                        }
-                        let blockEntry = sessionStorage.getItem(`0:${s}:${b}`);
-                        // The block is unavailable, so check to make sure the file doesn't already exist
-                        if (blockEntry.charAt(1) === '1') {
-                            // Get the remaining 60 bytes of data
-                            let fileMetadata = blockEntry.substring(8);
-                            // Work to get the file name by going byte by byte through the data
-                            let fileNameCheck = '';
-                            let charIndex = 0;
-                            let endFound = false;
-                            while (charIndex < fileMetadata.length && !endFound) {
-                                // Get the character code stored at the given byte
-                                let nextCharCode = parseInt(fileMetadata.substring(charIndex, charIndex + 2), 16);
-                                if (nextCharCode === 0) {
-                                    // End of file name
-                                    endFound = true;
-                                }
-                                else {
-                                    // Continue with the next character in the file name
-                                    fileNameCheck += String.fromCharCode(nextCharCode);
-                                    charIndex += 2;
-                                }
-                            }
-                            // Make sure the names do not match
-                            if (fileName === fileNameCheck) {
-                                out = 2;
-                            }
-                        }
-                        else if (firstOpenDir === '') {
-                            // Set the first open directory space accordingly
-                            firstOpenDir = `0:${s}:${b}`;
-                        }
-                    }
+                // Check if the file already exists
+                let nameCheck = this.getDirectoryBlockForFile(fileName);
+                if (nameCheck !== '') {
+                    out = 2;
                 }
-                // The number of blocks needed is the size needed divided by the amount of data space per block
-                let numBlocksNeeded = Math.ceil(sizeInBytes / (BLOCK_SIZE - 4));
-                let availableBlocks = this.getAvailableDataBlocks(numBlocksNeeded);
-                if (out === 0) {
+                else {
+                    // If the file does not exist, then we can try to allocate space on the disk
+                    let firstOpenDir = this.getFirstAvailableDirectoryBlock();
+                    // The number of blocks needed is the size needed divided by the amount of data space per block
+                    let numBlocksNeeded = Math.ceil(sizeInBytes / (BLOCK_SIZE - 4));
+                    let availableBlocks = this.getAvailableDataBlocks(numBlocksNeeded);
                     if (firstOpenDir === '') {
                         // There are no open directory spots
                         out = 3;
@@ -173,12 +138,23 @@ var TSOS;
                         for (let i = 0; i < availableBlocks[0].length; i += 2) {
                             directoryEntry += '0' + availableBlocks[0].charAt(i);
                         }
+                        let fileNameHex = '';
                         // Add each character of the file name to the directory entry
                         for (let j = 0; j < fileName.length; j++) {
-                            directoryEntry += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
+                            fileNameHex += fileName.charCodeAt(j).toString(16).padStart(2, '0').toUpperCase();
                         }
-                        // Pad the rest with 0s (should be at least 2)
-                        directoryEntry = directoryEntry.padEnd(BLOCK_SIZE * 2, '0');
+                        // Pad the rest with 0s
+                        fileNameHex = fileNameHex.padEnd(MAX_FILE_NAME_LENGTH * 2, '0');
+                        // Make sure the file name has 00 in it to mark the end of the name
+                        // We saved room for this when choosing the value for MAX_FILE_NAME_LENGTH
+                        fileNameHex += '00';
+                        directoryEntry += fileNameHex;
+                        // Get the date and store it in hex
+                        let date = TSOS.Utils.getDate(false).split('/');
+                        date = date.map((elem) => parseInt(elem).toString(16).toUpperCase());
+                        directoryEntry += date.join('');
+                        // Set the number of blocks in use based on the number of blocks needed
+                        directoryEntry += (numBlocksNeeded + 1).toString(16).toUpperCase().padStart(2, '0');
                         // Save it on the disk and update the table
                         sessionStorage.setItem(firstOpenDir, directoryEntry);
                         // Mark the data block as unavailable, give it the next block, and the data are all 0s
