@@ -58,70 +58,16 @@ module TSOS {
             if (!this.isFormatted) {
                 out = 1;
             } else {
-                // Initialize the first open directory spot to be an empty string because nothing is there yet
-                let firstOpenDir: string = '';
-                for (let s = 0; s < NUM_SECTORS && out === 0; s++) {
-                    for (let b = 0; b < NUM_BLOCKS && out === 0; b++) {
-                        if (s === 0 && b === 0) {
-                            // 0:0:0 is for the master boot record
-                            // Directory is 0:0:1 - 0:1:7
-                            continue;
-                        }
+                // Check if the file already exists
+                let nameCheck: string = this.getDirectoryBlockForFile(fileName);
+                if (nameCheck !== '') {
+                    out = 2;
+                } else {
+                    // If the file does not exist, then we can try to allocate space on the disk
+                    let firstOpenDir: string = this.getFirstAvailableDirectoryBlock();
 
-                        let blockEntry: string = sessionStorage.getItem(`0:${s}:${b}`);
+                    let firstOpenData: string = this.getFirstAvailableDataBlock();
 
-                        // The block is unavailable, so check to make sure the file doesn't already exist
-                        if (blockEntry.charAt(1) === '1') {
-                            // Get the remaining 60 bytes of data
-                            let fileMetadata: string = blockEntry.substring(8);
-
-                            // Work to get the file name by going byte by byte through the data
-                            let fileNameCheck: string = '';
-                            let charIndex = 0;
-                            let endFound: boolean = false;
-
-                            while (charIndex < fileMetadata.length && !endFound) {
-                                // Get the character code stored at the given byte
-                                let nextCharCode: number = parseInt(fileMetadata.substring(charIndex, charIndex + 2), 16);
-                                
-                                if (nextCharCode === 0) {
-                                    // End of file name
-                                    endFound = true;
-                                } else {
-                                    // Continue with the next character in the file name
-                                    fileNameCheck += String.fromCharCode(nextCharCode);
-                                    charIndex += 2;
-                                }
-                            }
-
-                            // Make sure the names do not match
-                            if (fileName === fileNameCheck) {
-                                out = 2;
-                            }
-
-                        } else if (firstOpenDir === '') {
-                            // Set the first open directory space accordingly
-                            firstOpenDir = `0:${s}:${b}`;
-                        }
-                    }
-                }
-
-                let firstOpenData: string = '';
-                // Data blocks start in track 1
-                for (let t: number = 1; t < NUM_TRACKS && firstOpenData === ''; t++) {
-                    for (let s: number = 0; s < NUM_SECTORS && firstOpenData === ''; s++) {
-                        for (let b: number = 0; b < NUM_BLOCKS && firstOpenData === ''; b++) {
-                            // The inUse byte is the first byte, but only need the second digit
-                            let inUse: string = sessionStorage.getItem(`${t}:${s}:${b}`).charAt(1);
-                            // 0 means it is available
-                            if (inUse === '0') {
-                                firstOpenData = `${t}:${s}:${b}`;
-                            }
-                        }
-                    }
-                }
-
-                if (out === 0) {
                     if (firstOpenDir === '') {
                         // Return an error code if no available directory space
                         out = 3;
@@ -151,7 +97,7 @@ module TSOS {
                         sessionStorage.setItem(firstOpenData, '01FFFFFF'.padEnd(BLOCK_SIZE * 2, '0'));
                         this.updateTable();
                     }
-                }
+                }                
             }
 
             return out;
@@ -773,6 +719,24 @@ module TSOS {
             }
             
             return outTsb;
+        }
+
+        public getFirstAvailableDirectoryBlock(): string {
+            let dirTsb: string = '';
+
+            for (let s: number = 0; s < NUM_SECTORS && dirTsb === ''; s++) {
+                for (let b: number = 0; b < NUM_BLOCKS && dirTsb === ''; b++) {
+                    if (s === 0 && b === 0) {
+                        // 0:0:0 is the MBR
+                        continue;
+                    }
+                    // Find the first data block that is not in use
+                    if (sessionStorage.getItem(`0:${s}:${b}`).charAt(1) === '0') {
+                        dirTsb = `0:${s}:${b}`;
+                    }
+                }
+            }
+            return dirTsb;
         }
 
         public getFirstAvailableDataBlock(): string {
