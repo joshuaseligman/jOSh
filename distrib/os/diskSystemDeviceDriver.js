@@ -645,7 +645,7 @@ var TSOS;
             let out = [];
             if (!this.isFormatted) {
                 // Push a 1 for saying the disk is not formatted
-                out.push(1);
+                out.push([1]);
             }
             else {
                 // Go through the entire directory track
@@ -673,11 +673,18 @@ var TSOS;
                                 }
                                 // Mark the directory block as is use
                                 sessionStorage.setItem(`0:${s}:${b}`, '01' + sessionStorage.getItem(`0:${s}:${b}`).substring(2));
-                                this.restoreFile(fileName);
+                                let restoreOut = this.restoreFile(fileName);
+                                // If nothing was restored, then mark the directory block as available
+                                if (restoreOut === 3) {
+                                    sessionStorage.setItem(`0:${s}:${b}`, '00' + sessionStorage.getItem(`0:${s}:${b}`).substring(2));
+                                }
+                                // Store the output and the filename for use by the OS
+                                out.push([restoreOut, fileName]);
                             }
                         }
                     }
                 }
+                this.updateTable();
             }
             return out;
         }
@@ -700,6 +707,18 @@ var TSOS;
                 while (!endFound) {
                     // If the block is in use, the data for the file is gone
                     if (sessionStorage.getItem(curDataBlock).charAt(1) === '1') {
+                        // Do not forget to break out of the loop with this variable
+                        endFound = true;
+                        if (prevDataBlock === '') {
+                            // Nothing of the file was able to be restored
+                            out = 3;
+                        }
+                        else {
+                            out = 2;
+                            // The last block is the end of the file, plus the last byte gets removed for EOF marker
+                            let newEnd = '01FFFFFF' + sessionStorage.getItem(prevDataBlock).substring(8, BLOCK_SIZE * 2 - 2) + '00';
+                            sessionStorage.setItem(prevDataBlock, newEnd);
+                        }
                     }
                     else {
                         // Set the block to be in use
@@ -711,12 +730,13 @@ var TSOS;
                             endFound = true;
                         }
                         else {
+                            // Update the trailing pointer
+                            prevDataBlock = curDataBlock;
                             // Move on to the next block in the file
                             curDataBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
                         }
                     }
                 }
-                this.updateTable();
             }
             return out;
         }

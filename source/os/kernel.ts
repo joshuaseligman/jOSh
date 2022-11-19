@@ -706,7 +706,32 @@ module TSOS {
         }
 
         public krnRestoreFiles(): void {
-            _krnDiskSystemDeviceDriver.restoreFiles();
+            let restoreOut: any[][] = _krnDiskSystemDeviceDriver.restoreFiles();
+            if (restoreOut.length === 0) {
+                _StdOut.putText('There are no files to restore.');
+            } else if (restoreOut[0][0] === 1) {
+                _StdOut.putText('Unable to restore files. The disk is not formatted.');
+            } else {
+                // Go through the files
+                for (let i: number = 0; i < restoreOut.length; i++) {
+                    // Print out the results accordingly (1 should never happen)
+                    switch (restoreOut[i][0]) {
+                        case 0:
+                            _StdOut.putText(restoreOut[i][1] + ' was successfully restored.');
+                            break;
+                        case 1:
+                            _StdOut.putText('Unable to restore files. The disk is not formatted.');
+                            break;
+                        case 2:
+                            _StdOut.putText(restoreOut[i][1] + ' was partially restored.');
+                            break;
+                        case 3:
+                            _StdOut.putText(restoreOut[i][1] + ' was unable to be restored.');
+                            break;
+                    }
+                    _StdOut.advanceLine();
+                }
+            }
         }
 
         //

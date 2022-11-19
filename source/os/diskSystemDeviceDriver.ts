@@ -690,12 +690,12 @@ module TSOS {
         // 1: Disk not formatted
         // 2: File partially restored
         // 3: File unable to be restored (first data block is gone)
-        public restoreFiles(): number[] {
-            let out: number[] = [];
+        public restoreFiles(): any[][] {
+            let out: any[][] = [];
 
             if (!this.isFormatted) {
                 // Push a 1 for saying the disk is not formatted
-                out.push(1);
+                out.push([1]);
             } else {
                 // Go through the entire directory track
                 for (let s: number = 0; s < NUM_SECTORS; s++) {
@@ -723,12 +723,20 @@ module TSOS {
                                 }
                                 // Mark the directory block as is use
                                 sessionStorage.setItem(`0:${s}:${b}`, '01' + sessionStorage.getItem(`0:${s}:${b}`).substring(2));
-                                this.restoreFile(fileName);
+                                let restoreOut: number = this.restoreFile(fileName);
+                                // If nothing was restored, then mark the directory block as available
+                                if (restoreOut === 3) {
+                                    sessionStorage.setItem(`0:${s}:${b}`, '00' + sessionStorage.getItem(`0:${s}:${b}`).substring(2));
+
+                                }
+                                // Store the output and the filename for use by the OS
+                                out.push([restoreOut, fileName]);
                             }
                         }
 
                     }
                 }
+                this.updateTable();
             }
 
             return out;
@@ -755,7 +763,17 @@ module TSOS {
                 while (!endFound) {
                     // If the block is in use, the data for the file is gone
                     if (sessionStorage.getItem(curDataBlock).charAt(1) === '1') {
-
+                        // Do not forget to break out of the loop with this variable
+                        endFound = true;
+                        if (prevDataBlock === '') {
+                            // Nothing of the file was able to be restored
+                            out = 3;
+                        } else {
+                            out = 2;
+                            // The last block is the end of the file, plus the last byte gets removed for EOF marker
+                            let newEnd: string = '01FFFFFF' + sessionStorage.getItem(prevDataBlock).substring(8, BLOCK_SIZE * 2 - 2) + '00';
+                            sessionStorage.setItem(prevDataBlock, newEnd);
+                        }
                     } else {
                         // Set the block to be in use
                         sessionStorage.setItem(curDataBlock, '01' + sessionStorage.getItem(curDataBlock).substring(2));
@@ -766,12 +784,13 @@ module TSOS {
                             // We have found the end of the file (fully restored)
                             endFound = true;
                         } else {
+                            // Update the trailing pointer
+                            prevDataBlock = curDataBlock;
                             // Move on to the next block in the file
                             curDataBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
                         }
                     }
                 }
-                this.updateTable();
             }
 
             return out;
