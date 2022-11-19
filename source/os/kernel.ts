@@ -705,6 +705,10 @@ module TSOS {
             }
         }
 
+        public krnRestoreFiles(): void {
+            _krnDiskSystemDeviceDriver.restoreFiles();
+        }
+
         //
         // OS Utility Routines
         //

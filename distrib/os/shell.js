@@ -98,6 +98,8 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellCopyFile, "copy", "<curFileName> <newFileName> - Makes a copy of an existing file");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRestoreFiles, "restorefiles", "- Restores deleted files");
+            this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellGetSchedule, "getschedule", "- Returns the CPU scheduling algorithm being used");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellSetSchedule, "setschedule", "<rr|fcfs|priority> - Sets the CPU scheduling algorithm to the one provided");
@@ -726,6 +728,9 @@ var TSOS;
             else {
                 _StdOut.putText('Usage: setschedule <rr|fcfs|priority>  Please provide the scheduling algorithm to use.');
             }
+        }
+        shellRestoreFiles(args) {
+            _Kernel.krnRestoreFiles();
         }
     }
     TSOS.Shell = Shell;

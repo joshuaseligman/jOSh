@@ -628,6 +628,9 @@ var TSOS;
                     break;
             }
         }
+        krnRestoreFiles() {
+            _krnDiskSystemDeviceDriver.restoreFiles();
+        }
         //
         // OS Utility Routines
         //

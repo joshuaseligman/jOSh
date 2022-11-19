@@ -192,6 +192,11 @@ module TSOS {
                 "<curFileName> <newFileName> - Makes a copy of an existing file");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellRestoreFiles,
+                "restorefiles",
+                "- Restores deleted files");
+            this.commandList[this.commandList.length] = sc;
+
             sc = new ShellCommand(this.shellGetSchedule,
                 "getschedule",
                 "- Returns the CPU scheduling algorithm being used");
@@ -847,6 +852,10 @@ module TSOS {
             } else {
                 _StdOut.putText('Usage: setschedule <rr|fcfs|priority>  Please provide the scheduling algorithm to use.');
             }
+        }
+
+        public shellRestoreFiles(args: string[]) {
+            _Kernel.krnRestoreFiles();
         }
     }
 }

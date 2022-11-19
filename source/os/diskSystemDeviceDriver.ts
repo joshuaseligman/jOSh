@@ -685,6 +685,53 @@ module TSOS {
             return fileList;
         }
 
+        // Possible outputs for each file
+        // 0: File completely restored
+        // 1: Disk not formatted
+        // 2: File partially restored
+        // 3: File unable to be restored (first data block is gone)
+        public restoreFiles(): number[] {
+            let out: number[] = [];
+
+            if (!this.isFormatted) {
+                // Push a 1 for saying the disk is not formatted
+                out.push(1);
+            } else {
+                // Go through the entire directory track
+                for (let s: number = 0; s < NUM_SECTORS; s++) {
+                    for (let b: number = 0; b < NUM_BLOCKS; b++) {
+                        if (s === 0 && b === 0) {
+                            // 0:0:0 is the MBR
+                            continue;
+                        }
+                        // Only need to check the available blocks
+                        if (sessionStorage.getItem(`0:${s}:${b}`).charAt(1) === '0') {
+                            // Get the name of the file
+                            let fileNameHex: string = sessionStorage.getItem(`0:${s}:${b}`).substring(8).substring(0, MAX_FILE_NAME_LENGTH * 2);
+    
+                            // Make sure a name is there and it is not a swap file
+                            if (fileNameHex.substring(0, 2) !== '00' && fileNameHex.substring(0, 2) !== '7E') {
+                                let fileName: string = '';
+                                for (let i: number = 0; i < MAX_FILE_NAME_LENGTH * 2; i += 2) {
+                                    let charToAdd: string = fileNameHex.substring(i, i + 2);
+                                    // We have reached the end of the file name
+                                    if (charToAdd === '00') {
+                                        break;
+                                    }
+                                    // Add the character to the file name
+                                    fileName += String.fromCharCode(parseInt(charToAdd, 16));
+                                }
+                                console.log(fileName);
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            return out;
+        }
+
         private getDirectoryBlockForFile(fileName: string): string {
             let out: string = '';
 
