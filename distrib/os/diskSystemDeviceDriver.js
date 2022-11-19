@@ -671,11 +671,52 @@ var TSOS;
                                     // Add the character to the file name
                                     fileName += String.fromCharCode(parseInt(charToAdd, 16));
                                 }
-                                console.log(fileName);
+                                // Mark the directory block as is use
+                                sessionStorage.setItem(`0:${s}:${b}`, '01' + sessionStorage.getItem(`0:${s}:${b}`).substring(2));
+                                this.restoreFile(fileName);
                             }
                         }
                     }
                 }
+            }
+            return out;
+        }
+        // Possible outputs for each file: 
+        // 0: File completely restored
+        // 1: Disk is not formatted
+        // 2: File partially restored
+        // 3: File unable to be restored (first data block is gone)
+        restoreFile(fileName) {
+            let out = 0;
+            if (!this.isFormatted) {
+                out = 1;
+            }
+            else {
+                // Start with the first data block of the file
+                let curDataBlock = this.getFirstDataBlockForFile(fileName);
+                // Keep a trailing pointer in case the file is not able to be fully restored
+                let prevDataBlock = '';
+                let endFound = false;
+                while (!endFound) {
+                    // If the block is in use, the data for the file is gone
+                    if (sessionStorage.getItem(curDataBlock).charAt(1) === '1') {
+                    }
+                    else {
+                        // Set the block to be in use
+                        sessionStorage.setItem(curDataBlock, '01' + sessionStorage.getItem(curDataBlock).substring(2));
+                        // Get the next tsb for the file
+                        let nextTsb = sessionStorage.getItem(curDataBlock).substring(2, 8);
+                        if (nextTsb === 'FFFFFF') {
+                            // We have found the end of the file (fully restored)
+                            endFound = true;
+                        }
+                        else {
+                            // Move on to the next block in the file
+                            curDataBlock = `${nextTsb.charAt(1)}:${nextTsb.charAt(3)}:${nextTsb.charAt(5)}`;
+                        }
+                    }
+                }
+                this.updateTable();
             }
             return out;
         }
