@@ -383,6 +383,26 @@ var TSOS;
                                     sessionStorage.setItem(newTsb, '01' + sessionStorage.getItem(newTsb).substring(2, 8) + '0'.repeat((BLOCK_SIZE - 4) * 2));
                                     // Set the current TSB to the new TSB
                                     curFileBlock = newTsb;
+                                    if (!isUsingNextTsb) {
+                                        // We took a block from storage, so we have to make sure that file restoration does not get screwed up in case we took a deleted file's first block
+                                        for (let s = 0; s < NUM_SECTORS; s++) {
+                                            for (let b = 0; b < NUM_BLOCKS; b++) {
+                                                if (s === 0 && b === 0) {
+                                                    // 0:0:0 is MBR
+                                                    continue;
+                                                }
+                                                let directoryEntry = sessionStorage.getItem(`0:${s}:${b}`);
+                                                // Check to see if the directory entry is a deleted file
+                                                if (directoryEntry.charAt(1) === '0' && directoryEntry.substring(8, 10) !== '00') {
+                                                    let directoryFirstBlock = `${directoryEntry.charAt(3)}:${directoryEntry.charAt(5)}:${directoryEntry.charAt(7)}`;
+                                                    if (directoryFirstBlock === curFileBlock) {
+                                                        // Set the next block to nothing to prevent it from reaching anything now that the blocks are being used by other things
+                                                        sessionStorage.setItem(`0:${s}:${b}`, '00FFFFFF' + directoryEntry.substring(8));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 // Increment the number of blocks being used
                                 numBlocksUsed++;
@@ -704,6 +724,11 @@ var TSOS;
                 // Keep a trailing pointer in case the file is not able to be fully restored
                 let prevDataBlock = '';
                 let endFound = false;
+                if (curDataBlock === 'F:F:F') {
+                    // If the directory entry points to nothing, then the file has already been written over, so cannot restore
+                    endFound = true;
+                    out = 3;
+                }
                 while (!endFound) {
                     // If the block is in use, the data for the file is gone
                     if (sessionStorage.getItem(curDataBlock).charAt(1) === '1') {
