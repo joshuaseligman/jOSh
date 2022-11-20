@@ -176,3 +176,19 @@ hr {
   margin-left: 1%;
   margin-right: 1%;
 }
+
+#testOptions {
+  width: 300px;
+  font-size: 10pt;
+
+  font-family: 'Courier New', Courier, monospace;
+  color: #2ECC40;
+  background-color: #111111;
+  padding: 2px;
+  border: 1px solid #2ECC40;
+  text-align-last: center;
+}
+
+#testOptions:focus {
+  outline: none;
+}

@@ -88,6 +88,8 @@ var SchedulingAlgo;
 // For testing (and enrichment)...
 var Glados = null; // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS = null; // If the above is linked in, this is the instantiated instance of Glados.
+var GladosV2 = null;
+var _GladosV2 = null;
 var onDocumentLoad = function () {
     TSOS.Control.hostInit();
 };

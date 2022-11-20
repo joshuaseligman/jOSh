@@ -122,6 +122,9 @@ enum SchedulingAlgo {
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.
 
+var GladosV2: any = null;
+var _GladosV2: any = null;
+
 var onDocumentLoad = function() {
 	TSOS.Control.hostInit();
 };

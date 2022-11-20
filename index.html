@@ -41,6 +41,7 @@
    <!-- Uncomment the line below to enable GLaDOS testing. -->
    <!-- <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip4.js"></script> -->
    <!-- <script type="text/javascript" src="test/jOSh-ip4.js"></script> -->
+   <script type="text/javascript" src="test/gladosV2.js"></script>
    
 </head>
 
@@ -73,6 +74,18 @@
              value="Reset"
              tabindex="2"
              onclick="TSOS.Control.hostBtnReset_click(this);">
+
+      <select id="testOptions">
+      </select>
+
+      <input type="button"
+             id = "btnRunTest"
+             class="normal_button"
+             name="brnRunTest"
+             disabled="disabled"
+             value="Run Test"
+             tabindex="2"
+             onclick="TSOS.Control.hostBtnRunTest_click(this)">            
    </div>
 
    <div id="statusBar">

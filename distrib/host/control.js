@@ -85,6 +85,12 @@ var TSOS;
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new TSOS.Kernel();
             _Kernel.krnBootstrap(); // _GLaDOS.afterStartup() will get called in there, if configured.
+            // Initialize gladosv2 on startup to make sure that the system is on before tests are run
+            if (typeof GladosV2 === "function") {
+                _GladosV2 = new GladosV2();
+                _GladosV2.init();
+                document.querySelector('#btnRunTest').disabled = false;
+            }
         }
         static hostBtnHaltOS_click(btn) {
             Control.hostLog("Emergency halt", "host");
@@ -110,6 +116,10 @@ var TSOS;
         static nextStep() {
             // Set the flag to be true so the next tick the kernel will tell the CPU to do the next step
             _NextStepRequested = true;
+        }
+        static hostBtnRunTest_click(btn) {
+            let testName = document.querySelector('#testOptions').value;
+            _GladosV2.runTest(testName);
         }
     }
     TSOS.Control = Control;
