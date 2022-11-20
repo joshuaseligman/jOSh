@@ -87,7 +87,7 @@ function GladosV2() {
     }
 
     this.createWithFullDisk = function() {
-        alert('Test: Create with a full disk\nThis test will format the disk, create a file and then write so much text to it that the disk fills up. Another file will then be requested to be created. \nExpected: The second file should not be created.')
+        alert('Test: Create with a full disk\nThis test will format the disk, create a file and then write so much text to it that the disk fills up. Another file will then be requested to be created.\nExpected: The second file should not be created.')
 
         inputCommand('format')
 
@@ -96,13 +96,109 @@ function GladosV2() {
         inputCommand('create test1')
     }
 
+    this.deleteTest = function() {
+        alert('Test: Delete a file\nThis test will format the disk, create a file, and then write some text to the file. The ls command will be used to make sure the file exists and the file will be read from. The delete command will then be run on the file, followed by an ls, read, and write attempt on the file. Lastly, the deleted file will be deleted again.\nExpected: "hello world" should be initially read and then should be rejected on reading and writing to a deleted file. The second delete should cause an error because the file does not exist.')
+
+        inputCommand('format')
+        
+        inputCommand('create test')
+        inputCommand('write test "hello world"')
+
+        inputCommand('ls')
+        inputCommand('read test')
+
+        inputCommand('delete test')
+
+        inputCommand('ls')
+        inputCommand('read test')
+        inputCommand('write test "jOSh"')
+        inputCommand('delete test')
+    }
+
+    this.copyFullDirectory = function() {
+        alert('Test: Copy to a full directory\nThis test will format the disk and create 63 files. "hello world" will be written to a file and then the file will tried to get copied.\nExpected: Copy fails because no directory room for the new file.')
+
+        inputCommand('format')
+        for (let i = 0; i < 63; i++) {
+            inputCommand(`create test${i}`)
+        }
+        inputCommand('write test0 "hello world"')
+        inputCommand('copy test0 myCopy')
+    }
+
+    this.copyWithFullDisk = function() {
+        alert('Test: Copy to a full disk\nThis test will format the disk and create a file. Enough text will be written to the file that the disk becomes full and then the file will be copied.\nExpected: Copy fails because no space on the disk for the new file.')
+
+        inputCommand('format')
+
+        inputCommand('create test')
+        inputCommand('write test "' + 'A'.repeat(64 * 3 * 60 - 1) + '"')
+        inputCommand('copy test test1')
+    }
+
+    this.partialCopy = function() {
+        alert('Test: Partial copy\nThis test will format the disk and create a file. Enough text will be written to the file that the disk almost be full and then the file will be copied. The new file will then be read from.\nExpected: Copy partially fails and the new file will only have 1 block worth of data')
+
+        inputCommand('format')
+
+        inputCommand('create test')
+        inputCommand('write test "' + 'A'.repeat(64 * 3 * 60 - 61) + '"')
+        inputCommand('copy test test1')
+        inputCommand('read test1')
+    }
+
+    this.run4Programs = function() {
+        alert('Test: Run 4 programs\nThis test will format the disk and load 4 programs. Execution of all programs will start with the runall command.\nExpected: The last process loaded goes to the disk initially. Swapping allows for each program to be in memory when being executed. Output: a0b0c0d0abcd1111a2b2c2d2adoneb3c3d3bcd444b5c5d5bdonec6d6cd77c8d8cdoned9d10d11ddone')
+
+
+        // From glados-ip4.js
+        let code1 = "A9 00 8D 7B 00 A9 00 8D 7B 00 A9 00 8D 7C 00 A9 00 8D 7C 00 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 39 A0 7D A2 02 FF AC 7B 00 A2 01 FF AD 7B 00 8D 7A 00 A9 01 6D 7A 00 8D 7B 00 A9 03 AE 7B 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 01 EC 7A 00 D0 05 A9 01 8D 7C 00 A9 00 AE 7C 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 AC A0 7F A2 02 FF 00 00 00 00 61 00 61 64 6F 6E 65 00";
+
+        let  code2 = "A9 00 8D 7B 00 A9 00 8D 7B 00 A9 00 8D 7C 00 A9 00 8D 7C 00 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 39 A0 7D A2 02 FF AC 7B 00 A2 01 FF AD 7B 00 8D 7A 00 A9 01 6D 7A 00 8D 7B 00 A9 06 AE 7B 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 01 EC 7A 00 D0 05 A9 01 8D 7C 00 A9 00 AE 7C 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 AC A0 7F A2 02 FF 00 00 00 00 62 00 62 64 6F 6E 65 00";
+
+        let code3 = "A9 00 8D 7B 00 A9 00 8D 7B 00 A9 00 8D 7C 00 A9 00 8D 7C 00 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 39 A0 7D A2 02 FF AC 7B 00 A2 01 FF AD 7B 00 8D 7A 00 A9 01 6D 7A 00 8D 7B 00 A9 09 AE 7B 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 01 EC 7A 00 D0 05 A9 01 8D 7C 00 A9 00 AE 7C 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 AC A0 7F A2 02 FF 00 00 00 00 63 00 63 64 6F 6E 65 00";
+
+        let code4 = "A9 00 8D 7B 00 A9 00 8D 7B 00 A9 00 8D 7C 00 A9 00 8D 7C 00 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 39 A0 7D A2 02 FF AC 7B 00 A2 01 FF AD 7B 00 8D 7A 00 A9 01 6D 7A 00 8D 7B 00 A9 0C AE 7B 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 01 EC 7A 00 D0 05 A9 01 8D 7C 00 A9 00 AE 7C 00 8D 7A 00 A9 00 EC 7A 00 D0 02 A9 01 8D 7A 00 A2 00 EC 7A 00 D0 AC A0 7F A2 02 FF 00 00 00 00 64 00 64 64 6F 6E 65 00";
+
+        inputCommand('format')
+
+		setTimeout(() => {
+            document.getElementById("taProgramInput").value = code1;
+			inputCommand('load')
+        }, 1000);
+
+		setTimeout(() => {
+            document.getElementById("taProgramInput").value = code2;
+			inputCommand('load')
+        }, 2000);
+
+        setTimeout(() => {
+            document.getElementById("taProgramInput").value = code3;
+			inputCommand('load')
+        }, 3000);
+
+        setTimeout(() => {
+            document.getElementById("taProgramInput").value = code4;
+			inputCommand('load')
+        }, 4000);
+
+        setTimeout(() => {
+			inputCommand('runall')
+        }, 5000);
+    }
+
     this.tests = {
         "iP4: Disk not formatted": this.diskNotFormatted,
         "iP4: Invalid file names": this.invalidFileNames,
         "iP4: Full directory": this.fullDirectory,
         "iP4: Create with full disk": this.createWithFullDisk,
         "iP4: Data leak": this.dataLeak,
-        "iP4: Write to a full disk": this.partialWrite
+        "iP4: Write to a full disk": this.partialWrite,
+        "iP4: Reading and writing to a deleted file": this.deleteTest,
+        "iP4: Copying with a full directory": this.copyFullDirectory,
+        "iP4: Copying with a full disk": this.copyWithFullDisk,
+        "iP4: Partial copy": this.partialCopy,
+        "iP4: Run 4 programs": this.run4Programs
     };
 
     this.init = function() {
@@ -118,10 +214,7 @@ function GladosV2() {
 
     this.runTest = function(testName) {
         // Clear the screen first
-        _KernelInputQueue.enqueue('c')
-        _KernelInputQueue.enqueue('l')
-        _KernelInputQueue.enqueue('s')
-        TSOS.Kernel.prototype.krnInterruptHandler(KEYBOARD_IRQ, [13, false])
+        inputCommand('cls')
 
         // Then run the test
         this.tests[testName]();
