@@ -27,22 +27,9 @@ module TSOS {
                 if (_PCBReadyQueue.getSize() > 0) {
                     let newProcess: ProcessControlBlock;
                     
-                    if (algo === SchedulingAlgo.ROUND_ROBIN) {
-                        // Take next process if using RR
+                    if (algo === SchedulingAlgo.ROUND_ROBIN || algo === SchedulingAlgo.FCFS) {
+                        // Take next process if using RR or FCFS
                         newProcess = _PCBReadyQueue.getHead();
-                    } else if (algo === SchedulingAlgo.FCFS) {
-                        // Assume first is the lowest priority
-                        let newProcessIndex: number = 0; 
-                        // Go through the rest of the PCBs
-                        for (let i: number = 1; i < _PCBReadyQueue.getSize(); i++) {
-                            // Lower pid was made earlier, so use that one next
-                            if ((_PCBReadyQueue.q[i] as ProcessControlBlock).pid < (_PCBReadyQueue.q[newProcessIndex] as ProcessControlBlock).pid) {
-                                newProcessIndex = i;
-                            }
-                        }
-                        // Remove the process from the array and place it at the start
-                        newProcess = _PCBReadyQueue.q.splice(newProcessIndex, 1)[0];
-                        _PCBReadyQueue.q.unshift(newProcess);
                     } else if (algo === SchedulingAlgo.PRIORITY) {
                         // Assume first is the lowest priority
                         let newProcessIndex: number = 0; 

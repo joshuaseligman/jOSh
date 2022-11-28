@@ -75,30 +75,34 @@ module TSOS {
         }
 
         public setCurAlgo(newAlgo: SchedulingAlgo) {
-            this.curAlgo = newAlgo;
-
             if (newAlgo === SchedulingAlgo.ROUND_ROBIN) {
-                // Set the quantum back to default when switching to round robin
-                this.setQuantum(DEFAULT_QUANTUM);
+                if (this.curAlgo !== SchedulingAlgo.ROUND_ROBIN) {
+                    // Only set the quantum back to default when switching back to round robin from another algorithm
+                    this.setQuantum(DEFAULT_QUANTUM);
+                }
 
                 document.querySelector('#algoVal').innerHTML = 'RR';
+
+                _Kernel.krnTrace('Scheduling algo changed to RR');
             } else if (newAlgo === SchedulingAlgo.FCFS) {
                 // FCFS is RR with a super large quantum value
                 this.setQuantum(Number.MAX_VALUE);
                 document.querySelector('#algoVal').innerHTML = 'FCFS';
+                _Kernel.krnTrace('Scheduling algo changed to FCFS');
             } else if (newAlgo === SchedulingAlgo.PRIORITY) {
                 this.setQuantum(-1);
                 document.querySelector('#algoVal').innerHTML = 'Priority';
+                _Kernel.krnTrace('Scheduling algo changed to priority');
             }
 
-            if (_PCBReadyQueue.getSize() > 1) {
-                // Create a software interrupt to do a context switch to work with the current scheduling algorithm
-                _KernelInterruptQueue.enqueue(new Interrupt(CALL_DISPATCHER_IRQ, []));
+            // Reset num cycles to 0 if the algorithm changed
+            if (this.curAlgo !== newAlgo) {
+                this.numCycles = 0;
+                document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
             }
 
-            // Reset num cycles to 0
-            this.numCycles = 0;
-            document.querySelector('#currentQuantumVal').innerHTML = this.numCycles.toString();
+            // Set the new algorithm
+            this.curAlgo = newAlgo;
         }
     }
 }
