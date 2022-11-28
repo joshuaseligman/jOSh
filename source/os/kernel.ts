@@ -296,6 +296,7 @@ module TSOS {
             } else {
                 _MemoryManager.deallocateAll();
                 _StdOut.putText('All memory cleared.');
+                _Kernel.krnTrace('Cleared memory')
             }
         }
 
@@ -347,8 +348,8 @@ module TSOS {
 
             if (pcbCreated) {
                 // Let the user know the program is valid
-                this.krnTrace(`Created PID ${newPCB.pid}`);
-                _StdOut.putText(`Process ID: ${newPCB.pid}`);
+                this.krnTrace(`Created PID ${newPCB.pid}, priority ${priority}`);
+                _StdOut.putText(`Process ID: ${newPCB.pid} with priority ${priority}`);
             } else {
                 this.krnTrace('Failed to load program.');
                 _StdOut.advanceLine();
@@ -424,6 +425,8 @@ module TSOS {
                 if (fileCreationStatus !== 0) {
                     // BSOD if any error
                     this.krnTrapError('Error from creating a swap file.');
+                } else {
+                    this.krnTrace(`Rolled out PID ${pcb.pid} to disk.`);
                 }
             }
             
@@ -441,6 +444,7 @@ module TSOS {
             if (swapRead[0] === 0) {
                 let newSegment: number = _MemoryManager.allocateProgram(swapRead[1]);
                 pcb.segment = newSegment;
+                this.krnTrace(`Rolled in PID ${pcb.pid} to segment ${newSegment}.`);
             } else {
                 // Nothing bad should ever happen from reading, but do a BSOD in case
                 this.krnTrapError('Error from reading a swap file.');
@@ -459,6 +463,7 @@ module TSOS {
                 // Otherwise can format the disk
                 _krnDiskSystemDeviceDriver.formatDisk(quick);
                 _StdOut.putText('Successfully formatted the disk.');
+                this.krnTrace('Formatted the disk');
             }
         }
 
@@ -534,6 +539,13 @@ module TSOS {
                 }
             }
 
+            // Some traces
+            if (out === 0) {
+                this.krnTrace('Successfully created swap file: ' + swapFileName);
+            } else {
+                this.krnTrace('Error in creating swap file: ' + swapFileName);
+            }
+
             return out;
         }
 
@@ -559,6 +571,12 @@ module TSOS {
                     _StdOut.putText('Failed to create the file. There are no available data blocks on the disk.');
                     break;
             }
+            // Some traces
+            if (createFileOutput === 0) {
+                this.krnTrace('Successfully created file: ' + fileName);
+            } else {
+                this.krnTrace('Error in creating file: ' + fileName);
+            }
         }
 
         public krnWriteFile(fileName: string, contents: string): void {
@@ -583,6 +601,13 @@ module TSOS {
                     _StdOut.putText("Internal file system error. Please reformat the disk.");
                     break;
             }
+            
+            // Traces
+            if (writeFileOutput === 0) {
+                this.krnTrace('Successfully wrote to file: ' + fileName);
+            } else {
+                this.krnTrace('Error in writing to file: ' + fileName);
+            }
         }
 
         public krnListFiles(showAll: boolean): void {
@@ -591,7 +616,7 @@ module TSOS {
             if (fileList === null) {
                 _StdOut.putText('Cannot list files. The disk is not formatted.');
             } else if (fileList.length === 0) {
-                _StdOut.putText('There are no files to list.')
+                _StdOut.putText('There are no files to list.');
             } else {
                 console.log(fileList);
                 // Print out each file name
@@ -632,6 +657,13 @@ module TSOS {
                     _StdOut.putText("Internal file system error. Please reformat the disk.");
                     break;
             }
+            
+            // Traces
+            if (fileReadOutput[0] === 0) {
+                this.krnTrace('Successfully read from file: ' + fileName);
+            } else {
+                this.krnTrace('Error in reading from file: ' + fileName);
+            }
         }
 
         public krnDeleteFile(fileName: string): void {
@@ -651,6 +683,13 @@ module TSOS {
                     _StdOut.putText("Internal file system error. Please reformat the disk.");
                     break;
             }
+
+            // Traces
+            if (fileDeleteOutput === 0) {
+                this.krnTrace('Successfully deleted file: ' + fileName);
+            } else {
+                this.krnTrace('Error in deleting file: ' + fileName);
+            }
         }
 
         public krnRenameFile(oldFileName: string, newFileName: string): void {
@@ -666,6 +705,13 @@ module TSOS {
                 case 2:
                     _StdOut.putText('Failed to rename the file. ' + oldFileName + ' does not exist.');
                     break;
+            }
+
+            // Traces
+            if (renameOutput === 0) {
+                this.krnTrace('Successfully renamed ' + oldFileName + ' to ' + newFileName + '.');
+            } else {
+                this.krnTrace('Error in renaming ' + oldFileName + ' to ' + newFileName);
             }
         }
 
@@ -703,6 +749,12 @@ module TSOS {
                     _StdOut.putText("Internal file system error when writing to " + newFileName + ". Please reformat the disk.");
                     break;
             }
+
+            if (copyOutput === 0) {
+                this.krnTrace('Successfully copied ' + curFileName + ' to ' + newFileName);
+            } else {
+                this.krnTrace('Error in copying ' + curFileName + ' to ' + newFileName);
+            }
         }
 
         public krnRestoreFiles(): void {
@@ -730,6 +782,12 @@ module TSOS {
                             break;
                     }
                     _StdOut.advanceLine();
+
+                    if (restoreOut[i][0] === 0) {
+                        this.krnTrace('Successfully restored file: ' + restoreOut[i][1]);
+                    } else {
+                        this.krnTrace('Error in restoring file: ' + restoreOut[i][1]);
+                    }
                 }
             }
         }
