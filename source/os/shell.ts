@@ -719,7 +719,8 @@ module TSOS {
                 // Generate the contents string
                 let contents: string = args.join(' ');
 
-                if (contents.charAt(0) !== '"' || contents.charAt(contents.length - 1) !== '"') {
+                if (!contents.match(/".*"/)) {
+                    // Must have 0 or more characters surrounded by quotations
                     _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
                 } else {
                     if (args[0].charAt(0) === '~') {

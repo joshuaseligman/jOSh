@@ -586,7 +586,8 @@ var TSOS;
                 let fileName = args.shift();
                 // Generate the contents string
                 let contents = args.join(' ');
-                if (contents.charAt(0) !== '"' || contents.charAt(contents.length - 1) !== '"') {
+                if (!contents.match(/".*"/)) {
+                    // Must have some characters surrounded by quotations
                     _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
                 }
                 else {
