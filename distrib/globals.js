@@ -70,8 +70,8 @@ const NUM_SECTORS = 8;
 const NUM_BLOCKS = 8;
 // 64 byte blocks
 const BLOCK_SIZE = 64;
-// 64 - 4 (overhead) - 1 (end of name) - 4 (6 digits for date and 2 for size)
-const MAX_FILE_NAME_LENGTH = 55;
+// 64 - 4 (overhead) - 1 (end of name) - 8 (8 digits for date and 2 for size)
+const MAX_FILE_NAME_LENGTH = 54;
 var _hardwareClockID = null;
 // Declare the variables for the scheduler and dispatcher
 var _Scheduler = null;

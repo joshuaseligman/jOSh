@@ -30,10 +30,10 @@ function GladosV2() {
         inputCommand('create test')
 
         // The exact max file name length
-        inputCommand('create ' + 'A'.repeat(55))
+        inputCommand('create ' + 'A'.repeat(54))
 
         // One letter longer than the max file length name (should be rejected)
-        inputCommand('create ' + 'A'.repeat(56))
+        inputCommand('create ' + 'A'.repeat(55))
 
         // Swap file beginning of file (should be rejected)
         inputCommand('create ~test')

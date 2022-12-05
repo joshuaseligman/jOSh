@@ -100,7 +100,13 @@ module TSOS {
 
                         // Get the date and store it in hex
                         let date: string[] = Utils.getDate(false).split('/');
-                        date = date.map((elem: string) => parseInt(elem).toString(16).toUpperCase());
+                        date = date.map((elem: string) => {
+                            let res: string = parseInt(elem).toString(16).toUpperCase();
+                            if (res.length % 2 === 1) {
+                                res = '0' + res;
+                            }
+                            return res;
+                        });
                         directoryEntry += date.join('');
 
                         // We are initially using 2 block on the disk (1 for directory and 1 for data)
@@ -174,7 +180,13 @@ module TSOS {
 
                         // Get the date and store it in hex
                         let date: string[] = Utils.getDate(false).split('/');
-                        date = date.map((elem: string) => parseInt(elem).toString(16).toUpperCase());
+                        date = date.map((elem: string) => {
+                            let res: string = parseInt(elem).toString(16).toUpperCase();
+                            if (res.length % 2 === 1) {
+                                res = '0' + res;
+                            }
+                            return res;
+                        });
                         directoryEntry += date.join('');
 
                         // Set the number of blocks in use based on the number of blocks needed
@@ -680,17 +692,17 @@ module TSOS {
                             }
 
                             // Grab the file metadata
-                            let fileMetaData = directoryEntry.substring((BLOCK_SIZE - 4) * 2);
+                            let fileMetaData = directoryEntry.substring((BLOCK_SIZE - 5) * 2);
                             // Get the date the file was created
                             let dateCreated: string = '';
-                            dateCreated += parseInt(fileMetaData.charAt(0), 16);
+                            dateCreated += parseInt(fileMetaData.substring(0, 2), 16);
                             dateCreated += '/';
-                            dateCreated += parseInt(fileMetaData.substring(1, 3), 16);
+                            dateCreated += parseInt(fileMetaData.substring(2, 4), 16);
                             dateCreated += '/';
-                            dateCreated += parseInt(fileMetaData.substring(3, 6), 16);
+                            dateCreated += parseInt(fileMetaData.substring(4, 8), 16);
                             
                             // Get the size in bytes
-                            let size: string = (parseInt(fileMetaData.substring(6), 16) * BLOCK_SIZE) + ' bytes';
+                            let size: string = (parseInt(fileMetaData.substring(fileMetaData.length - 2), 16) * BLOCK_SIZE) + ' bytes';
 
                             // Create the file entry
                             let fileEntry: string[] = [fileName, dateCreated, size];

@@ -99,8 +99,8 @@ const NUM_BLOCKS: number = 8;
 // 64 byte blocks
 const BLOCK_SIZE: number = 64;
 
-// 64 - 4 (overhead) - 1 (end of name) - 4 (6 digits for date and 2 for size)
-const MAX_FILE_NAME_LENGTH: number = 55;
+// 64 - 4 (overhead) - 1 (end of name) - 8 (8 digits for date and 2 for size)
+const MAX_FILE_NAME_LENGTH: number = 54;
 
 var _hardwareClockID: number = null;
 
