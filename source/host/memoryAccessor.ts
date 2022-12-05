@@ -43,6 +43,18 @@ module TSOS {
             }
         }
 
+        // Gets a chunk of memory
+        public memoryDump(baseAddr: number, limitAddr: number): number[] {
+            // Initialize to nothing
+            let dump: number[] = [];
+            // Go through the requested range of addresses
+            for (let addr: number = baseAddr; addr < limitAddr; addr++) {
+                // Push the value to the array
+                dump.push(_Memory.read(addr));
+            }
+            return dump;
+        }
+
         // Clears memory from the start up to, but not including stop
         public clearMemory(start: number, stop: number): void {
             for (let i = start; i < stop; i++) {

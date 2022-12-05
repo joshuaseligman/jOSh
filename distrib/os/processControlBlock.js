@@ -1,7 +1,7 @@
 var TSOS;
 (function (TSOS) {
     class ProcessControlBlock {
-        constructor(segment, priority = 8) {
+        constructor(segment, priority) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;
@@ -23,8 +23,8 @@ var TSOS;
             // Turnaround time and wait time are both 0
             this.turnaroundTime = 0;
             this.waitTime = 0;
-            // Add the PCB to the table
-            this.createTableEntry();
+            // The name of the swap file will be ~<pid>. Since all PIDs are unique, there will be no issue with duplicate swap file names
+            this.swapFile = `~${this.pid}`;
         }
         // Function to handle the table row entry for the PCB
         createTableEntry() {
@@ -45,7 +45,7 @@ var TSOS;
             newRow.appendChild(locationElem);
             // Create the segment element
             let segmentElem = document.createElement('td');
-            segmentElem.innerHTML = this.seg.toString();
+            segmentElem.innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             newRow.appendChild(segmentElem);
             // Create the base register element
             let baseElem = document.createElement('td');
@@ -103,7 +103,7 @@ var TSOS;
             // Update the location
             tableEntry.cells[2].innerHTML = this.location;
             // Update the segment and the base/limit registers
-            tableEntry.cells[3].innerHTML = (this.segment === -1) ? 'N/A' : this.segment.toString();
+            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             tableEntry.cells[4].innerHTML = (this.baseReg !== -1) ? TSOS.Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             tableEntry.cells[5].innerHTML = (this.limitReg !== -1) ? TSOS.Utils.getHexString(this.limitReg, 3, false) : 'N/A';
             // Update each of the CPU fields
@@ -131,6 +131,11 @@ var TSOS;
                     // Program is in memory
                     [this.baseReg, this.limitReg] = _BaseLimitPairs[this.seg];
                     this.location = 'MEMORY';
+                    break;
+                case 3:
+                    // Program is on the disk
+                    [this.baseReg, this.limitReg] = [-1, -1];
+                    this.location = 'DISK';
                     break;
                 case -1:
                     // Program has been deallocated

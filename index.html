@@ -34,11 +34,15 @@
    <script type="text/javascript" src="distrib/os/scheduler.js"></script>
    <script type="text/javascript" src="distrib/os/dispatcher.js"></script>
    <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
+   <script type="text/javascript" src="distrib/os/diskSystemDeviceDriver.js"></script>
+   <script type="text/javascript" src="distrib/os/swapper.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment the line below to enable GLaDOS testing. -->
-   <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip3.js"></script>
+   <!-- <script type="text/javascript" src="http://alanclasses.github.io/TSOS/test/glados-ip4.js"></script> -->
+   <!-- <script type="text/javascript" src="test/jOSh-ip4.js"></script> -->
+   <script type="text/javascript" src="test/gladosV2.js"></script>
    
 </head>
 
@@ -71,6 +75,18 @@
              value="Reset"
              tabindex="2"
              onclick="TSOS.Control.hostBtnReset_click(this);">
+
+      <select id="testOptions">
+      </select>
+
+      <input type="button"
+             id = "btnRunTest"
+             class="normal_button"
+             name="brnRunTest"
+             disabled="disabled"
+             value="Run Test"
+             tabindex="3"
+             onclick="TSOS.Control.hostBtnRunTest_click(this)">            
    </div>
 
    <div id="statusBar">
@@ -124,6 +140,7 @@
             <button id="stepBtn" class="singleStepBtn normal_button" onclick="TSOS.Control.nextStep()" disabled>Step</button>
          </div>
 
+         <p id="algoLine">Scheduling Algorithm: <span id="algoVal">RR</span></p>
          <p id="quantumLine">Quantum (q = <span id="quantumVal">6</span>) (current = <span id="currentQuantumVal">0</span>)</p>
 
          <h3>CPU Status</h3>
@@ -176,6 +193,15 @@
             <table id="memTable">
             </table>
          </div>
+      </div>
+   </div>
+
+   <div id="diskDiv">
+      <h3>Disk</h3>
+      <div id="diskTableDiv">
+         <table id="diskTable">
+            <td>The disk has not been formatted.</td>
+         </table>
       </div>
    </div>
    

@@ -29,11 +29,17 @@ var TSOS;
             // Initialize the scheduler and dispatcher
             _Scheduler = new TSOS.Scheduler();
             _Dispatcher = new TSOS.Dispatcher();
+            // Initialize the swapper
+            _Swapper = new TSOS.Swapper();
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new TSOS.DeviceDriverKeyboard(); // Construct it.
             _krnKeyboardDriver.driverEntry(); // Call the driverEntry() initialization routine.
-            this.krnTrace(_krnKeyboardDriver.status);
+            this.krnTrace('Kbd device driver status: ' + _krnKeyboardDriver.status);
+            this.krnTrace("Loading the disk system device driver.");
+            _krnDiskSystemDeviceDriver = new TSOS.DiskSystemDeviceDriver();
+            _krnDiskSystemDeviceDriver.driverEntry();
+            this.krnTrace('Ds device driver status: ' + _krnDiskSystemDeviceDriver.status);
             //
             // ... more?
             //
@@ -217,7 +223,7 @@ var TSOS;
                     }
                     break;
                 case CALL_DISPATCHER_IRQ:
-                    _Dispatcher.contextSwitch(params[0]);
+                    _Dispatcher.contextSwitch(params[0], _Scheduler.getCurAlgo());
                     this.krnTrace('Called dispatcher');
                     break;
                 default:
@@ -243,21 +249,69 @@ var TSOS;
         // - ReadFile
         // - WriteFile
         // - CloseFile
-        krnCreateProcess(prog) {
-            // Try to load a process into memory
-            let segment = _MemoryManager.allocateProgram(prog);
-            if (segment == -1) {
-                // Trace and print the output for a failed load
-                _Kernel.krnTrace('No space for the program.');
-                _StdOut.putText('Failed to load program. No available space.');
+        krnClearMemory() {
+            if (_CPU.isExecuting) {
+                _StdOut.putText('Cannot clear memory when the CPU is executing.');
             }
             else {
-                // Create the PCB
-                let newPCB = new TSOS.ProcessControlBlock(segment);
+                _MemoryManager.deallocateAll();
+                _StdOut.putText('All memory cleared.');
+                _Kernel.krnTrace('Cleared memory');
+            }
+        }
+        krnCreateProcess(prog, priority) {
+            // Try to load a process into memory
+            let segment = _MemoryManager.allocateProgram(prog);
+            // Create the PCB
+            let pcbCreated = true;
+            let newPCB = new TSOS.ProcessControlBlock(segment, priority);
+            if (newPCB.segment === -1) {
+                // Try to create a swap file if no room in memory
+                let swapFileOutput = this.createSwapFile(newPCB.swapFile, prog);
+                if (swapFileOutput === 0) {
+                    // A segment of 3 is being used to represent the disk
+                    newPCB.segment = 3;
+                    // The swap file was made, so the PCB can be recorded
+                    newPCB.createTableEntry();
+                    _PCBHistory.push(newPCB);
+                }
+                else {
+                    switch (swapFileOutput) {
+                        case 1:
+                            _StdOut.putText('Could not load process to disk. Disk is not formatted.');
+                            break;
+                        case 3:
+                            _StdOut.putText('Could not load process to disk. Not enough directory space.');
+                            break;
+                        case 4:
+                        case 6:
+                            _StdOut.putText('Could not load process to disk. Not enough data space.');
+                            break;
+                        case 2:
+                        case 5:
+                        case 7:
+                            this.krnTrapError('Error creating swap file.');
+                            break;
+                    }
+                    // Swap file was not created, so backtrack a little
+                    TSOS.ProcessControlBlock.CurrentPID--;
+                    pcbCreated = false;
+                }
+            }
+            else {
+                // Can add the pcb because it is already in memory
                 _PCBHistory.push(newPCB);
+                newPCB.createTableEntry();
+            }
+            if (pcbCreated) {
                 // Let the user know the program is valid
-                _Kernel.krnTrace(`Created PID ${newPCB.pid}`);
-                _StdOut.putText(`Process ID: ${newPCB.pid}`);
+                this.krnTrace(`Created PID ${newPCB.pid}, priority ${priority}`);
+                _StdOut.putText(`Process ID: ${newPCB.pid} with priority ${priority}`);
+            }
+            else {
+                this.krnTrace('Failed to load program.');
+                _StdOut.advanceLine();
+                _StdOut.putText('Program was not loaded.');
             }
         }
         krnTerminateProcess(requestedProcess, status, msg, putPrompt = true) {
@@ -270,6 +324,10 @@ var TSOS;
             else {
                 // Otherwise we can just remove the process from the ready queue and the dispatcher will not be affected
                 _PCBReadyQueue.remove(requestedProcess);
+            }
+            if (requestedProcess.segment === 3) {
+                _krnDiskSystemDeviceDriver.deleteFile(requestedProcess.swapFile);
+                requestedProcess.segment = -1;
             }
             // Update the table entry with the terminated status and the updated cpu values
             requestedProcess.updateTableEntry();
@@ -295,6 +353,335 @@ var TSOS;
             _StdOut.advanceLine();
             if (putPrompt) {
                 _OsShell.putPrompt();
+            }
+        }
+        krnFormatDisk(quick) {
+            // Get the files on the disk
+            let files = _krnDiskSystemDeviceDriver.getFileList();
+            // Check if there is a swap file
+            if (files !== null && files.find(file => file[0].charAt(0) === '~')) {
+                // Cannot format if there are swap files on the disk
+                _StdOut.putText('Disk cannot be formatted. Swap files found on the disk.');
+            }
+            else {
+                // Otherwise can format the disk
+                _krnDiskSystemDeviceDriver.formatDisk(quick);
+                _StdOut.putText('Successfully formatted the disk.');
+                this.krnTrace('Formatted the disk');
+            }
+        }
+        createSwapFileForSegment(swapFileName, segment) {
+            // Get the program from memory
+            let program = _MemoryAccessor.memoryDump(_BaseLimitPairs[segment][0], _BaseLimitPairs[segment][1]);
+            // Create the swap file and return the error status
+            return this.createSwapFile(swapFileName, program);
+        }
+        // Possible outputs:
+        // 0: Successful
+        // 1: Disk not formatted
+        // 2: File already exists
+        // 3: No directory room
+        // 4: No data room
+        // 5: File does not exist
+        // 6: Partial write
+        // 7: Internal error
+        createSwapFile(swapFileName, program) {
+            let out = 0;
+            // Call the dsDD to create a file on the disk if possible
+            let createFileOutput = _krnDiskSystemDeviceDriver.createFileWithInitialSize(swapFileName, program.length);
+            switch (createFileOutput) {
+                case 1:
+                    // Disk is not formatted, so cannot work with swap files
+                    out = 1;
+                    break;
+                case 2:
+                    // File already exists (should never come up)
+                    out = 2;
+                    break;
+                case 3:
+                    // No directory room
+                    out = 3;
+                    break;
+                case 4:
+                    // No data room
+                    out = 4;
+                    break;
+            }
+            if (out === 0) {
+                // Convert the binary into a hex string of length 256 bytes
+                let programStr = program.map((e) => e.toString(16).toUpperCase().padStart(2, '0')).join('').padEnd(0x100 * 2, '0');
+                // Write the data to the swap file
+                let writeOutput = _krnDiskSystemDeviceDriver.writeFile(swapFileName, programStr, true);
+                switch (writeOutput) {
+                    case 1:
+                        // Disk not formatted should never be reached
+                        out = 1;
+                        break;
+                    case 2:
+                        // File not found should also never be reached
+                        out = 5;
+                        break;
+                    case 3:
+                        // Partial write should never be reached because we allocated the space ahead of time to make sure there is enough room
+                        out = 6;
+                        break;
+                    case 4:
+                        // Internal error should never be reached if everything is implemented correctly
+                        out = 7;
+                        break;
+                }
+                if (out === 1) {
+                    // If something went wrong, make sure that the file gets deleted because it will not be used
+                    // Do not care about output, just get it done
+                    _krnDiskSystemDeviceDriver.deleteFile(swapFileName);
+                }
+            }
+            // Some traces
+            if (out === 0) {
+                this.krnTrace('Successfully created swap file: ' + swapFileName);
+            }
+            else {
+                this.krnTrace('Error in creating swap file: ' + swapFileName);
+            }
+            return out;
+        }
+        krnCreateFile(fileName) {
+            // Call the dsDD to create a file on the disk if possible
+            let createFileOutput = _krnDiskSystemDeviceDriver.createFile(fileName);
+            // Print out a response accordingly
+            switch (createFileOutput) {
+                case 0:
+                    _StdOut.putText('Successfully created file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to create the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to create the file. ' + fileName + ' already exists.');
+                    break;
+                case 3:
+                    _StdOut.putText('Failed to create the file. There is no room in the directory.');
+                    break;
+                case 4:
+                    _StdOut.putText('Failed to create the file. There are no available data blocks on the disk.');
+                    break;
+            }
+            // Some traces
+            if (createFileOutput === 0) {
+                this.krnTrace('Successfully created file: ' + fileName);
+            }
+            else {
+                this.krnTrace('Error in creating file: ' + fileName);
+            }
+        }
+        krnWriteFile(fileName, contents) {
+            // Call the dsDD to write contents to a file on the disk if possible
+            let writeFileOutput = _krnDiskSystemDeviceDriver.writeFile(fileName, contents);
+            // Print out a response accordingly
+            switch (writeFileOutput) {
+                case 0:
+                    _StdOut.putText('Successfully wrote to file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to write to the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to write to the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText('Performed a partial write to file: ' + fileName + '. Not enough available data blocks on the disk.');
+                    break;
+                case 4:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
+            // Traces
+            if (writeFileOutput === 0) {
+                this.krnTrace('Successfully wrote to file: ' + fileName);
+            }
+            else {
+                this.krnTrace('Error in writing to file: ' + fileName);
+            }
+        }
+        krnListFiles(showAll) {
+            // Get the file list from the dsDD
+            let fileList = _krnDiskSystemDeviceDriver.getFileList();
+            if (fileList === null) {
+                _StdOut.putText('Cannot list files. The disk is not formatted.');
+            }
+            else {
+                if (!showAll) {
+                    // Only keep the non-hidden files
+                    fileList = fileList.filter((file) => file[0].charAt(0) !== '.' && file[0].charAt(0) !== '~');
+                }
+                if (fileList.length === 0) {
+                    _StdOut.putText('There are no files to list.');
+                }
+                else {
+                    // Print out each file name
+                    for (let i = 0; i < fileList.length; i++) {
+                        // Print the file name
+                        _StdOut.putText('  ' + fileList[i][0]);
+                        // Only print the additional metadata if the -a flag was used
+                        if (showAll) {
+                            _StdOut.putText('  ' + fileList[i][1] + '  ' + fileList[i][2]);
+                        }
+                        _StdOut.advanceLine();
+                    }
+                }
+            }
+        }
+        krnReadFile(fileName) {
+            // Read the file and get the results
+            let fileReadOutput = _krnDiskSystemDeviceDriver.readFile(fileName);
+            switch (fileReadOutput[0]) {
+                case 0:
+                    // File read was successful so print the contents
+                    for (let i = 0; i < fileReadOutput[1].length; i++) {
+                        _StdOut.putText(String.fromCharCode(fileReadOutput[1][i]));
+                    }
+                    _StdOut.advanceLine();
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to read from the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to read from the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
+            // Traces
+            if (fileReadOutput[0] === 0) {
+                this.krnTrace('Successfully read from file: ' + fileName);
+            }
+            else {
+                this.krnTrace('Error in reading from file: ' + fileName);
+            }
+        }
+        krnDeleteFile(fileName) {
+            let fileDeleteOutput = _krnDiskSystemDeviceDriver.deleteFile(fileName);
+            switch (fileDeleteOutput) {
+                case 0:
+                    _StdOut.putText('Successfully deleted file: ' + fileName);
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to delete the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to delete the file. ' + fileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText("Internal file system error. Please reformat the disk.");
+                    break;
+            }
+            // Traces
+            if (fileDeleteOutput === 0) {
+                this.krnTrace('Successfully deleted file: ' + fileName);
+            }
+            else {
+                this.krnTrace('Error in deleting file: ' + fileName);
+            }
+        }
+        krnRenameFile(oldFileName, newFileName) {
+            let renameOutput = _krnDiskSystemDeviceDriver.renameFile(oldFileName, newFileName);
+            switch (renameOutput) {
+                case 0:
+                    _StdOut.putText('Successfully renamed ' + oldFileName + ' to ' + newFileName + '.');
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to rename the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to rename the file. ' + oldFileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText('Failed to rename the file. ' + newFileName + ' already exists.');
+                    break;
+            }
+            // Traces
+            if (renameOutput === 0) {
+                this.krnTrace('Successfully renamed ' + oldFileName + ' to ' + newFileName + '.');
+            }
+            else {
+                this.krnTrace('Error in renaming ' + oldFileName + ' to ' + newFileName);
+            }
+        }
+        krnCopyFile(curFileName, newFileName) {
+            // Copy the file
+            let copyOutput = _krnDiskSystemDeviceDriver.copyFile(curFileName, newFileName);
+            // Handle the output codes
+            switch (copyOutput) {
+                case 0:
+                    _StdOut.putText('Successfully copied ' + curFileName + ' to ' + newFileName + '.');
+                    break;
+                case 1:
+                    _StdOut.putText('Failed to copy the file. The disk is not formatted.');
+                    break;
+                case 2:
+                    _StdOut.putText('Failed to copy the file. ' + curFileName + ' does not exist.');
+                    break;
+                case 3:
+                    _StdOut.putText('Failed to copy the file. ' + newFileName + ' already exists.');
+                    break;
+                case 4:
+                    _StdOut.putText('Failed to copy the file. There is no room in the directory for the new file.');
+                    break;
+                case 5:
+                    _StdOut.putText('Failed to copy the file. There are no available data blocks on the disk for the new file.');
+                    break;
+                case 6:
+                    _StdOut.putText("Internal file system error when reading " + curFileName + ". Please reformat the disk.");
+                    break;
+                case 7:
+                    _StdOut.putText('Performed a partial copy of ' + curFileName + ' to ' + newFileName + '. Not enough available data blocks on the disk.');
+                    break;
+                case 8:
+                    _StdOut.putText("Internal file system error when writing to " + newFileName + ". Please reformat the disk.");
+                    break;
+            }
+            if (copyOutput === 0) {
+                this.krnTrace('Successfully copied ' + curFileName + ' to ' + newFileName);
+            }
+            else {
+                this.krnTrace('Error in copying ' + curFileName + ' to ' + newFileName);
+            }
+        }
+        krnRestoreFiles() {
+            let restoreOut = _krnDiskSystemDeviceDriver.restoreFiles();
+            if (restoreOut.length === 0) {
+                _StdOut.putText('There are no files to restore.');
+            }
+            else if (restoreOut[0][0] === 1) {
+                _StdOut.putText('Unable to restore files. The disk is not formatted.');
+            }
+            else {
+                // Go through the files
+                for (let i = 0; i < restoreOut.length; i++) {
+                    // Print out the results accordingly (1 should never happen)
+                    switch (restoreOut[i][0]) {
+                        case 0:
+                            _StdOut.putText(restoreOut[i][1] + ' was successfully restored.');
+                            break;
+                        case 1:
+                            _StdOut.putText('Unable to restore files. The disk is not formatted.');
+                            break;
+                        case 2:
+                            _StdOut.putText(restoreOut[i][1] + ' was partially restored.');
+                            break;
+                        case 3:
+                            _StdOut.putText(restoreOut[i][1] + ' was unable to be restored.');
+                            break;
+                    }
+                    _StdOut.advanceLine();
+                    if (restoreOut[i][0] === 0) {
+                        this.krnTrace('Successfully restored file: ' + restoreOut[i][1]);
+                    }
+                    else {
+                        this.krnTrace('Error in restoring file: ' + restoreOut[i][1]);
+                    }
+                }
             }
         }
         //

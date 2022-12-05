@@ -39,6 +39,9 @@ var TSOS;
         getHead() {
             return this.q[0];
         }
+        getTail() {
+            return this.q[this.getSize() - 1];
+        }
         remove(elem) {
             this.q = this.q.filter((e) => e !== elem);
         }

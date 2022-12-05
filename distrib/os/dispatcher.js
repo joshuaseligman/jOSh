@@ -2,7 +2,7 @@ var TSOS;
 (function (TSOS) {
     class Dispatcher {
         // Function to perform a context switch
-        contextSwitch(firstProcess) {
+        contextSwitch(firstProcess, algo) {
             if (firstProcess) {
                 // Set the first process to running to get the ball rolling
                 let headProcess = _PCBReadyQueue.getHead();
@@ -16,14 +16,43 @@ var TSOS;
                 // Get the process that has been preempted and move it to the back of the queue
                 let preemptedProcess = _PCBReadyQueue.dequeue();
                 if (preemptedProcess.status !== 'Terminated') {
+                    // If there is another program, we need to roll this one out of memory
                     preemptedProcess.status = 'Ready';
                     preemptedProcess.updateTableEntry();
                     _PCBReadyQueue.enqueue(preemptedProcess);
                 }
                 // Set the next process to be running and update the cpu accordingly
                 if (_PCBReadyQueue.getSize() > 0) {
-                    let newProcess = _PCBReadyQueue.getHead();
+                    let newProcess;
+                    if (algo === SchedulingAlgo.ROUND_ROBIN || algo === SchedulingAlgo.FCFS) {
+                        // Take next process if using RR or FCFS
+                        newProcess = _PCBReadyQueue.getHead();
+                    }
+                    else if (algo === SchedulingAlgo.PRIORITY) {
+                        // Assume first is the lowest priority
+                        let newProcessIndex = 0;
+                        // Go through the rest of the PCBs
+                        for (let i = 1; i < _PCBReadyQueue.getSize(); i++) {
+                            // If the new PCB has a lower priority, use it next
+                            if (_PCBReadyQueue.q[i].priority < _PCBReadyQueue.q[newProcessIndex].priority) {
+                                newProcessIndex = i;
+                            }
+                            else if (_PCBReadyQueue.q[i].priority === _PCBReadyQueue.q[newProcessIndex].priority) {
+                                // If the priorities are equal, use FCFS to break tie
+                                if (_PCBReadyQueue.q[i].pid < _PCBReadyQueue.q[newProcessIndex].pid) {
+                                    newProcessIndex = i;
+                                }
+                            }
+                        }
+                        // Remove the process from the array and place it at the start
+                        newProcess = _PCBReadyQueue.q.splice(newProcessIndex, 1)[0];
+                        _PCBReadyQueue.q.unshift(newProcess);
+                    }
+                    if (newProcess.segment === 3) {
+                        _Swapper.swap(newProcess);
+                    }
                     newProcess.status = 'Running';
+                    newProcess.updateTableEntry();
                     _CPU.isExecuting = true;
                     _CPU.setCpuStatus(newProcess.programCounter, newProcess.instructionRegister, newProcess.acc, newProcess.xReg, newProcess.yReg, newProcess.zFlag);
                 }

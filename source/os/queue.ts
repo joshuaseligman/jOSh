@@ -45,6 +45,10 @@ module TSOS {
             return this.q[0];
         }
 
+        public getTail() {
+            return this.q[this.getSize() - 1];
+        }
+
         public remove(elem: any) {
             this.q = this.q.filter((e) => e !== elem);
         }

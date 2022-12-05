@@ -84,20 +84,47 @@ var _OsShell: TSOS.Shell;
 var _SarcasticMode: boolean = false;
 
 // Global Device Driver Objects - page 12
-var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard  = null;
+var _krnKeyboardDriver: TSOS.DeviceDriverKeyboard = null;
+var _krnDiskSystemDeviceDriver: TSOS.DiskSystemDeviceDriver = null;
+
+// 4 total tracks
+const NUM_TRACKS: number = 4;
+
+// 8 sectors per track
+const NUM_SECTORS: number = 8;
+
+// 8 blocks per sector
+const NUM_BLOCKS: number = 8;
+
+// 64 byte blocks
+const BLOCK_SIZE: number = 64;
+
+// 64 - 4 (overhead) - 1 (end of name) - 8 (8 digits for date and 2 for size)
+const MAX_FILE_NAME_LENGTH: number = 54;
 
 var _hardwareClockID: number = null;
 
-// Delcare the variables for the scheduler and dispatcher
+// Declare the variables for the scheduler and dispatcher
 var _Scheduler: TSOS.Scheduler = null;
 var _Dispatcher: TSOS.Dispatcher = null;
+var _Swapper: TSOS.Swapper = null;
 
 // The default quantum is 6 CPU cycles
 const DEFAULT_QUANTUM: number = 6;
 
+// Create an enum to use for representing the scheduling algorithm choices
+enum SchedulingAlgo {
+   ROUND_ROBIN,
+   FCFS,
+   PRIORITY
+}
+
 // For testing (and enrichment)...
 var Glados: any = null;  // This is the function Glados() in glados-ip*.js http://alanclasses.github.io/TSOS/test/ .
 var _GLaDOS: any = null; // If the above is linked in, this is the instantiated instance of Glados.
+
+var GladosV2: any = null;
+var _GladosV2: any = null;
 
 var onDocumentLoad = function() {
 	TSOS.Control.hostInit();

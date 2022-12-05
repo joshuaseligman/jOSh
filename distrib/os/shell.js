@@ -64,7 +64,7 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellTestBSOD, "testbsod", "- Tests the blue screen of death when the kernel traps an OS error.");
             this.commandList[this.commandList.length] = sc;
             // load
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads the user program into memory.");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "[<priority>]- Loads the user program into memory with the given priority (8 is default)");
             this.commandList[this.commandList.length] = sc;
             // run
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<pid> - Runs the given process ID.");
@@ -81,6 +81,28 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellKillAll, "killall", "- Kill all processes");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> - Sets the Round Robin quantum (measured in cpu cycles)");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "[-quick] - Performs a low-level format of the disk for use (-quick performs a quick format instead)");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCreate, "create", "<filename> - Creates a file of the given name");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellReadFile, "read", "<filename> - Reads a file");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellWriteFile, "write", "<filename> \"<contents>\" - Writes the contents between the quotation marks to a given file");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDeleteFile, "delete", "<filename> - Deletes a file from the disk");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "[-a] - Lists the files on the disk (-a includes hidden files)");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRenameFile, "rename", "<curFileName> <newFileName> - Changes the name of a file");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCopyFile, "copy", "<curFileName> <newFileName> - Makes a copy of an existing file");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRestoreFiles, "restorefiles", "- Restores deleted files");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellGetSchedule, "getschedule", "- Returns the CPU scheduling algorithm being used");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellSetSchedule, "setschedule", "<rr|fcfs|priority> - Sets the CPU scheduling algorithm to the one provided");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -378,12 +400,23 @@ var TSOS;
                 // Update the value of the input box
                 progInput.value = program.toUpperCase();
                 let progStrArr = progInput.value.split(' ');
-                let progArr = new Array(0x100);
+                let progArr = [];
                 for (let byte = 0; byte < progStrArr.length; byte++) {
                     progArr[byte] = parseInt(progStrArr[byte], 16);
                 }
-                // Call the kernel process to create a process
-                _Kernel.krnCreateProcess(progArr);
+                // 8 is default priority value
+                let priority = 8;
+                if (args.length > 0) {
+                    priority = parseInt(args[0]);
+                }
+                if (isNaN(priority) || priority < 0) {
+                    // Make sure we have a valid input
+                    _StdOut.putText('Invalid priority. Priority must be a integer value greater than or equal to 0.');
+                }
+                else {
+                    // Call the kernel process to create a process
+                    _Kernel.krnCreateProcess(progArr, priority);
+                }
             }
             else {
                 // Invalid program from bad characters
@@ -437,11 +470,7 @@ var TSOS;
             }
         }
         shellClearMem(args) {
-            // We need to kill all of the running processes
-            _OsShell.shellKillAll([]);
-            _MemoryManager.deallocateAll();
-            _StdOut.advanceLine();
-            _StdOut.putText('All memory cleared.');
+            _Kernel.krnClearMemory();
         }
         shellPs(args) {
             // Iterate through all made PCBs and display their PID and status
@@ -506,8 +535,6 @@ var TSOS;
                     _Scheduler.setQuantum(newQuantum);
                     _StdOut.putText(`Quantum set to ${newQuantum}`);
                     _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
-                    // Update the HTML to reflect the new quantum
-                    document.querySelector('#quantumVal').innerHTML = newQuantum.toString();
                 }
                 else {
                     // Print out an error message for an invalid quantum value
@@ -518,6 +545,193 @@ var TSOS;
                 // Print out an error message for a missing quantum value
                 _StdOut.putText('Usage: quantum <int>  Please supply a quantum value.');
             }
+        }
+        shellFormat(args) {
+            // Assume low level format
+            let quick = false;
+            // The flag changes it to want to do a quick format
+            if (args.length > 0 && args[0] === '-quick') {
+                quick = true;
+            }
+            // Call the kernel to format the disk
+            _Kernel.krnFormatDisk(quick);
+        }
+        shellCreate(args) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // ~ will be used for swap files, so reserve the character
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                }
+                else if (args[0].length > MAX_FILE_NAME_LENGTH) {
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
+                }
+                else {
+                    // Call the kernel to create the file of the given name
+                    _Kernel.krnCreateFile(args[0]);
+                }
+            }
+            else {
+                _StdOut.putText('Usage: create <filename>  Please supply a file name.');
+            }
+        }
+        shellWriteFile(args) {
+            if (args.length === 0) {
+                _StdOut.putText('Usage: write <filename> "<contents>"  Please supply the name of the file and the contents to write.');
+            }
+            else if (args.length === 1) {
+                _StdOut.putText('Usage: write <filename> "<contents>"  Please supply the contents to write.');
+            }
+            else {
+                // Remove the file name from the arguments array
+                let fileName = args.shift();
+                // Generate the contents string
+                let contents = args.join(' ');
+                if (!contents.match(/^".*"$/)) {
+                    // Must have 0 or more characters surrounded by quotations at the start and end
+                    _StdOut.putText('Usage: write <filename> "<contents>"  Please surround the contents with quotation marks.');
+                }
+                else {
+                    if (args[0].charAt(0) === '~') {
+                        // Prevent the user from touching the swap files
+                        _StdOut.putText('Cannot write to a swap file.');
+                    }
+                    else {
+                        // Remove the quotation marks from the contents string
+                        contents = contents.substring(1, contents.length - 1);
+                        // Call the kernel to write the contents to the file
+                        _Kernel.krnWriteFile(fileName, contents);
+                    }
+                }
+            }
+        }
+        shellListFiles(args) {
+            // Include hidden files if the flag is given
+            if (args.length > 0 && args[0] === '-a') {
+                _Kernel.krnListFiles(true);
+            }
+            else {
+                _Kernel.krnListFiles(false);
+            }
+        }
+        shellReadFile(args) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // Swap files are inaccessible
+                    _StdOut.putText('Cannot read from a swap file.');
+                }
+                else {
+                    // Call the kernel routine to read the file
+                    _Kernel.krnReadFile(args[0]);
+                }
+            }
+            else {
+                _StdOut.putText('Usage: read <filename>  Please provide the name of the file.');
+            }
+        }
+        shellDeleteFile(args) {
+            if (args.length > 0) {
+                if (args[0].charAt(0) === '~') {
+                    // Swap files cannot be deleted by the user
+                    _StdOut.putText('Cannot delete a swap file.');
+                }
+                else {
+                    _Kernel.krnDeleteFile(args[0]);
+                }
+            }
+            else {
+                _StdOut.putText('Usage: delete <filename>  Please provide the name of the file.');
+            }
+        }
+        shellRenameFile(args) {
+            // Check to make sure we have the right number of arguments
+            if (args.length === 0) {
+                _StdOut.putText('Usage: rename <curFileName> <newFileName>  Please provide the file to rename and its new name.');
+            }
+            else if (args.length === 1) {
+                _StdOut.putText('Usage: rename <curFileName> <newFileName>  Please provide a new name for the file.');
+            }
+            else {
+                if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
+                    // ~ will be used for swap files, so reserve the character
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                }
+                else if (args[0].length > MAX_FILE_NAME_LENGTH || args[1].length > MAX_FILE_NAME_LENGTH) {
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
+                }
+                else {
+                    // Call the kernel routine to rename the file
+                    _Kernel.krnRenameFile(args[0], args[1]);
+                }
+            }
+        }
+        shellCopyFile(args) {
+            // Check to make sure we have the right number of arguments
+            if (args.length === 0) {
+                _StdOut.putText('Usage: copy <curFileName> <newFileName>  Please provide the file to copy and the name of the destination file.');
+            }
+            else if (args.length === 1) {
+                _StdOut.putText('Usage: copy <curFileName> <newFileName>  Please provide the name of the destination file.');
+            }
+            else {
+                if (args[0] === args[1]) {
+                    // Make sure there are 2 unique names
+                    _StdOut.putText('Invalid file name. Must provide 2 unique file names');
+                }
+                else if (args[0].charAt(0) === '~' || args[1].charAt(0) === '~') {
+                    // ~ will be used for swap files, so reserve the character
+                    _StdOut.putText('Invalid file name. File names may not start with \'~\'.');
+                }
+                else if (args[0].length > MAX_FILE_NAME_LENGTH || args[1].length > MAX_FILE_NAME_LENGTH) {
+                    // The directory block has 60 bytes, but needs a byte (00) for the end of the file name, so 59 characters is max
+                    _StdOut.putText(`Invalid file name. File names cannot be longer than ${MAX_FILE_NAME_LENGTH} characters.`);
+                }
+                else {
+                    // Call the kernel routine to copy the file
+                    _Kernel.krnCopyFile(args[0], args[1]);
+                }
+            }
+        }
+        shellGetSchedule(args) {
+            let algo = _Scheduler.getCurAlgo();
+            _StdOut.putText("The scheduler is using ");
+            switch (algo) {
+                case SchedulingAlgo.ROUND_ROBIN:
+                    _StdOut.putText("round robin scheduling.");
+                    break;
+                case SchedulingAlgo.FCFS:
+                    _StdOut.putText("first come, first serve scheduling.");
+                    break;
+                case SchedulingAlgo.PRIORITY:
+                    _StdOut.putText("priority scheduling.");
+                    break;
+            }
+        }
+        shellSetSchedule(args) {
+            if (args.length > 0) {
+                switch (args[0]) {
+                    case 'rr':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.ROUND_ROBIN);
+                        _StdOut.putText('Scheduling algorithm updated to round robin.');
+                        break;
+                    case 'fcfs':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.FCFS);
+                        _StdOut.putText('Scheduling algorithm updated to first come, first serve.');
+                        break;
+                    case 'priority':
+                        _Scheduler.setCurAlgo(SchedulingAlgo.PRIORITY);
+                        _StdOut.putText('Scheduling algorithm updated to priority.');
+                        break;
+                    default:
+                        _StdOut.putText("Invalid scheduling algorithm. Must be rr, fcfs, or priority.");
+                        break;
+                }
+            }
+            else {
+                _StdOut.putText('Usage: setschedule <rr|fcfs|priority>  Please provide the scheduling algorithm to use.');
+            }
+        }
+        shellRestoreFiles(args) {
+            _Kernel.krnRestoreFiles();
         }
     }
     TSOS.Shell = Shell;

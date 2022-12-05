@@ -51,7 +51,10 @@ module TSOS {
         // The time spent in the ready state
         public waitTime: number;
 
-        constructor(segment: number, priority: number = 8) {
+        // The name of the swap file
+        public swapFile: string;
+
+        constructor(segment: number, priority: number) {
             // Set the process id te the current id and increment the current id for future use
             this.pid = ProcessControlBlock.CurrentPID;
             ProcessControlBlock.CurrentPID++;
@@ -80,12 +83,12 @@ module TSOS {
             this.turnaroundTime = 0;
             this.waitTime = 0;
 
-            // Add the PCB to the table
-            this.createTableEntry();
+            // The name of the swap file will be ~<pid>. Since all PIDs are unique, there will be no issue with duplicate swap file names
+            this.swapFile = `~${this.pid}`;
         }
 
         // Function to handle the table row entry for the PCB
-        private createTableEntry(): void {
+        public createTableEntry(): void {
             // Create the row for the pcb info to be placed in
             let newRow: HTMLTableRowElement = document.createElement('tr');
             newRow.id = `pid${this.pid}`;
@@ -107,7 +110,7 @@ module TSOS {
 
             // Create the segment element
             let segmentElem: HTMLTableCellElement = document.createElement('td');
-            segmentElem.innerHTML = this.seg.toString();
+            segmentElem.innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             newRow.appendChild(segmentElem);
 
             // Create the base register element
@@ -115,10 +118,10 @@ module TSOS {
             baseElem.innerHTML = (this.baseReg !== -1) ? Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             newRow.appendChild(baseElem);
 
-             // Create the limit register element
-             let limitElem: HTMLTableCellElement = document.createElement('td');
-             limitElem.innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
-             newRow.appendChild(limitElem);
+            // Create the limit register element
+            let limitElem: HTMLTableCellElement = document.createElement('td');
+            limitElem.innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
+            newRow.appendChild(limitElem);
 
             // Create the PC element
             let pcElem: HTMLTableCellElement = document.createElement('td');
@@ -179,7 +182,7 @@ module TSOS {
             tableEntry.cells[2].innerHTML = this.location;
 
             // Update the segment and the base/limit registers
-            tableEntry.cells[3].innerHTML = (this.segment === -1) ? 'N/A' : this.segment.toString();
+            tableEntry.cells[3].innerHTML = (this.seg === -1 || this.seg === 3) ? 'N/A' : this.seg.toString();
             tableEntry.cells[4].innerHTML = (this.baseReg !== -1) ? Utils.getHexString(this.baseReg, 3, false) : 'N/A';
             tableEntry.cells[5].innerHTML = (this.limitReg !== -1) ? Utils.getHexString(this.limitReg, 3, false) : 'N/A';
 
@@ -212,6 +215,11 @@ module TSOS {
                 // Program is in memory
                 [this.baseReg, this.limitReg] = _BaseLimitPairs[this.seg];
                 this.location = 'MEMORY';
+                break;
+            case 3:
+                // Program is on the disk
+                [this.baseReg, this.limitReg] = [-1, -1];
+                this.location = 'DISK';
                 break;
             case -1:
                 // Program has been deallocated
