@@ -107,6 +107,7 @@ var _hardwareClockID: number = null;
 // Declare the variables for the scheduler and dispatcher
 var _Scheduler: TSOS.Scheduler = null;
 var _Dispatcher: TSOS.Dispatcher = null;
+var _Swapper: TSOS.Swapper = null;
 
 // The default quantum is 6 CPU cycles
 const DEFAULT_QUANTUM: number = 6;

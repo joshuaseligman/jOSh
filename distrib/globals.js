@@ -76,6 +76,7 @@ var _hardwareClockID = null;
 // Declare the variables for the scheduler and dispatcher
 var _Scheduler = null;
 var _Dispatcher = null;
+var _Swapper = null;
 // The default quantum is 6 CPU cycles
 const DEFAULT_QUANTUM = 6;
 // Create an enum to use for representing the scheduling algorithm choices

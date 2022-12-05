@@ -51,7 +51,7 @@ module TSOS {
                     }
                     
                     if (newProcess.segment === 3) {
-                        _Kernel.krnSwap(newProcess);
+                        _Swapper.swap(newProcess);
                     }
 
                     newProcess.status = 'Running';

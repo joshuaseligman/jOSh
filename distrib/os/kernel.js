@@ -29,6 +29,8 @@ var TSOS;
             // Initialize the scheduler and dispatcher
             _Scheduler = new TSOS.Scheduler();
             _Dispatcher = new TSOS.Dispatcher();
+            // Initialize the swapper
+            _Swapper = new TSOS.Swapper();
             // Load the Keyboard Device Driver
             this.krnTrace("Loading the keyboard device driver.");
             _krnKeyboardDriver = new TSOS.DeviceDriverKeyboard(); // Construct it.
@@ -352,47 +354,6 @@ var TSOS;
             if (putPrompt) {
                 _OsShell.putPrompt();
             }
-        }
-        krnSwap(pcb) {
-            // Check for an available segment in memory
-            if (!_MemoryManager.hasAvailableSegment()) {
-                // Roll out the most recently run process
-                this.krnRollOut(_PCBReadyQueue.getTail());
-            }
-            // Roll in the given process
-            this.krnRollIn(pcb);
-        }
-        krnRollOut(pcb) {
-            // Create the swap file for the process
-            if (pcb.status === 'Ready') {
-                let fileCreationStatus = this.createSwapFileForSegment(pcb.swapFile, pcb.segment);
-                if (fileCreationStatus !== 0) {
-                    // BSOD if any error
-                    this.krnTrapError('Error from creating a swap file.');
-                }
-                else {
-                    this.krnTrace(`Rolled out PID ${pcb.pid} to disk.`);
-                }
-            }
-            // Free it up in the pcb
-            _MemoryManager.deallocateProcess(pcb, pcb.status === 'Ready');
-            // Update the table
-            pcb.updateTableEntry();
-        }
-        krnRollIn(pcb) {
-            // Read the swap file from the disk
-            let swapRead = _krnDiskSystemDeviceDriver.readFileRaw(pcb.swapFile, 0x100);
-            _krnDiskSystemDeviceDriver.deleteFile(pcb.swapFile);
-            if (swapRead[0] === 0) {
-                let newSegment = _MemoryManager.allocateProgram(swapRead[1]);
-                pcb.segment = newSegment;
-                this.krnTrace(`Rolled in PID ${pcb.pid} to segment ${newSegment}.`);
-            }
-            else {
-                // Nothing bad should ever happen from reading, but do a BSOD in case
-                this.krnTrapError('Error from reading a swap file.');
-            }
-            pcb.updateTableEntry();
         }
         krnFormatDisk(quick) {
             // Get the files on the disk
