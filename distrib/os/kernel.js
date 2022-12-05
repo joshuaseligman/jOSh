@@ -509,15 +509,17 @@ var TSOS;
             if (fileList === null) {
                 _StdOut.putText('Cannot list files. The disk is not formatted.');
             }
-            else if (fileList.length === 0) {
-                _StdOut.putText('There are no files to list.');
-            }
             else {
-                console.log(fileList);
-                // Print out each file name
-                for (let i = 0; i < fileList.length; i++) {
-                    // List the file if hidden files is on or if the file doesn't start with a . or a ~
-                    if (showAll || !(fileList[i][0].charAt(0) === '.' || fileList[i][0].charAt(0) === '~')) {
+                if (!showAll) {
+                    // Only keep the non-hidden files
+                    fileList = fileList.filter((file) => file[0].charAt(0) !== '.' && file[0].charAt(0) !== '~');
+                }
+                if (fileList.length === 0) {
+                    _StdOut.putText('There are no files to list.');
+                }
+                else {
+                    // Print out each file name
+                    for (let i = 0; i < fileList.length; i++) {
                         // Print the file name
                         _StdOut.putText('  ' + fileList[i][0]);
                         // Only print the additional metadata if the -a flag was used
