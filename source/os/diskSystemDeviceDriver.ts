@@ -538,6 +538,7 @@ module TSOS {
         // 0: Rename successful
         // 1: Disk is not formatted yet
         // 2: File not found
+        // 3: New file name already exists
         public renameFile(oldFileName: string, newFileName: string): number {
             let out: number = 0;
 
@@ -546,9 +547,14 @@ module TSOS {
                 out = 1
             } else {
                 let directoryTsb: string = this.getDirectoryBlockForFile(oldFileName);
+                let newDirectoryTsb: string = this.getDirectoryBlockForFile(newFileName);
+
                 if (directoryTsb === '') {
                     // The file to rename doesn't exist
                     out = 2;
+                } else if (newDirectoryTsb !== '') {
+                    // We are using a single level file system, so no dupes for names allowed
+                    out = 3;
                 } else {
                     let newNameHex: string = '';
                     for (let i: number = 0; i < newFileName.length; i++) {

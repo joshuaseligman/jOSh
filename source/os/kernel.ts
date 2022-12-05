@@ -664,6 +664,9 @@ module TSOS {
                 case 2:
                     _StdOut.putText('Failed to rename the file. ' + oldFileName + ' does not exist.');
                     break;
+                case 3:
+                    _StdOut.putText('Failed to rename the file. ' + newFileName + ' already exists.');
+                    break;
             }
 
             // Traces

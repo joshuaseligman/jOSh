@@ -499,6 +499,7 @@ var TSOS;
         // 0: Rename successful
         // 1: Disk is not formatted yet
         // 2: File not found
+        // 3: New file name already exists
         renameFile(oldFileName, newFileName) {
             let out = 0;
             if (!this.isFormatted) {
@@ -507,9 +508,14 @@ var TSOS;
             }
             else {
                 let directoryTsb = this.getDirectoryBlockForFile(oldFileName);
+                let newDirectoryTsb = this.getDirectoryBlockForFile(newFileName);
                 if (directoryTsb === '') {
                     // The file to rename doesn't exist
                     out = 2;
+                }
+                else if (newDirectoryTsb !== '') {
+                    // We are using a single level file system, so no dupes for names allowed
+                    out = 3;
                 }
                 else {
                     let newNameHex = '';
