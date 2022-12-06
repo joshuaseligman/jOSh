@@ -19,6 +19,12 @@ module TSOS {
         public branchTaken: boolean = false;
         public preBranchAddr: number = 0;
 
+        // Defines where we are in the overall pipeline
+        public pipelineState: PipelineState;
+
+        // The operands for the current instruction being executed
+        private operands: number[];
+
         constructor(public PC: number = 0,
                     public IR: number = 0,
                     public Acc: number = 0,
@@ -37,33 +43,59 @@ module TSOS {
             this.Yreg = 0;
             this.Zflag = 0;
             this.isExecuting = false;
+
+            // Fetch is first state
+            this.pipelineState = PipelineState.FETCH;
+
+            // Start with nothing
+            this.operands = [];
         }
 
         public cycle(): void {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
-
-            this.fetch();
-            let operands: number[] = this.decode();
-
-            // Make sure we have a valid instruction before trying to execute
-            if (operands !== undefined) {
-                this.execute(operands);
+            
+            switch (this.pipelineState) {
+                case PipelineState.FETCH:
+                    this.fetch();
+                    break;
+                case PipelineState.DECODE:
+                    this.decode();
+                    break;
+                case PipelineState.EXECUTE:
+                    this.execute();
+                    break;
+                case PipelineState.WRITEBACK:
+                    this.writeback();
+                    break;
             }
+
+            // this.fetch();
+            // let operands: number[] = this.decode();
+
+            // // Make sure we have a valid instruction before trying to execute
+            // if (operands !== undefined) {
+            //     this.execute(operands);
+            // }
         }
 
         // Function for fetching an instruction
         private fetch(): void {
+            _Kernel.krnTrace('CPU fetch');
             // Get the instruction from memory and increment the PC
             _MemoryAccessor.setMar(this.PC);
             _MemoryAccessor.callRead();
             this.IR = _MemoryAccessor.getMdr();
             this.PC++;
+
+            this.pipelineState = PipelineState.DECODE;
         }
 
         // Function for decoding the instruction
-        private decode(): number[] {
+        private decode() {
+            _Kernel.krnTrace('CPU decode');
+
             switch (this.IR) {
             // 1 operand
             case 0xA9: // LDA constant
@@ -77,7 +109,8 @@ module TSOS {
                 // Increment the PC
                 this.PC++;
                 // Return the operand
-                return [op];
+                this.operands = [op];
+                break;
             
             // 2 operands
             case 0xAD: // LDA memory
@@ -99,36 +132,43 @@ module TSOS {
                 this.PC++;
 
                 // Return the operands
-                return [op1, op2];
+                this.operands = [op1, op2];
+                break;
             
             // 0 operands
             case 0xEA: // NOP
             case 0x00: // BRK
             case 0xFF: // SYS
-                return [];
+                this.operands = [];
+                break;
             
             // Invalid opcode
             default:
                 // Add the interrupt to kill the process and return nothing
                 _KernelInterruptQueue.enqueue(new Interrupt(INVALID_OPCODE_IRQ, [this.IR]));
-                return undefined;
+                this.operands = undefined;
+                break;
             }
+
+            this.pipelineState = PipelineState.EXECUTE;
         }
 
         // Function for executing the instruction
-        private execute(operands: number[]): void {
+        private execute(): void {
+            _Kernel.krnTrace('CPU execute');
+
             switch (this.IR) {
             case 0xA9: // LDA constant
                 // Update the accumulator
-                this.Acc = operands[0];
+                this.Acc = this.operands[0];
                 break;
             case 0xAD: // LDA memory
                 // Convert the operands from little endian format to a plain address
                 // Since each operand is 8 bits, we can left shift the first one and do a bitwise OR
                 // te combine them into one whole address
                 // let readAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
                 
                 // Set the accumulator to whatever is in memory at the given address
@@ -138,8 +178,8 @@ module TSOS {
             case 0x8D: // STA
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let writeAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.setMdr(this.Acc);
 
                 // Write the accumulator to memory
@@ -149,8 +189,8 @@ module TSOS {
             case 0x6D: // ADC
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let addAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
 
                 // Get the value to add to the accumulator
@@ -162,14 +202,14 @@ module TSOS {
 
             case 0xA2: // LDX constant
                 // Put the operand into the x register
-                this.Xreg = operands[0];
+                this.Xreg = this.operands[0];
                 break;
 
             case 0xAE: // LDX memory
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let xAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
 
                 // Set the x register to the value in memory
@@ -178,14 +218,14 @@ module TSOS {
 
             case 0xA0: // LDY constant
                 // Put the operand into the y register
-                this.Yreg = operands[0];
+                this.Yreg = this.operands[0];
                 break;
 
             case 0xAC: // LDY memory
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let yAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
 
                 // Set the x register to the value in memory
@@ -204,8 +244,8 @@ module TSOS {
             case 0xEC: // CPX
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let compAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
 
                 // Get the value in memory and negate it
@@ -225,7 +265,7 @@ module TSOS {
                     this.branchTaken = true;
                     
                     // Add the operand to the program counter
-                    this.PC = this.add(this.PC, operands[0]);
+                    this.PC = this.add(this.PC, this.operands[0]);
                 } else {
                     this.branchTaken = false;
                 }
@@ -234,8 +274,8 @@ module TSOS {
             case 0xEE: // INC
                 // Convert the operands from little endian format to a plain address as described in 0xAD
                 // let incAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(operands[0]);
-                _MemoryAccessor.setHighOrderByte(operands[1]);
+                _MemoryAccessor.setLowOrderByte(this.operands[0]);
+                _MemoryAccessor.setHighOrderByte(this.operands[1]);
                 _MemoryAccessor.callRead();
 
                 // Get the value from memory and add 1 to it
@@ -264,6 +304,14 @@ module TSOS {
                 }
                 break;
             }
+
+            this.pipelineState = PipelineState.WRITEBACK;
+        }
+
+        private writeback(): void {
+            _Kernel.krnTrace('CPU writeback');
+
+            this.pipelineState = PipelineState.INTERRUPTCHECK;
         }
 
         // Function to update the table on the website
