@@ -208,7 +208,7 @@ var TSOS;
                     let runningProg = _PCBReadyQueue.getHead();
                     // Get the first character from memory
                     // Will return -1 if there is an error and will check for error bounds
-                    let charVal = _MemoryAccessor.callRead(params[0]);
+                    let charVal = _MemoryAccessor.readImmediate(params[0]);
                     // Increment variable to go untir 0x00 or error
                     let i = 0;
                     while (charVal !== -1 && charVal !== 0) {
@@ -219,7 +219,7 @@ var TSOS;
                         runningProg.output += printedChar;
                         // Increment i and get the next character
                         i++;
-                        charVal = _MemoryAccessor.callRead(params[0] + i);
+                        charVal = _MemoryAccessor.readImmediate(params[0] + i);
                     }
                     break;
                 case CALL_DISPATCHER_IRQ:

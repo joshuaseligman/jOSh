@@ -4,8 +4,27 @@ var TSOS;
     class Memory {
         constructor() {
             // We are creating an array of size 3 * 0x100
-            this._memArr = new Uint8Array(0x300);
+            this._memArr = new Uint8Array(Memory.ADDRESSABLE_SPACE);
+            // Initialize the MAR and MDR to be 0
+            this.mar = 0x0;
+            this.mdr = 0x0;
             this.initializeMemoryTable();
+        }
+        read() {
+            // Get the value from the memory array
+            this.mdr = this._memArr[this.mar];
+        }
+        write() {
+            // Set the value in the memory array appropriately
+            this._memArr[this.mar] = this.mdr;
+        }
+        readImmediate(addr) {
+            // Returns the value stored in memory at that location
+            return this._memArr[addr];
+        }
+        writeImmediate(addr, val) {
+            // Sets the location in memory to be the value
+            this._memArr[addr] = val;
         }
         // Memory table is initially empty, so we need to fill it with the appropriate elements
         initializeMemoryTable() {
@@ -100,15 +119,9 @@ var TSOS;
                 }
             }
         }
-        write(addr, val) {
-            // Sets the location in memory to be the value
-            this._memArr[addr] = val;
-        }
-        read(addr) {
-            // Returns the value stored in memory at that location
-            return this._memArr[addr];
-        }
     }
+    // The amount of space that is being addressed
+    Memory.ADDRESSABLE_SPACE = 0x300;
     TSOS.Memory = Memory;
 })(TSOS || (TSOS = {}));
 //# sourceMappingURL=memory.js.map

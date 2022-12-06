@@ -48,7 +48,9 @@ var TSOS;
         // Function for fetching an instruction
         fetch() {
             // Get the instruction from memory and increment the PC
-            this.IR = _MemoryAccessor.callRead(this.PC);
+            _MemoryAccessor.setMar(this.PC);
+            _MemoryAccessor.callRead();
+            this.IR = _MemoryAccessor.getMdr();
             this.PC++;
         }
         // Function for decoding the instruction
@@ -60,7 +62,9 @@ var TSOS;
                 case 0xA0: // LDY constant
                 case 0xD0: // BNE
                     // Get the operand
-                    let op = _MemoryAccessor.callRead(this.PC);
+                    _MemoryAccessor.setMar(this.PC);
+                    _MemoryAccessor.callRead();
+                    let op = _MemoryAccessor.getMdr();
                     // Increment the PC
                     this.PC++;
                     // Return the operand
@@ -74,9 +78,13 @@ var TSOS;
                 case 0xEC: // CPX
                 case 0xEE: // INC
                     // Get the operands from memory
-                    let op1 = _MemoryAccessor.callRead(this.PC);
+                    _MemoryAccessor.setMar(this.PC);
+                    _MemoryAccessor.callRead();
+                    let op1 = _MemoryAccessor.getMdr();
                     this.PC++;
-                    let op2 = _MemoryAccessor.callRead(this.PC);
+                    _MemoryAccessor.setMar(this.PC);
+                    _MemoryAccessor.callRead();
+                    let op2 = _MemoryAccessor.getMdr();
                     this.PC++;
                     // Return the operands
                     return [op1, op2];
@@ -103,21 +111,30 @@ var TSOS;
                     // Convert the operands from little endian format to a plain address
                     // Since each operand is 8 bits, we can left shift the first one and do a bitwise OR
                     // te combine them into one whole address
-                    let readAddr = operands[1] << 8 | operands[0];
+                    // let readAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Set the accumulator to whatever is in memory at the given address
-                    this.Acc = _MemoryAccessor.callRead(readAddr);
+                    this.Acc = _MemoryAccessor.getMdr();
                     break;
                 case 0x8D: // STA
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let writeAddr = operands[1] << 8 | operands[0];
+                    // let writeAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.setMdr(this.Acc);
                     // Write the accumulator to memory
-                    _MemoryAccessor.callWrite(writeAddr, this.Acc);
+                    _MemoryAccessor.callWrite();
                     break;
                 case 0x6D: // ADC
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let addAddr = operands[1] << 8 | operands[0];
+                    // let addAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Get the value to add to the accumulator
-                    let addVal = _MemoryAccessor.callRead(addAddr);
+                    let addVal = _MemoryAccessor.getMdr();
                     // Add the numbers together
                     this.Acc = this.add(this.Acc, addVal);
                     break;
@@ -127,9 +144,12 @@ var TSOS;
                     break;
                 case 0xAE: // LDX memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let xAddr = operands[1] << 8 | operands[0];
+                    // let xAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Set the x register to the value in memory
-                    this.Xreg = _MemoryAccessor.callRead(xAddr);
+                    this.Xreg = _MemoryAccessor.getMdr();
                     break;
                 case 0xA0: // LDY constant
                     // Put the operand into the y register
@@ -137,9 +157,12 @@ var TSOS;
                     break;
                 case 0xAC: // LDY memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let yAddr = operands[1] << 8 | operands[0];
+                    // let yAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Set the x register to the value in memory
-                    this.Yreg = _MemoryAccessor.callRead(yAddr);
+                    this.Yreg = _MemoryAccessor.getMdr();
                     break;
                 case 0xEA: // NOP
                     // Do nothing for a no operation
@@ -150,9 +173,12 @@ var TSOS;
                     break;
                 case 0xEC: // CPX
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let compAddr = operands[1] << 8 | operands[0];
+                    // let compAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Get the value in memory and negate it
-                    let compVal = _MemoryAccessor.callRead(compAddr);
+                    let compVal = _MemoryAccessor.getMdr();
                     let compValNeg = this.negate(compVal);
                     // Run the values through the adder
                     // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
@@ -173,12 +199,16 @@ var TSOS;
                     break;
                 case 0xEE: // INC
                     // Convert the operands from little endian format to a plain address as described in 0xAD
-                    let incAddr = operands[1] << 8 | operands[0];
+                    // let incAddr: number = operands[1] << 8 | operands[0];
+                    _MemoryAccessor.setLowOrderByte(operands[0]);
+                    _MemoryAccessor.setHighOrderByte(operands[1]);
+                    _MemoryAccessor.callRead();
                     // Get the value from memory and add 1 to it
-                    let origVal = _MemoryAccessor.callRead(incAddr);
+                    let origVal = _MemoryAccessor.getMdr();
                     let newVal = this.add(origVal, 1);
+                    _MemoryAccessor.setMdr(newVal);
                     // Write the new value back to memory
-                    _MemoryAccessor.callWrite(incAddr, newVal);
+                    _MemoryAccessor.callWrite();
                     break;
                 case 0xFF: // SYS
                     if (this.Xreg === 1) {

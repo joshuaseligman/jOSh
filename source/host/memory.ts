@@ -5,11 +5,44 @@ module TSOS {
         // The 6502 has a word size of 1 byte, so each element should be 8 bits
         private _memArr: Uint8Array;
 
+        // The memory access register
+        public mar: number;
+
+        // The memory data register
+        public mdr: number;
+
+        // The amount of space that is being addressed
+        public static ADDRESSABLE_SPACE: number = 0x300;
+
         constructor() {
             // We are creating an array of size 3 * 0x100
-            this._memArr = new Uint8Array(0x300);
+            this._memArr = new Uint8Array(Memory.ADDRESSABLE_SPACE);
+
+            // Initialize the MAR and MDR to be 0
+            this.mar = 0x0;
+            this.mdr = 0x0;
 
             this.initializeMemoryTable();
+        }
+
+        public read(): void {
+            // Get the value from the memory array
+            this.mdr = this._memArr[this.mar];
+        }
+
+        public write(): void {
+            // Set the value in the memory array appropriately
+            this._memArr[this.mar] = this.mdr;
+        }
+
+        public readImmediate(addr: number): number {
+            // Returns the value stored in memory at that location
+            return this._memArr[addr];
+        }
+
+        public writeImmediate(addr: number, val: number): void {
+            // Sets the location in memory to be the value
+            this._memArr[addr] = val;
         }
 
         // Memory table is initially empty, so we need to fill it with the appropriate elements
@@ -116,16 +149,6 @@ module TSOS {
                     document.querySelector(`#mem${i}`).classList.add('operand');
                 }
             }
-        }
-
-        public write(addr: number, val: number): void {
-            // Sets the location in memory to be the value
-            this._memArr[addr] = val;
-        }
-
-        public read(addr: number): number {
-            // Returns the value stored in memory at that location
-            return this._memArr[addr];
         }
     }
 }
