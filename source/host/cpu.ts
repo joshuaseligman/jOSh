@@ -104,25 +104,21 @@ module TSOS {
 
         // Function for fetching an instruction
         private fetch(): void {            
+            _Kernel.krnTrace('CPU fetch ' + this._fetchState);
+
             // Get the instruction from memory and increment the PC
             switch (this._fetchState) {
                 case FetchState.FETCH0:
-                    _Kernel.krnTrace('CPU fetch 0');
-
                     // Transfer the PC to the MAR
                     _MemoryAccessor.setMar(this.PC);
                     this._fetchState = FetchState.FETCH1;
                     break;
                 case FetchState.FETCH1:
-                    _Kernel.krnTrace('CPU fetch 1');
-
                     // Call read and wait for the instruction
                     _MemoryAccessor.callRead();
                     this._fetchState = FetchState.FETCH2;
                     break;
                 case FetchState.FETCH2:
-                    _Kernel.krnTrace('CPU fetch 2');
-
                     // if (_MemoryAccessor.isReady()) {
                         // Set the instruction register
                         this.IR = _MemoryAccessor.getMdr();
@@ -165,7 +161,7 @@ module TSOS {
 
         // Function for decoding the instruction
         private decode() {
-            _Kernel.krnTrace('CPU decode');
+            _Kernel.krnTrace('CPU decode ' + this._decodeState);
 
             switch (this.IR) {
             // One operand
@@ -251,7 +247,7 @@ module TSOS {
 
         // Function for executing the instruction
         private execute(): void {
-            _Kernel.krnTrace('CPU execute');
+            _Kernel.krnTrace('CPU execute ' + this._executeState);
 
             switch (this.IR) {
             case 0xA9: // LDA constant
@@ -576,7 +572,7 @@ module TSOS {
         }
 
         private writeback(): void {
-            _Kernel.krnTrace('CPU writeback');
+            _Kernel.krnTrace('CPU writeback ' + this._writebackState);
 
             // Rewrite the value
             if (this._writebackState === WritebackState.WRITEBACK0) {
@@ -592,16 +588,16 @@ module TSOS {
         public updateCpuTable(): void {
             switch (this.pipelineState) {
                 case PipelineState.FETCH:
-                    document.querySelector('#cpuPipelineState').innerHTML = 'Fetch';
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Fetch ' + this._fetchState;
                     break;
                 case PipelineState.DECODE:
-                    document.querySelector('#cpuPipelineState').innerHTML = 'Decode';
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Decode ' + this._decodeState;
                     break;
                 case PipelineState.EXECUTE:
-                    document.querySelector('#cpuPipelineState').innerHTML = 'Execute';
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Execute ' + this._executeState;
                     break;
                 case PipelineState.WRITEBACK:
-                    document.querySelector('#cpuPipelineState').innerHTML = 'Write-back';
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Writeback ' + this._writebackState;
                     break;
                 case PipelineState.INTERRUPTCHECK:
                     document.querySelector('#cpuPipelineState').innerHTML = 'Interrupt Check';
