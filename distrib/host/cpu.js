@@ -85,41 +85,41 @@ var TSOS;
                     this._fetchState = TSOS.FetchState.FETCH2;
                     break;
                 case TSOS.FetchState.FETCH2:
-                    // if (_MemoryAccessor.isReady()) {
-                    // Set the instruction register
-                    this.IR = _MemoryAccessor.getMdr();
-                    // Increment program counter and move to Decode phase
-                    this.PC += 0x0001;
-                    // Switch handle special instructions that do no need to decode
-                    switch (this.IR) {
-                        // No operands
-                        case 0x8A: // TXA
-                        case 0x98: // TYA
-                        case 0xAA: // TAX
-                        case 0xA8: // TAY
-                        case 0x00: // BRK
-                            // Go straight to the execute phase
-                            this.pipelineState = TSOS.PipelineState.EXECUTE;
-                            this._executeState = TSOS.ExecuteState.EXECUTE0;
-                            break;
-                        case 0xEA: // NOP
-                            // Go straight to interrupt check because no operation
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            break;
-                        case 0xFF: // SYS (xReg = 1 or xReg = 2)
-                            if (this.Xreg === 0x01 || this.Xreg == 0x02) {
-                                // Immediately execute
+                    if (_MemoryAccessor.isReady()) {
+                        // Set the instruction register
+                        this.IR = _MemoryAccessor.getMdr();
+                        // Increment program counter and move to Decode phase
+                        this.PC += 0x0001;
+                        // Switch handle special instructions that do no need to decode
+                        switch (this.IR) {
+                            // No operands
+                            case 0x8A: // TXA
+                            case 0x98: // TYA
+                            case 0xAA: // TAX
+                            case 0xA8: // TAY
+                            case 0x00: // BRK
+                                // Go straight to the execute phase
                                 this.pipelineState = TSOS.PipelineState.EXECUTE;
                                 this._executeState = TSOS.ExecuteState.EXECUTE0;
                                 break;
-                            } // xReg = 3 will continue to the default
-                        default: // All other instructions will perform a decode
-                            this.pipelineState = TSOS.PipelineState.DECODE;
-                            this._decodeState = TSOS.DecodeState.DECODE0;
-                            this._hasSecondOperand = false;
-                            break;
+                            case 0xEA: // NOP
+                                // Go straight to interrupt check because no operation
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                                break;
+                            case 0xFF: // SYS (xReg = 1 or xReg = 2)
+                                if (this.Xreg === 0x01 || this.Xreg == 0x02) {
+                                    // Immediately execute
+                                    this.pipelineState = TSOS.PipelineState.EXECUTE;
+                                    this._executeState = TSOS.ExecuteState.EXECUTE0;
+                                    break;
+                                } // xReg = 3 will continue to the default
+                            default: // All other instructions will perform a decode
+                                this.pipelineState = TSOS.PipelineState.DECODE;
+                                this._decodeState = TSOS.DecodeState.DECODE0;
+                                this._hasSecondOperand = false;
+                                break;
+                        }
                     }
-                    // }
                     break;
             }
         }
@@ -144,12 +144,12 @@ var TSOS;
                             this._decodeState = TSOS.DecodeState.DECODE2;
                             break;
                         case TSOS.DecodeState.DECODE2:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Move to the execute phase
-                            this.PC += 0x0001;
-                            this.pipelineState = TSOS.PipelineState.EXECUTE;
-                            this._executeState = TSOS.ExecuteState.EXECUTE0;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Move to the execute phase
+                                this.PC += 0x0001;
+                                this.pipelineState = TSOS.PipelineState.EXECUTE;
+                                this._executeState = TSOS.ExecuteState.EXECUTE0;
+                            }
                             break;
                     }
                     break;
@@ -179,22 +179,22 @@ var TSOS;
                             }
                             break;
                         case TSOS.DecodeState.DECODE2:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Set the first operand and repeat for the second operand
-                            this._operand0 = _MemoryAccessor.getMdr();
-                            this.PC += 0x0001;
-                            this._decodeState = TSOS.DecodeState.DECODE0;
-                            this._hasSecondOperand = true;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Set the first operand and repeat for the second operand
+                                this._operand0 = _MemoryAccessor.getMdr();
+                                this.PC += 0x0001;
+                                this._decodeState = TSOS.DecodeState.DECODE0;
+                                this._hasSecondOperand = true;
+                            }
                             break;
                         case TSOS.DecodeState.DECODE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Set the second operand and move to execute
-                            this._operand1 = _MemoryAccessor.getMdr();
-                            this.PC += 0x0001;
-                            this.pipelineState = TSOS.PipelineState.EXECUTE;
-                            this._executeState = TSOS.ExecuteState.EXECUTE0;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Set the second operand and move to execute
+                                this._operand1 = _MemoryAccessor.getMdr();
+                                this.PC += 0x0001;
+                                this.pipelineState = TSOS.PipelineState.EXECUTE;
+                                this._executeState = TSOS.ExecuteState.EXECUTE0;
+                            }
                             break;
                     }
                     break;
@@ -233,12 +233,12 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE3;
                             break;
                         case TSOS.ExecuteState.EXECUTE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Place the value in the accumulator
-                            this.Acc = _MemoryAccessor.getMdr();
-                            // Move to the interrupt check
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Place the value in the accumulator
+                                this.Acc = _MemoryAccessor.getMdr();
+                                // Move to the interrupt check
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                            }
                             break;
                     }
                     break;
@@ -294,12 +294,12 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE3;
                             break;
                         case TSOS.ExecuteState.EXECUTE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Call add
-                            this.Acc = this.alu.addWithCarry(this.Acc, _MemoryAccessor.getMdr());
-                            // Move to the interrupt check
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Call add
+                                this.Acc = this.alu.addWithCarry(this.Acc, _MemoryAccessor.getMdr());
+                                // Move to the interrupt check
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                            }
                             break;
                     }
                     break;
@@ -325,12 +325,12 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE3;
                             break;
                         case TSOS.ExecuteState.EXECUTE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Place the value in the X reg
-                            this.Xreg = _MemoryAccessor.getMdr();
-                            // Move to the interrupt check
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Place the value in the X reg
+                                this.Xreg = _MemoryAccessor.getMdr();
+                                // Move to the interrupt check
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                            }
                             break;
                     }
                     break;
@@ -362,12 +362,12 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE3;
                             break;
                         case TSOS.ExecuteState.EXECUTE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Place the value in the Y reg
-                            this.Yreg = _MemoryAccessor.getMdr();
-                            // Move to the interrupt check
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Place the value in the Y reg
+                                this.Yreg = _MemoryAccessor.getMdr();
+                                // Move to the interrupt check
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                            }
                             break;
                     }
                     break;
@@ -403,12 +403,12 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE4;
                             break;
                         case TSOS.ExecuteState.EXECUTE4:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Run the negated value in X and the value in memory through the adder to set the zFlag if needed
-                            this.alu.addWithCarry(this.alu.getLastOutput(), _MemoryAccessor.getMdr());
-                            // Go to the interrupt check
-                            this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Run the negated value in X and the value in memory through the adder to set the zFlag if needed
+                                this.alu.addWithCarry(this.alu.getLastOutput(), _MemoryAccessor.getMdr());
+                                // Go to the interrupt check
+                                this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
+                            }
                             break;
                     }
                     break;
@@ -458,11 +458,11 @@ var TSOS;
                             this._executeState = TSOS.ExecuteState.EXECUTE3;
                             break;
                         case TSOS.ExecuteState.EXECUTE3:
-                            // if (_MemoryAccessor.isReady()) {
-                            // Transfer MDR to ACC
-                            this.Acc = _MemoryAccessor.getMdr();
-                            this._executeState = TSOS.ExecuteState.EXECUTE4;
-                            // }
+                            if (_MemoryAccessor.isReady()) {
+                                // Transfer MDR to ACC
+                                this.Acc = _MemoryAccessor.getMdr();
+                                this._executeState = TSOS.ExecuteState.EXECUTE4;
+                            }
                             break;
                         case TSOS.ExecuteState.EXECUTE4:
                             /// Increment the value

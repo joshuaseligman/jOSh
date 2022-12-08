@@ -14,6 +14,16 @@ module TSOS {
         // The amount of space that is being addressed
         public static ADDRESSABLE_SPACE: number = 0x300;
 
+         /**
+         * Represents the state of memory
+         */
+        public memoryState: MemoryState;
+
+        /**
+         * Variable to determine if a read was requested
+         */
+        private _readCalled: boolean;
+
         constructor() {
             // We are creating an array of size 3 * 0x100
             this._memArr = new Uint8Array(Memory.ADDRESSABLE_SPACE);
@@ -22,12 +32,33 @@ module TSOS {
             this.mar = 0x0;
             this.mdr = 0x0;
 
+            // The state for the delay for getting the memory
+            this.memoryState = MemoryState.READY;
+            this._readCalled = false;
+
             this.initializeMemoryTable();
+        }
+
+        // Called every clock tick
+        public pulse(): void {
+            if (this._readCalled) {
+                this.memoryState++;
+                if (this.memoryState === MemoryState.WAIT2) {
+                    this.read();
+                }
+            }
+            
+        }
+
+        public initiateRead(): void {
+            this._readCalled = true;
         }
 
         public read(): void {
             // Get the value from the memory array
             this.mdr = this._memArr[this.mar];
+            this.memoryState = MemoryState.READY;
+            this._readCalled = false;
         }
 
         public write(): void {

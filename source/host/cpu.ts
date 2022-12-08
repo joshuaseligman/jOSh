@@ -118,7 +118,7 @@ module TSOS {
                     this._fetchState = FetchState.FETCH2;
                     break;
                 case FetchState.FETCH2:
-                    // if (_MemoryAccessor.isReady()) {
+                    if (_MemoryAccessor.isReady()) {
                         // Set the instruction register
                         this.IR = _MemoryAccessor.getMdr();
                         // Increment program counter and move to Decode phase
@@ -153,7 +153,7 @@ module TSOS {
                                 this._hasSecondOperand = false;
                                 break;
                         } 
-                    // }
+                    }
                     break;
             }
         }
@@ -180,12 +180,12 @@ module TSOS {
                         this._decodeState = DecodeState.DECODE2;
                         break;
                     case DecodeState.DECODE2:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Move to the execute phase
                             this.PC += 0x0001;
                             this.pipelineState = PipelineState.EXECUTE;
                             this._executeState = ExecuteState.EXECUTE0;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -214,22 +214,22 @@ module TSOS {
                         }
                         break;
                     case DecodeState.DECODE2:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Set the first operand and repeat for the second operand
                             this._operand0 = _MemoryAccessor.getMdr();
                             this.PC += 0x0001;
                             this._decodeState = DecodeState.DECODE0;
                             this._hasSecondOperand = true;
-                        // }
+                        }
                         break;
                     case DecodeState.DECODE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Set the second operand and move to execute
                             this._operand1 = _MemoryAccessor.getMdr();
                             this.PC += 0x0001;
                             this.pipelineState = PipelineState.EXECUTE;
                             this._executeState = ExecuteState.EXECUTE0;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -271,12 +271,12 @@ module TSOS {
                         this._executeState = ExecuteState.EXECUTE3;
                         break;
                     case ExecuteState.EXECUTE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Place the value in the accumulator
                             this.Acc = _MemoryAccessor.getMdr();
                             // Move to the interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -332,12 +332,12 @@ module TSOS {
                             this._executeState = ExecuteState.EXECUTE3;
                         break;
                     case ExecuteState.EXECUTE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Call add
                             this.Acc = this.alu.addWithCarry(this.Acc, _MemoryAccessor.getMdr());
                             // Move to the interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -363,12 +363,12 @@ module TSOS {
                         this._executeState = ExecuteState.EXECUTE3;
                         break;
                     case ExecuteState.EXECUTE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Place the value in the X reg
                             this.Xreg = _MemoryAccessor.getMdr();
                             // Move to the interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -400,12 +400,12 @@ module TSOS {
                         this._executeState = ExecuteState.EXECUTE3;
                         break;
                     case ExecuteState.EXECUTE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Place the value in the Y reg
                             this.Yreg = _MemoryAccessor.getMdr();
                             // Move to the interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -441,12 +441,12 @@ module TSOS {
                         this._executeState = ExecuteState.EXECUTE4;
                         break;
                     case ExecuteState.EXECUTE4:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Run the negated value in X and the value in memory through the adder to set the zFlag if needed
                             this.alu.addWithCarry(this.alu.getLastOutput(), _MemoryAccessor.getMdr());
                             // Go to the interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
-                        // }
+                        }
                         break;
                 }
                 break;
@@ -496,11 +496,11 @@ module TSOS {
                         this._executeState = ExecuteState.EXECUTE3;
                         break;
                     case ExecuteState.EXECUTE3:
-                        // if (_MemoryAccessor.isReady()) {
+                        if (_MemoryAccessor.isReady()) {
                             // Transfer MDR to ACC
                             this.Acc = _MemoryAccessor.getMdr();
                             this._executeState = ExecuteState.EXECUTE4;
-                        // }
+                        }
                         break;
                     case ExecuteState.EXECUTE4:
                         /// Increment the value

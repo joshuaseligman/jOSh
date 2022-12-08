@@ -35,6 +35,7 @@ module TSOS {
             // Update the CPU table in real time
             _CPU.updateCpuTable();
 
+            _Memory.pulse();
             // Update the memory table in real time
             _Memory.updateMemoryTable();
         }

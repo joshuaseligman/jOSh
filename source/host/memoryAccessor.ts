@@ -16,13 +16,21 @@ module TSOS {
             return virtualAddr + baseAddr;
         }
 
+        /**
+         * Checks to see if the memory is ready
+         * @returns The ready state of memory
+         */
+        public isReady(): boolean {
+            return _Memory.memoryState === MemoryState.READY;
+        }
+
         public callRead(): void {
             if (this.getMar() >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
                 _KernelInterruptQueue.enqueue(new Interrupt(MEM_EXCEPTION_IRQ, [this.getMar(), _PCBReadyQueue.getHead().segment]));
             } else {
                 // Requested address is in bounds
-                _Memory.read();
+                _Memory.initiateRead();
             }
         }
 

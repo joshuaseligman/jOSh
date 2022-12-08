@@ -14,6 +14,13 @@ var TSOS;
         getPhysicalAddress(virtualAddr, baseAddr) {
             return virtualAddr + baseAddr;
         }
+        /**
+         * Checks to see if the memory is ready
+         * @returns The ready state of memory
+         */
+        isReady() {
+            return _Memory.memoryState === TSOS.MemoryState.READY;
+        }
         callRead() {
             if (this.getMar() >= _PCBReadyQueue.getHead().limitReg) {
                 // Throw an error when trying to access memory outside of the range of the section
@@ -21,7 +28,7 @@ var TSOS;
             }
             else {
                 // Requested address is in bounds
-                _Memory.read();
+                _Memory.initiateRead();
             }
         }
         callWrite() {

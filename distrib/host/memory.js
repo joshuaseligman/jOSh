@@ -8,11 +8,28 @@ var TSOS;
             // Initialize the MAR and MDR to be 0
             this.mar = 0x0;
             this.mdr = 0x0;
+            // The state for the delay for getting the memory
+            this.memoryState = TSOS.MemoryState.READY;
+            this._readCalled = false;
             this.initializeMemoryTable();
+        }
+        // Called every clock tick
+        pulse() {
+            if (this._readCalled) {
+                this.memoryState++;
+                if (this.memoryState === TSOS.MemoryState.WAIT2) {
+                    this.read();
+                }
+            }
+        }
+        initiateRead() {
+            this._readCalled = true;
         }
         read() {
             // Get the value from the memory array
             this.mdr = this._memArr[this.mar];
+            this.memoryState = TSOS.MemoryState.READY;
+            this._readCalled = false;
         }
         write() {
             // Set the value in the memory array appropriately
