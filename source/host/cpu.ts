@@ -316,6 +316,24 @@ module TSOS {
 
         // Function to update the table on the website
         public updateCpuTable(): void {
+            switch (this.pipelineState) {
+                case PipelineState.FETCH:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Fetch';
+                    break;
+                case PipelineState.DECODE:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Decode';
+                    break;
+                case PipelineState.EXECUTE:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Execute';
+                    break;
+                case PipelineState.WRITEBACK:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Write-back';
+                    break;
+                case PipelineState.INTERRUPTCHECK:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Interrupt Check';
+                    break;
+            }
+
             document.querySelector('#cpuPC').innerHTML = Utils.getHexString(this.PC, 2, false);
             document.querySelector('#cpuIR').innerHTML = Utils.getHexString(this.IR, 2, false);
             document.querySelector('#cpuAcc').innerHTML = Utils.getHexString(this.Acc, 2, false);

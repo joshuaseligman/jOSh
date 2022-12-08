@@ -264,6 +264,23 @@ var TSOS;
         }
         // Function to update the table on the website
         updateCpuTable() {
+            switch (this.pipelineState) {
+                case TSOS.PipelineState.FETCH:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Fetch';
+                    break;
+                case TSOS.PipelineState.DECODE:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Decode';
+                    break;
+                case TSOS.PipelineState.EXECUTE:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Execute';
+                    break;
+                case TSOS.PipelineState.WRITEBACK:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Write-back';
+                    break;
+                case TSOS.PipelineState.INTERRUPTCHECK:
+                    document.querySelector('#cpuPipelineState').innerHTML = 'Interrupt Check';
+                    break;
+            }
             document.querySelector('#cpuPC').innerHTML = TSOS.Utils.getHexString(this.PC, 2, false);
             document.querySelector('#cpuIR').innerHTML = TSOS.Utils.getHexString(this.IR, 2, false);
             document.querySelector('#cpuAcc').innerHTML = TSOS.Utils.getHexString(this.Acc, 2, false);
