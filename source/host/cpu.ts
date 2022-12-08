@@ -454,12 +454,18 @@ module TSOS {
                 switch (this._executeState) {
                     case ExecuteState.EXECUTE0:
                         // Branch only if the zFlag = 0
-                        if (!this.alu.getZFlag()) {
+                        if (this.alu.getZFlag() == 0) {
+                            // Variables for the memory display
+                            this.preBranchAddr = this.PC;
+                            this.branchTaken = true;
+
                             // Set the low order byte of the program counter with the branch
                             this.PC = this.PC & 0xFF00 | this.alu.addWithCarry(this.PC & 0x00FF, _MemoryAccessor.getMdr());
                             // Go to EXECUTE1 to update the high order byte of the program counter
                             this._executeState = ExecuteState.EXECUTE1;
                         } else {
+                            // Branch was not taken
+                            this.branchTaken = false;
                             // Go to interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
                         }
