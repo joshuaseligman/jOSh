@@ -24,10 +24,6 @@ var TSOS;
             this.branchTaken = false;
             this.preBranchAddr = 0;
             this.alu = new TSOS.Alu();
-            this._fetchState = TSOS.FetchState.FETCH0;
-            this._decodeState = TSOS.DecodeState.DECODE0;
-            this._executeState = TSOS.ExecuteState.EXECUTE0;
-            this._writebackState = TSOS.WritebackState.WRITEBACK0;
         }
         init() {
             this.PC = 0;
@@ -39,7 +35,12 @@ var TSOS;
             // Fetch is first state
             this.pipelineState = TSOS.PipelineState.FETCH;
             // Start with nothing
-            this.operands = [];
+            this._operand0 = 0x0;
+            this._operand1 = 0x0;
+            this._fetchState = TSOS.FetchState.FETCH0;
+            this._decodeState = TSOS.DecodeState.DECODE0;
+            this._executeState = TSOS.ExecuteState.EXECUTE0;
+            this._writebackState = TSOS.WritebackState.WRITEBACK0;
         }
         cycle() {
             _Kernel.krnTrace('CPU cycle');
@@ -126,54 +127,85 @@ var TSOS;
         decode() {
             _Kernel.krnTrace('CPU decode');
             switch (this.IR) {
-                // 1 operand
+                // One operand
                 case 0xA9: // LDA constant
                 case 0xA2: // LDX constant
                 case 0xA0: // LDY constant
                 case 0xD0: // BNE
-                    // Get the operand
-                    _MemoryAccessor.setMar(this.PC);
-                    _MemoryAccessor.callRead();
-                    let op = _MemoryAccessor.getMdr();
-                    // Increment the PC
-                    this.PC++;
-                    // Return the operand
-                    this.operands = [op];
+                    switch (this._decodeState) {
+                        case TSOS.DecodeState.DECODE0:
+                            // Set the MAR to the program counter to get the one operand
+                            _MemoryAccessor.setMar(this.PC);
+                            this._decodeState = TSOS.DecodeState.DECODE1;
+                            break;
+                        case TSOS.DecodeState.DECODE1:
+                            // Call read and wait for the operand to come back from memory
+                            _MemoryAccessor.callRead();
+                            this._decodeState = TSOS.DecodeState.DECODE2;
+                            break;
+                        case TSOS.DecodeState.DECODE2:
+                            // if (this._mmu.isReady()) {
+                            // Move to the execute phase
+                            this.PC += 0x0001;
+                            this.pipelineState = TSOS.PipelineState.EXECUTE;
+                            this._executeState = TSOS.ExecuteState.EXECUTE0;
+                            // }
+                            break;
+                    }
                     break;
-                // 2 operands
+                // Two operands
                 case 0xAD: // LDA memory
                 case 0x8D: // STA
-                case 0x6D: // ADC
                 case 0xAE: // LDX memory
                 case 0xAC: // LDY memory
+                case 0x6D: // ADC
                 case 0xEC: // CPX
                 case 0xEE: // INC
-                    // Get the operands from memory
-                    _MemoryAccessor.setMar(this.PC);
-                    _MemoryAccessor.callRead();
-                    let op1 = _MemoryAccessor.getMdr();
-                    this.PC++;
-                    _MemoryAccessor.setMar(this.PC);
-                    _MemoryAccessor.callRead();
-                    let op2 = _MemoryAccessor.getMdr();
-                    this.PC++;
-                    // Return the operands
-                    this.operands = [op1, op2];
-                    break;
-                // 0 operands
-                case 0xEA: // NOP
-                case 0x00: // BRK
-                case 0xFF: // SYS
-                    this.operands = [];
+                case 0xFF: // SYS (xReg = 3)
+                    switch (this._decodeState) {
+                        case TSOS.DecodeState.DECODE0:
+                            // Get the first operand
+                            _MemoryAccessor.setMar(this.PC);
+                            this._decodeState = TSOS.DecodeState.DECODE1;
+                            break;
+                        case TSOS.DecodeState.DECODE1:
+                            // Read the operand and move to the next decode step
+                            _MemoryAccessor.callRead();
+                            if (this._hasSecondOperand) {
+                                this._decodeState = TSOS.DecodeState.DECODE3;
+                            }
+                            else {
+                                this._decodeState = TSOS.DecodeState.DECODE2;
+                            }
+                            break;
+                        case TSOS.DecodeState.DECODE2:
+                            // if (this._mmu.isReady()) {
+                            // Set the first operand and repeat for the second operand
+                            this._operand0 = _MemoryAccessor.getMdr();
+                            this.PC += 0x0001;
+                            this._decodeState = TSOS.DecodeState.DECODE0;
+                            this._hasSecondOperand = true;
+                            // }
+                            break;
+                        case TSOS.DecodeState.DECODE3:
+                            // if (this._mmu.isReady()) {
+                            // Set the second operand and move to execute
+                            this._operand1 = _MemoryAccessor.getMdr();
+                            this.PC += 0x0001;
+                            this.pipelineState = TSOS.PipelineState.EXECUTE;
+                            this._executeState = TSOS.ExecuteState.EXECUTE0;
+                            // }
+                            break;
+                    }
                     break;
                 // Invalid opcode
                 default:
                     // Add the interrupt to kill the process and return nothing
                     _KernelInterruptQueue.enqueue(new TSOS.Interrupt(INVALID_OPCODE_IRQ, [this.IR]));
-                    this.operands = undefined;
+                    // Get the interrupt processed ASAP
+                    this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
                     break;
             }
-            this.pipelineState = TSOS.PipelineState.EXECUTE;
         }
         // Function for executing the instruction
         execute() {
@@ -181,15 +213,15 @@ var TSOS;
             switch (this.IR) {
                 case 0xA9: // LDA constant
                     // Update the accumulator
-                    this.Acc = this.operands[0];
+                    this.Acc = this._operand0;
                     break;
                 case 0xAD: // LDA memory
                     // Convert the operands from little endian format to a plain address
                     // Since each operand is 8 bits, we can left shift the first one and do a bitwise OR
                     // te combine them into one whole address
                     // let readAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Set the accumulator to whatever is in memory at the given address
                     this.Acc = _MemoryAccessor.getMdr();
@@ -197,8 +229,8 @@ var TSOS;
                 case 0x8D: // STA
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let writeAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.setMdr(this.Acc);
                     // Write the accumulator to memory
                     _MemoryAccessor.callWrite();
@@ -206,8 +238,8 @@ var TSOS;
                 case 0x6D: // ADC
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let addAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Get the value to add to the accumulator
                     let addVal = _MemoryAccessor.getMdr();
@@ -216,26 +248,26 @@ var TSOS;
                     break;
                 case 0xA2: // LDX constant
                     // Put the operand into the x register
-                    this.Xreg = this.operands[0];
+                    this.Xreg = this._operand0;
                     break;
                 case 0xAE: // LDX memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let xAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Set the x register to the value in memory
                     this.Xreg = _MemoryAccessor.getMdr();
                     break;
                 case 0xA0: // LDY constant
                     // Put the operand into the y register
-                    this.Yreg = this.operands[0];
+                    this.Yreg = this._operand0;
                     break;
                 case 0xAC: // LDY memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let yAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Set the x register to the value in memory
                     this.Yreg = _MemoryAccessor.getMdr();
@@ -250,8 +282,8 @@ var TSOS;
                 case 0xEC: // CPX
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let compAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Get the value in memory and negate it
                     let compVal = _MemoryAccessor.getMdr();
@@ -267,7 +299,7 @@ var TSOS;
                         this.preBranchAddr = this.PC;
                         this.branchTaken = true;
                         // Add the operand to the program counter
-                        this.PC = this.alu.addWithCarry(this.PC, this.operands[0]);
+                        this.PC = this.alu.addWithCarry(this.PC, this._operand0);
                     }
                     else {
                         this.branchTaken = false;
@@ -276,8 +308,8 @@ var TSOS;
                 case 0xEE: // INC
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     // let incAddr: number = operands[1] << 8 | operands[0];
-                    _MemoryAccessor.setLowOrderByte(this.operands[0]);
-                    _MemoryAccessor.setHighOrderByte(this.operands[1]);
+                    _MemoryAccessor.setLowOrderByte(this._operand0);
+                    _MemoryAccessor.setHighOrderByte(this._operand1);
                     _MemoryAccessor.callRead();
                     // Get the value from memory and add 1 to it
                     let origVal = _MemoryAccessor.getMdr();
