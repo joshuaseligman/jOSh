@@ -128,11 +128,22 @@ module TSOS {
                 _Scheduler.scheduleFirstProcess();
                 this.krnTrace('Scheduling first process');
             } else if (_CPU.isExecuting) { // If there are no interrupts then run one CPU cycle if there is anything being processed.
-                if (_Scheduler.handleCpuSchedule()) {
-                    // Set the CPU to go back to fetch
-                    _CPU.pipelineState = PipelineState.FETCH;
-                    // Do the next cycle
-                    this.handleCpuCycle(true);
+                // Get the button for requesting the step
+                let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
+    
+                // We can execute a CPU cycle if the step button is disabled (single step off)
+                // or if the button is enabled and the user just clicked it (_NextStepRequested)
+                if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
+                    if (_Scheduler.handleCpuSchedule()) {
+                        // Set the CPU to go back to fetch
+                        _CPU.pipelineState = PipelineState.FETCH;
+                        // Do the next cycle
+                        this.handleCpuCycle(true);
+
+                        // Set the flag to false so the user can click again
+                        // If the button is disabled, it still will be false
+                        _NextStepRequested = false;
+                    }
                 }
             } else {
                 // If there are no interrupts and there is nothing being executed then just be idle.
@@ -759,34 +770,23 @@ module TSOS {
         }
 
         private handleCpuCycle(newCycle: boolean = false): void {
-            // Get the button for requesting the step
-            let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
-    
-            // We can execute a CPU cycle if the step button is disabled (single step off)
-            // or if the button is enabled and the user just clicked it (_NextStepRequested)
-            if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
-                // Determine if the time is up for the process and if the cpu should run another cycle
-                _CPU.cycle(newCycle);
+            // Determine if the time is up for the process and if the cpu should run another cycle
+            _CPU.cycle(newCycle);
 
-                // Get the running program and update its value in the PCB table
-                let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
-                currentPCB.status = 'Running';
-                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
-                currentPCB.updateTableEntry();
+            // Get the running program and update its value in the PCB table
+            let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
+            currentPCB.status = 'Running';
+            currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
+            currentPCB.updateTableEntry();
 
-                // Iterate through all of the running and ready processes
-                for (const process of _PCBReadyQueue.q) {
-                    // Turnaround time increases
-                    process.turnaroundTime++;
-                    // Increment the wait time if they are not currently executing
-                    if (process.status === 'Ready') {
-                        process.waitTime++;
-                    }
+            // Iterate through all of the running and ready processes
+            for (const process of _PCBReadyQueue.q) {
+                // Turnaround time increases
+                process.turnaroundTime++;
+                // Increment the wait time if they are not currently executing
+                if (process.status === 'Ready') {
+                    process.waitTime++;
                 }
-
-                // Set the flag to false so the user can click again
-                // If the button is disabled, it still will be false
-                _NextStepRequested = false;
             }
         }
     }
