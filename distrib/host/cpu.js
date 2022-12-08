@@ -213,7 +213,7 @@ var TSOS;
             switch (this.IR) {
                 case 0xA9: // LDA constant
                     // Update the accumulator
-                    this.Acc = this._operand0;
+                    this.Acc = _MemoryAccessor.getMdr();
                     break;
                 case 0xAD: // LDA memory
                     // Convert the operands from little endian format to a plain address
@@ -248,7 +248,7 @@ var TSOS;
                     break;
                 case 0xA2: // LDX constant
                     // Put the operand into the x register
-                    this.Xreg = this._operand0;
+                    this.Xreg = _MemoryAccessor.getMdr();
                     break;
                 case 0xAE: // LDX memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
@@ -261,7 +261,7 @@ var TSOS;
                     break;
                 case 0xA0: // LDY constant
                     // Put the operand into the y register
-                    this.Yreg = this._operand0;
+                    this.Yreg = _MemoryAccessor.getMdr();
                     break;
                 case 0xAC: // LDY memory
                     // Convert the operands from little endian format to a plain address as described in 0xAD
@@ -299,7 +299,7 @@ var TSOS;
                         this.preBranchAddr = this.PC;
                         this.branchTaken = true;
                         // Add the operand to the program counter
-                        this.PC = this.alu.addWithCarry(this.PC, this._operand0);
+                        this.PC = this.alu.addWithCarry(this.PC, _MemoryAccessor.getMdr());
                     }
                     else {
                         this.branchTaken = false;
