@@ -43,7 +43,6 @@ var TSOS;
             this._writebackState = TSOS.WritebackState.WRITEBACK0;
         }
         cycle(newCycle = false) {
-            _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
             if (newCycle) {
@@ -486,53 +485,11 @@ var TSOS;
                         // Convert the operands from little endian format to a plain address as described in 0xAD
                         _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SYSCALL_PRINT_STR_IRQ, [this.Yreg]));
                     }
+                    else if (this.Xreg === 0x03) {
+                        _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SYSCALL_PRINT_STR_IRQ, [this._operand1 << 8 | this._operand0]));
+                    }
                     this.pipelineState = TSOS.PipelineState.INTERRUPTCHECK;
                     break;
-                // } else if (this._xReg === 0x03) {
-                //     switch (this._executeState) {
-                //         // Set the address of the character we want to print
-                //         case ExecuteState.EXECUTE0:
-                //             _MemoryAccessor.setLowOrderByte(this._operand0);
-                //             this._executeState = ExecuteState.EXECUTE1;
-                //             break;
-                //         case ExecuteState.EXECUTE1:
-                //             _MemoryAccessor.setHighOrderByte(this._operand1);
-                //             this._executeState = ExecuteState.EXECUTE2;
-                //             break;
-                //         case ExecuteState.EXECUTE2:
-                //             _MemoryAccessor.callRead();
-                //             this._executeState = ExecuteState.EXECUTE3;
-                //             break;
-                //         case ExecuteState.EXECUTE3:
-                //             if (_MemoryAccessor.isReady()) {
-                //                 // Run the current byte through the ALU to check for the zFlag
-                //                 this._alu.addWithCarry(_MemoryAccessor.getMdr(), 0x00);
-                //                 this._executeState = ExecuteState.EXECUTE4;
-                //             }
-                //             break;
-                //         case ExecuteState.EXECUTE4:
-                //             if (this._alu.getZFlag()) {
-                //                 // Move to interrupt check
-                //                 this.pipelineState = PipelineState.INTERRUPTCHECK;
-                //             } else {
-                //                 // Print out the character
-                //                 process.stdout.write(Ascii.toChar(_MemoryAccessor.getMdr()));
-                //                 this._executeState = ExecuteState.EXECUTE5;
-                //             }
-                //             break;
-                //         case ExecuteState.EXECUTE5:
-                //             /// Increment the low order byte
-                //             this._operand0 = this._alu.addWithCarry(this._operand0, 0x01);
-                //             this._executeState = ExecuteState.EXECUTE6;
-                //             break;
-                //         case ExecuteState.EXECUTE6:
-                //             if (this._alu.getCarryFlag()) {
-                //                 // If overflow, add 1 to the first operand
-                //                 this._operand1 = this._alu.addWithCarry(this._operand1, 0x01);
-                //             }
-                //             this._executeState = ExecuteState.EXECUTE0;
-                //             break;
-                //     }
             }
         }
         writeback() {
