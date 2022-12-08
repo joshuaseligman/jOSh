@@ -26,17 +26,30 @@ module TSOS {
         private operands: number[];
 
         // The alu for the CPU
-        private _alu: TSOS.Alu;
+        public alu: TSOS.Alu;
+
+        // The stage of each pipeline state
+        private _fetchState: FetchState;
+        private _decodeState: DecodeState;
+        private _executeState: ExecuteState;
+        private _writebackState: WritebackState;
+
+        // Whether or not an instruction has 2 operands
+        private _hasSecondOperand: boolean;
 
         constructor(public PC: number = 0,
                     public IR: number = 0,
                     public Acc: number = 0,
                     public Xreg: number = 0,
                     public Yreg: number = 0,
-                    public Zflag: number = 0,
                     public isExecuting: boolean = false) {
 
-            this._alu = new Alu();
+            this.alu = new Alu();
+
+            this._fetchState = FetchState.FETCH0;
+            this._decodeState = DecodeState.DECODE0;
+            this._executeState = ExecuteState.EXECUTE0;
+            this._writebackState = WritebackState.WRITEBACK0;
         }
 
         public init(): void {
@@ -45,7 +58,6 @@ module TSOS {
             this.Acc = 0;
             this.Xreg = 0;
             this.Yreg = 0;
-            this.Zflag = 0;
             this.isExecuting = false;
 
             // Fetch is first state
@@ -85,15 +97,64 @@ module TSOS {
         }
 
         // Function for fetching an instruction
-        private fetch(): void {
-            _Kernel.krnTrace('CPU fetch');
+        private fetch(): void {            
             // Get the instruction from memory and increment the PC
-            _MemoryAccessor.setMar(this.PC);
-            _MemoryAccessor.callRead();
-            this.IR = _MemoryAccessor.getMdr();
-            this.PC++;
+            switch (this._fetchState) {
+                case FetchState.FETCH0:
+                    _Kernel.krnTrace('CPU fetch 0');
 
-            this.pipelineState = PipelineState.DECODE;
+                    // Transfer the PC to the MAR
+                    _MemoryAccessor.setMar(this.PC);
+                    this._fetchState = FetchState.FETCH1;
+                    break;
+                case FetchState.FETCH1:
+                    _Kernel.krnTrace('CPU fetch 1');
+
+                    // Call read and wait for the instruction
+                    _MemoryAccessor.callRead();
+                    this._fetchState = FetchState.FETCH2;
+                    break;
+                case FetchState.FETCH2:
+                    _Kernel.krnTrace('CPU fetch 2');
+
+                    // if (this._mmu.isReady()) {
+                        // Set the instruction register
+                        this.IR = _MemoryAccessor.getMdr();
+                        // Increment program counter and move to Decode phase
+                        this.PC += 0x0001;
+    
+                        // Switch handle special instructions that do no need to decode
+                        switch (this.IR) {
+                            // No operands
+                            case 0x8A: // TXA
+                            case 0x98: // TYA
+                            case 0xAA: // TAX
+                            case 0xA8: // TAY
+                            case 0x00: // BRK
+                                // Go straight to the execute phase
+                                this.pipelineState = PipelineState.EXECUTE;
+                                this._executeState = ExecuteState.EXECUTE0;
+                                break;
+                            case 0xEA: // NOP
+                                // Go straight to interrupt check because no operation
+                                this.pipelineState = PipelineState.INTERRUPTCHECK;
+                                break;
+                            case 0xFF: // SYS (xReg = 1 or xReg = 2)
+                                if (this.Xreg === 0x01 || this.Xreg == 0x02) {
+                                    // Immediately execute
+                                    this.pipelineState = PipelineState.EXECUTE;
+                                    this._executeState = ExecuteState.EXECUTE0;
+                                    break;
+                                } // xReg = 3 will continue to the default
+                            default: // All other instructions will perform a decode
+                                this.pipelineState = PipelineState.DECODE;
+                                this._decodeState = DecodeState.DECODE0;
+                                this._hasSecondOperand = false;
+                                break;
+                        } 
+                    // }
+                    break;
+            }
         }
 
         // Function for decoding the instruction
@@ -201,7 +262,7 @@ module TSOS {
                 let addVal: number = _MemoryAccessor.getMdr();
 
                 // Add the numbers together
-                this.Acc = this._alu.addWithCarry(this.Acc, addVal);
+                this.Acc = this.alu.addWithCarry(this.Acc, addVal);
                 break;
 
             case 0xA2: // LDX constant
@@ -254,22 +315,22 @@ module TSOS {
 
                 // Get the value in memory and negate it
                 let compVal: number = _MemoryAccessor.getMdr();
-                let compValNeg: number = this._alu.negate(compVal);
+                let compValNeg: number = this.alu.negate(compVal);
 
                 // Run the values through the adder
                 // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
-                this._alu.addWithCarry(this.Xreg, compValNeg);
+                this.alu.addWithCarry(this.Xreg, compValNeg);
                 break;
 
             case 0xD0: // BNE
                 // Only branch if the z flag is not enabled
-                if (this.Zflag === 0) {
+                if (this.alu.getZFlag()) {
                     // Save the state for the memory table updates
                     this.preBranchAddr = this.PC;
                     this.branchTaken = true;
                     
                     // Add the operand to the program counter
-                    this.PC = this._alu.addWithCarry(this.PC, this.operands[0]);
+                    this.PC = this.alu.addWithCarry(this.PC, this.operands[0]);
                 } else {
                     this.branchTaken = false;
                 }
@@ -284,7 +345,7 @@ module TSOS {
 
                 // Get the value from memory and add 1 to it
                 let origVal: number = _MemoryAccessor.getMdr();
-                let newVal: number = this._alu.addWithCarry(origVal, 1);
+                let newVal: number = this.alu.addWithCarry(origVal, 1);
 
                 _MemoryAccessor.setMdr(newVal);
                 // Write the new value back to memory
@@ -295,7 +356,7 @@ module TSOS {
                 if (this.Xreg === 1) {
                     if (this.Yreg >> 7 === 1) {
                         // We have a negative number and have to put it in a usable format for base 10
-                        let printableNum: number = -1 * this._alu.negate(this.Yreg);
+                        let printableNum: number = -1 * this.alu.negate(this.Yreg);
                         // Make a system call for printing the number
                         _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_INT_IRQ, [printableNum]));
                     } else {
@@ -316,6 +377,7 @@ module TSOS {
             _Kernel.krnTrace('CPU writeback');
 
             this.pipelineState = PipelineState.INTERRUPTCHECK;
+            this._fetchState = FetchState.FETCH0;
         }
 
         // Function to update the table on the website
@@ -343,7 +405,7 @@ module TSOS {
             document.querySelector('#cpuAcc').innerHTML = Utils.getHexString(this.Acc, 2, false);
             document.querySelector('#cpuXReg').innerHTML = Utils.getHexString(this.Xreg, 2, false);
             document.querySelector('#cpuYReg').innerHTML = Utils.getHexString(this.Yreg, 2, false);
-            document.querySelector('#cpuZFlag').innerHTML = this.Zflag.toString();
+            document.querySelector('#cpuZFlag').innerHTML = this.alu.getZFlag().toString();
         }
 
         // Function to set all of the variables of the cpu at once
@@ -354,7 +416,7 @@ module TSOS {
             this.Acc = newAcc;
             this.Xreg = newXReg;
             this.Yreg = newYReg;
-            this.Zflag = newZFlag;
+            this.alu.setZFlag(newZFlag);
 
             this.updateCpuTable();
         }

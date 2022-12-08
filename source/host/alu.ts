@@ -22,7 +22,7 @@ module TSOS {
         /**
          * Represents the zFlag
          */
-        private _zFlag: boolean;
+        private _zFlag: number;
 
         /**
          * Represents the carry flag
@@ -38,7 +38,7 @@ module TSOS {
          * Constructor for the ALU
          */
         constructor() {
-            this._zFlag = false;
+            this._zFlag = 0;
             this._carryFlag = false;
             this._lastOutput = 0x00;
         }
@@ -72,7 +72,7 @@ module TSOS {
             }
 
             // Set zFlag and carry flag
-            this._zFlag = (sum == 0);
+            this._zFlag = (sum == 0) ? 1 : 0;
             this._carryFlag = Boolean(carry);
             this._lastOutput = sum;
 
@@ -140,8 +140,16 @@ module TSOS {
          * Getter for the zFlag
          * @returns The zFlag
          */
-        public getZFlag(): boolean {
+        public getZFlag(): number {
             return this._zFlag;
+        }
+
+        /**
+         * Setter for the z flag
+         * @param newZFlag The new z flag
+         */
+        public setZFlag(newZFlag: number) {
+            this._zFlag = newZFlag;
         }
 
         /**

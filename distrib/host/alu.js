@@ -8,7 +8,7 @@ var TSOS;
          * Constructor for the ALU
          */
         constructor() {
-            this._zFlag = false;
+            this._zFlag = 0;
             this._carryFlag = false;
             this._lastOutput = 0x00;
         }
@@ -36,7 +36,7 @@ var TSOS;
                 carry = result.carry;
             }
             // Set zFlag and carry flag
-            this._zFlag = (sum == 0);
+            this._zFlag = (sum == 0) ? 1 : 0;
             this._carryFlag = Boolean(carry);
             this._lastOutput = sum;
             // Return the sum
@@ -97,6 +97,13 @@ var TSOS;
          */
         getZFlag() {
             return this._zFlag;
+        }
+        /**
+         * Setter for the z flag
+         * @param newZFlag The new z flag
+         */
+        setZFlag(newZFlag) {
+            this._zFlag = newZFlag;
         }
         /**
          * Getter for the carry flag

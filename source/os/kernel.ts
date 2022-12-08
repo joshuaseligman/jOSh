@@ -82,7 +82,7 @@ module TSOS {
                 finishedProgram.status = 'Terminated';
 
                 // Get final CPU values and save them in the table
-                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 finishedProgram.updateTableEntry();
 
                 // Clear the CPU
@@ -342,7 +342,7 @@ module TSOS {
 
             if (_PCBReadyQueue.getHead() === requestedProcess) {
                 // Get final CPU values and save them in the table if the program is running
-                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 _Scheduler.handleCpuSchedule();
             } else {
                 // Otherwise we can just remove the process from the ready queue and the dispatcher will not be affected
@@ -771,7 +771,7 @@ module TSOS {
                 // Get the running program and update its value in the PCB table
                 let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();
                 currentPCB.status = 'Running';
-                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 currentPCB.updateTableEntry();
 
                 // Iterate through all of the running and ready processes

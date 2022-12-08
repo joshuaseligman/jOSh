@@ -66,7 +66,7 @@ var TSOS;
                 let finishedProgram = _PCBReadyQueue.dequeue();
                 finishedProgram.status = 'Terminated';
                 // Get final CPU values and save them in the table
-                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 finishedProgram.updateTableEntry();
                 // Clear the CPU
                 _CPU.init();
@@ -300,7 +300,7 @@ var TSOS;
             requestedProcess.status = 'Terminated';
             if (_PCBReadyQueue.getHead() === requestedProcess) {
                 // Get final CPU values and save them in the table if the program is running
-                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 _Scheduler.handleCpuSchedule();
             }
             else {
@@ -701,7 +701,7 @@ var TSOS;
                 // Get the running program and update its value in the PCB table
                 let currentPCB = _PCBReadyQueue.getHead();
                 currentPCB.status = 'Running';
-                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 currentPCB.updateTableEntry();
                 // Iterate through all of the running and ready processes
                 for (const process of _PCBReadyQueue.q) {
