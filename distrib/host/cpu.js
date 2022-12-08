@@ -24,6 +24,7 @@ var TSOS;
             // Variables for the memory table update to highlight the right things
             this.branchTaken = false;
             this.preBranchAddr = 0;
+            this._alu = new TSOS.Alu();
         }
         init() {
             this.PC = 0;
@@ -163,7 +164,7 @@ var TSOS;
                     // Get the value to add to the accumulator
                     let addVal = _MemoryAccessor.getMdr();
                     // Add the numbers together
-                    this.Acc = this.add(this.Acc, addVal);
+                    this.Acc = this._alu.addWithCarry(this.Acc, addVal);
                     break;
                 case 0xA2: // LDX constant
                     // Put the operand into the x register
@@ -206,10 +207,10 @@ var TSOS;
                     _MemoryAccessor.callRead();
                     // Get the value in memory and negate it
                     let compVal = _MemoryAccessor.getMdr();
-                    let compValNeg = this.negate(compVal);
+                    let compValNeg = this._alu.negate(compVal);
                     // Run the values through the adder
                     // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
-                    this.add(this.Xreg, compValNeg);
+                    this._alu.addWithCarry(this.Xreg, compValNeg);
                     break;
                 case 0xD0: // BNE
                     // Only branch if the z flag is not enabled
@@ -218,7 +219,7 @@ var TSOS;
                         this.preBranchAddr = this.PC;
                         this.branchTaken = true;
                         // Add the operand to the program counter
-                        this.PC = this.add(this.PC, this.operands[0]);
+                        this.PC = this._alu.addWithCarry(this.PC, this.operands[0]);
                     }
                     else {
                         this.branchTaken = false;
@@ -232,7 +233,7 @@ var TSOS;
                     _MemoryAccessor.callRead();
                     // Get the value from memory and add 1 to it
                     let origVal = _MemoryAccessor.getMdr();
-                    let newVal = this.add(origVal, 1);
+                    let newVal = this._alu.addWithCarry(origVal, 1);
                     _MemoryAccessor.setMdr(newVal);
                     // Write the new value back to memory
                     _MemoryAccessor.callWrite();
@@ -241,7 +242,7 @@ var TSOS;
                     if (this.Xreg === 1) {
                         if (this.Yreg >> 7 === 1) {
                             // We have a negative number and have to put it in a usable format for base 10
-                            let printableNum = -1 * this.negate(this.Yreg);
+                            let printableNum = -1 * this._alu.negate(this.Yreg);
                             // Make a system call for printing the number
                             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SYSCALL_PRINT_INT_IRQ, [printableNum]));
                         }
@@ -298,51 +299,6 @@ var TSOS;
             this.Yreg = newYReg;
             this.Zflag = newZFlag;
             this.updateCpuTable();
-        }
-        // All ALU code below is from Computer Organization and Architecture project
-        // https://github.com/joshuaseligman/422-tsiraM/blob/master/src/hardware/Alu.ts
-        // Low-level adder for 2 8-bit numbers
-        add(num1, num2) {
-            // Sum is the outputted answer and starts at 0 and carry will initally be 0
-            let sum = 0;
-            let carry = 0;
-            // Iterate 8 times because each number is 8 bits
-            for (let i = 0; i < 8; i++) {
-                // Get the bits to add
-                let bit1 = num1 & 1;
-                let bit2 = num2 & 1;
-                // Update the numbers
-                num1 = num1 >> 1;
-                num2 = num2 >> 1;
-                // Get the result
-                let result = this.fullAdder(bit1, bit2, carry);
-                // Update the final total and carry for next adder
-                sum = result[0] << i | sum;
-                carry = result[1];
-            }
-            // Update the z flag accordingly
-            this.Zflag = (sum === 0) ? 1 : 0;
-            return sum;
-        }
-        // Low-level full adder for adding 2 bits with carry
-        fullAdder(bit1, bit2, carry) {
-            // Add the 2 bits together
-            let firstOut = this.halfAdder(bit1, bit2);
-            // Add the sum of the 2 bits with the carry bit
-            let secondOut = this.halfAdder(firstOut[0], carry);
-            // The total sum is the sum of the second output and the carry output is if either half adder returned a carry flag
-            return [secondOut[0], firstOut[1] | secondOut[1]];
-        }
-        // Low-level half adder for adding 2 bits
-        halfAdder(bit1, bit2) {
-            // The sum is the XOR or the bits and the carry is the AND of the bits
-            let sum = bit1 ^ bit2;
-            let carry = bit1 & bit2;
-            return [sum, carry];
-        }
-        // Negates a number using 2s complement
-        negate(num) {
-            return ((~num) & 0xFF) + 1;
         }
     }
     TSOS.Cpu = Cpu;

@@ -110,7 +110,7 @@ var TSOS;
             tableEntry.cells[6].innerHTML = TSOS.Utils.getHexString(this.programCounter, 2, false);
             tableEntry.cells[7].innerHTML = TSOS.Utils.getHexString(this.instructionRegister, 2, false);
             tableEntry.cells[8].innerHTML = TSOS.Utils.getHexString(this.acc, 2, false);
-            tableEntry.cells[8].innerHTML = TSOS.Utils.getHexString(this.xReg, 2, false);
+            tableEntry.cells[9].innerHTML = TSOS.Utils.getHexString(this.xReg, 2, false);
             tableEntry.cells[10].innerHTML = TSOS.Utils.getHexString(this.yReg, 2, false);
             tableEntry.cells[11].innerHTML = this.zFlag.toString();
             // Update the status
