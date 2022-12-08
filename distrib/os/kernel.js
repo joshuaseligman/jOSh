@@ -112,7 +112,7 @@ var TSOS;
                     // Set the CPU to go back to fetch
                     _CPU.pipelineState = TSOS.PipelineState.FETCH;
                     // Do the next cycle
-                    this.handleCpuCycle();
+                    this.handleCpuCycle(true);
                 }
             }
             else {
@@ -690,14 +690,14 @@ var TSOS;
             _StdOut.bsod();
             this.krnShutdown();
         }
-        handleCpuCycle() {
+        handleCpuCycle(newCycle = false) {
             // Get the button for requesting the step
             let stepBtn = document.querySelector('#stepBtn');
             // We can execute a CPU cycle if the step button is disabled (single step off)
             // or if the button is enabled and the user just clicked it (_NextStepRequested)
             if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
                 // Determine if the time is up for the process and if the cpu should run another cycle
-                _CPU.cycle();
+                _CPU.cycle(newCycle);
                 // Get the running program and update its value in the PCB table
                 let currentPCB = _PCBReadyQueue.getHead();
                 currentPCB.status = 'Running';

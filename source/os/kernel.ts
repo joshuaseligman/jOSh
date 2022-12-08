@@ -132,7 +132,7 @@ module TSOS {
                     // Set the CPU to go back to fetch
                     _CPU.pipelineState = PipelineState.FETCH;
                     // Do the next cycle
-                    this.handleCpuCycle();
+                    this.handleCpuCycle(true);
                 }
             } else {
                 // If there are no interrupts and there is nothing being executed then just be idle.
@@ -758,7 +758,7 @@ module TSOS {
             this.krnShutdown();
         }
 
-        private handleCpuCycle(): void {
+        private handleCpuCycle(newCycle: boolean = false): void {
             // Get the button for requesting the step
             let stepBtn: HTMLButtonElement = document.querySelector('#stepBtn');
     
@@ -766,7 +766,7 @@ module TSOS {
             // or if the button is enabled and the user just clicked it (_NextStepRequested)
             if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
                 // Determine if the time is up for the process and if the cpu should run another cycle
-                _CPU.cycle();
+                _CPU.cycle(newCycle);
 
                 // Get the running program and update its value in the PCB table
                 let currentPCB: ProcessControlBlock = _PCBReadyQueue.getHead();

@@ -69,10 +69,14 @@ module TSOS {
             this._writebackState = WritebackState.WRITEBACK0;
         }
 
-        public cycle(): void {
+        public cycle(newCycle: boolean = false): void {
             _Kernel.krnTrace('CPU cycle');
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
+
+            if (newCycle) {
+                this._fetchState = FetchState.FETCH0;
+            }
             
             switch (this.pipelineState) {
                 case PipelineState.FETCH:
@@ -119,7 +123,7 @@ module TSOS {
                 case FetchState.FETCH2:
                     _Kernel.krnTrace('CPU fetch 2');
 
-                    // if (this._mmu.isReady()) {
+                    // if (_MemoryAccessor.isReady()) {
                         // Set the instruction register
                         this.IR = _MemoryAccessor.getMdr();
                         // Increment program counter and move to Decode phase
@@ -181,7 +185,7 @@ module TSOS {
                         this._decodeState = DecodeState.DECODE2;
                         break;
                     case DecodeState.DECODE2:
-                        // if (this._mmu.isReady()) {
+                        // if (_MemoryAccessor.isReady()) {
                             // Move to the execute phase
                             this.PC += 0x0001;
                             this.pipelineState = PipelineState.EXECUTE;
@@ -215,7 +219,7 @@ module TSOS {
                         }
                         break;
                     case DecodeState.DECODE2:
-                        // if (this._mmu.isReady()) {
+                        // if (_MemoryAccessor.isReady()) {
                             // Set the first operand and repeat for the second operand
                             this._operand0 = _MemoryAccessor.getMdr();
                             this.PC += 0x0001;
@@ -224,7 +228,7 @@ module TSOS {
                         // }
                         break;
                     case DecodeState.DECODE3:
-                        // if (this._mmu.isReady()) {
+                        // if (_MemoryAccessor.isReady()) {
                             // Set the second operand and move to execute
                             this._operand1 = _MemoryAccessor.getMdr();
                             this.PC += 0x0001;
@@ -251,134 +255,261 @@ module TSOS {
 
             switch (this.IR) {
             case 0xA9: // LDA constant
-                // Update the accumulator
+                // Place the operand in the accumulator
                 this.Acc = _MemoryAccessor.getMdr();
+                // Move to the interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
             case 0xAD: // LDA memory
-                // Convert the operands from little endian format to a plain address
-                // Since each operand is 8 bits, we can left shift the first one and do a bitwise OR
-                // te combine them into one whole address
-                // let readAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-                
-                // Set the accumulator to whatever is in memory at the given address
-                this.Acc = _MemoryAccessor.getMdr();
+                // Get the value from memory
+                switch (this._executeState) {
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        _MemoryAccessor.callRead();
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Place the value in the accumulator
+                            this.Acc = _MemoryAccessor.getMdr();
+                            // Move to the interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        // }
+                        break;
+                }
                 break;
-
             case 0x8D: // STA
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let writeAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.setMdr(this.Acc);
-
-                // Write the accumulator to memory
-                _MemoryAccessor.callWrite();
+                switch (this._executeState) {
+                    // Set the address we want to write to
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        // Set the MDR appropriately
+                        _MemoryAccessor.setMdr(this.Acc);
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // Call write
+                        _MemoryAccessor.callWrite();
+                        // Move to the interrupt check
+                        this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        break;
+                }
                 break;
-
+            case 0x8A: // TXA
+                // Transfer X reg to ACC
+                this.Acc = this.Xreg;
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
+                break;
+            case 0x98: // TYA
+                // Transfer Y reg to ACC
+                this.Acc = this.Yreg;
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
+                break;
             case 0x6D: // ADC
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let addAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-
-                // Get the value to add to the accumulator
-                let addVal: number = _MemoryAccessor.getMdr();
-
-                // Add the numbers together
-                this.Acc = this.alu.addWithCarry(this.Acc, addVal);
+                switch (this._executeState) {
+                    // Set the address of the value we want to add
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                            _MemoryAccessor.callRead();
+                            this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Call add
+                            this.Acc = this.alu.addWithCarry(this.Acc, _MemoryAccessor.getMdr());
+                            // Move to the interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        // }
+                        break;
+                }
                 break;
-
             case 0xA2: // LDX constant
-                // Put the operand into the x register
+                // Put the operand in the X reg
                 this.Xreg = _MemoryAccessor.getMdr();
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
-
             case 0xAE: // LDX memory
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let xAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-
-                // Set the x register to the value in memory
-                this.Xreg = _MemoryAccessor.getMdr();
+                switch (this._executeState) {
+                    // Set the address of the value we want to load
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        _MemoryAccessor.callRead();
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Place the value in the X reg
+                            this.Xreg = _MemoryAccessor.getMdr();
+                            // Move to the interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        // }
+                        break;
+                }
                 break;
-
+            case 0xAA: // TAX
+                // Transfer ACC to X reg
+                this.Xreg = this.Acc;
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
+                break;
             case 0xA0: // LDY constant
-                // Put the operand into the y register
+                // Put the operand in the Y reg
                 this.Yreg = _MemoryAccessor.getMdr();
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
-
             case 0xAC: // LDY memory
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let yAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-
-                // Set the x register to the value in memory
-                this.Yreg = _MemoryAccessor.getMdr();
+                switch (this._executeState) {
+                    // Set the address of the value we want to load
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        _MemoryAccessor.callRead();
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Place the value in the Y reg
+                            this.Yreg = _MemoryAccessor.getMdr();
+                            // Move to the interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        // }
+                        break;
+                }
                 break;
-
-            case 0xEA: // NOP
-                // Do nothing for a no operation
+            case 0xA8: // TAY
+                // Transfer ACC to Y reg
+                this.Yreg = this.Acc;
+                // Move to interrupt check
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
-
             case 0x00: // BRK
                 // Call an interrupt for the OS to handle to end of the program execution
                 _KernelInterruptQueue.enqueue(new Interrupt(PROG_BREAK_SINGLE_IRQ, []));
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
-            
             case 0xEC: // CPX
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let compAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-
-                // Get the value in memory and negate it
-                let compVal: number = _MemoryAccessor.getMdr();
-                let compValNeg: number = this.alu.negate(compVal);
-
-                // Run the values through the adder
-                // The Z flag will be updated appropriately to be 1 if they are equal and 0 if not
-                this.alu.addWithCarry(this.Xreg, compValNeg);
-                break;
-
-            case 0xD0: // BNE
-                // Only branch if the z flag is not enabled
-                if (this.alu.getZFlag()) {
-                    // Save the state for the memory table updates
-                    this.preBranchAddr = this.PC;
-                    this.branchTaken = true;
-                    
-                    // Add the operand to the program counter
-                    this.PC = this.alu.addWithCarry(this.PC, _MemoryAccessor.getMdr());
-                } else {
-                    this.branchTaken = false;
+                switch (this._executeState) {
+                    // Set the address of the value we want to compare
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        _MemoryAccessor.callRead();
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // Negate the value in the X register for later use (does not impact the actual register)
+                        this.alu.negate(this.Xreg);
+                        this._executeState = ExecuteState.EXECUTE4;
+                        break;
+                    case ExecuteState.EXECUTE4:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Run the negated value in X and the value in memory through the adder to set the zFlag if needed
+                            this.alu.addWithCarry(this.alu.getLastOutput(), _MemoryAccessor.getMdr());
+                            // Go to the interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        // }
+                        break;
                 }
                 break;
-            
-            case 0xEE: // INC
-                // Convert the operands from little endian format to a plain address as described in 0xAD
-                // let incAddr: number = operands[1] << 8 | operands[0];
-                _MemoryAccessor.setLowOrderByte(this._operand0);
-                _MemoryAccessor.setHighOrderByte(this._operand1);
-                _MemoryAccessor.callRead();
-
-                // Get the value from memory and add 1 to it
-                let origVal: number = _MemoryAccessor.getMdr();
-                let newVal: number = this.alu.addWithCarry(origVal, 1);
-
-                _MemoryAccessor.setMdr(newVal);
-                // Write the new value back to memory
-                _MemoryAccessor.callWrite();
+            case 0xD0: // BNE
+                switch (this._executeState) {
+                    case ExecuteState.EXECUTE0:
+                        // Branch only if the zFlag = 0
+                        if (!this.alu.getZFlag()) {
+                            // Set the low order byte of the program counter with the branch
+                            this.PC = this.PC & 0xFF00 | this.alu.addWithCarry(this.PC & 0x00FF, _MemoryAccessor.getMdr());
+                            // Go to EXECUTE1 to update the high order byte of the program counter
+                            this._executeState = ExecuteState.EXECUTE1;
+                        } else {
+                            // Go to interrupt check
+                            this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        }
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        // Determine what the high order byte should be added to depending on the operand
+                        let highOrderAdd: number = (_MemoryAccessor.getMdr() >> 7 === 1) ? 0xFF : 0x00;
+                        // Set the high order byte of the program counter
+                        this.PC = this.PC & 0x00FF | (this.alu.addWithCarry((this.PC & 0xFF00) >> 8, highOrderAdd, true) << 8);
+                        // Go to the interrupt check
+                        this.pipelineState = PipelineState.INTERRUPTCHECK;
+                        break;
+                    }
                 break;
-
+            case 0xEE: // INC
+                switch (this._executeState) {
+                    // Set the address of the value we want to increment the value of
+                    case ExecuteState.EXECUTE0:
+                        _MemoryAccessor.setLowOrderByte(this._operand0);
+                        this._executeState = ExecuteState.EXECUTE1;
+                        break;
+                    case ExecuteState.EXECUTE1:
+                        _MemoryAccessor.setHighOrderByte(this._operand1);
+                        this._executeState = ExecuteState.EXECUTE2;
+                        break;
+                    case ExecuteState.EXECUTE2:
+                        _MemoryAccessor.callRead();
+                        this._executeState = ExecuteState.EXECUTE3;
+                        break;
+                    case ExecuteState.EXECUTE3:
+                        // if (_MemoryAccessor.isReady()) {
+                            // Transfer MDR to ACC
+                            this.Acc = _MemoryAccessor.getMdr();
+                            this._executeState = ExecuteState.EXECUTE4;
+                        // }
+                        break;
+                    case ExecuteState.EXECUTE4:
+                        /// Increment the value
+                        this.Acc = this.alu.addWithCarry(this.Acc, 0x01);
+                        // Go to the writeback state
+                        this._writebackState = WritebackState.WRITEBACK0;
+                        this.pipelineState = PipelineState.WRITEBACK;
+                        break;
+                }
+                break;
             case 0xFF: // SYS
                 if (this.Xreg === 1) {
                     if (this.Yreg >> 7 === 1) {
@@ -394,17 +525,67 @@ module TSOS {
                     // Convert the operands from little endian format to a plain address as described in 0xAD
                     _KernelInterruptQueue.enqueue(new Interrupt(SYSCALL_PRINT_STR_IRQ, [this.Yreg]));
                 }
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
                 break;
+                // } else if (this._xReg === 0x03) {
+                //     switch (this._executeState) {
+                //         // Set the address of the character we want to print
+                //         case ExecuteState.EXECUTE0:
+                //             _MemoryAccessor.setLowOrderByte(this._operand0);
+                //             this._executeState = ExecuteState.EXECUTE1;
+                //             break;
+                //         case ExecuteState.EXECUTE1:
+                //             _MemoryAccessor.setHighOrderByte(this._operand1);
+                //             this._executeState = ExecuteState.EXECUTE2;
+                //             break;
+                //         case ExecuteState.EXECUTE2:
+                //             _MemoryAccessor.callRead();
+                //             this._executeState = ExecuteState.EXECUTE3;
+                //             break;
+                //         case ExecuteState.EXECUTE3:
+                //             if (_MemoryAccessor.isReady()) {
+                //                 // Run the current byte through the ALU to check for the zFlag
+                //                 this._alu.addWithCarry(_MemoryAccessor.getMdr(), 0x00);
+                //                 this._executeState = ExecuteState.EXECUTE4;
+                //             }
+                //             break;
+                //         case ExecuteState.EXECUTE4:
+                //             if (this._alu.getZFlag()) {
+                //                 // Move to interrupt check
+                //                 this.pipelineState = PipelineState.INTERRUPTCHECK;
+                //             } else {
+                //                 // Print out the character
+                //                 process.stdout.write(Ascii.toChar(_MemoryAccessor.getMdr()));
+                //                 this._executeState = ExecuteState.EXECUTE5;
+                //             }
+                //             break;
+                //         case ExecuteState.EXECUTE5:
+                //             /// Increment the low order byte
+                //             this._operand0 = this._alu.addWithCarry(this._operand0, 0x01);
+                //             this._executeState = ExecuteState.EXECUTE6;
+                //             break;
+                //         case ExecuteState.EXECUTE6:
+                //             if (this._alu.getCarryFlag()) {
+                //                 // If overflow, add 1 to the first operand
+                //                 this._operand1 = this._alu.addWithCarry(this._operand1, 0x01);
+                //             }
+                //             this._executeState = ExecuteState.EXECUTE0;
+                //             break;
+                //     }
             }
-
-            this.pipelineState = PipelineState.WRITEBACK;
         }
 
         private writeback(): void {
             _Kernel.krnTrace('CPU writeback');
 
-            this.pipelineState = PipelineState.INTERRUPTCHECK;
-            this._fetchState = FetchState.FETCH0;
+            // Rewrite the value
+            if (this._writebackState === WritebackState.WRITEBACK0) {
+                _MemoryAccessor.setMdr(this.Acc);
+                this._writebackState = WritebackState.WRITEBACK1;
+            } else {
+                _MemoryAccessor.callWrite();
+                this.pipelineState = PipelineState.INTERRUPTCHECK;
+            }
         }
 
         // Function to update the table on the website
