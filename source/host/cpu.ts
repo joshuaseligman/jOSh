@@ -14,17 +14,17 @@
 module TSOS {
 
     export class Cpu {
-
-        // Variables for the memory table update to highlight the right things
-        public branchTaken: boolean = false;
-        public preBranchAddr: number = 0;
-
         // Defines where we are in the overall pipeline
         public pipelineState: PipelineState;
 
         // The operands for the current instruction being executed
         private _operand0: number;
         private _operand1: number;
+
+        // Addresses stored for the memory display
+        public opcodeAddr: number;
+        public operand0Addr: number;
+        public operand1Addr: number;
 
         // The alu for the CPU
         public alu: TSOS.Alu;
@@ -75,6 +75,9 @@ module TSOS {
 
             if (newCycle) {
                 this._fetchState = FetchState.FETCH0;
+                this.opcodeAddr = undefined;
+                this.operand0Addr = undefined;
+                this.operand1Addr = undefined;
             }
             
             switch (this.pipelineState) {
@@ -121,6 +124,9 @@ module TSOS {
                     if (_MemoryAccessor.isReady()) {
                         // Set the instruction register
                         this.IR = _MemoryAccessor.getMdr();
+                        // Save the physical address of the opcode
+                        this.opcodeAddr = _MemoryAccessor.getMar();
+
                         // Increment program counter and move to Decode phase
                         this.PC += 0x0001;
     
@@ -181,6 +187,8 @@ module TSOS {
                         break;
                     case DecodeState.DECODE2:
                         if (_MemoryAccessor.isReady()) {
+                            // Get the physical address of the operand
+                            this.operand0Addr = _MemoryAccessor.getMar();
                             // Move to the execute phase
                             this.PC += 0x0001;
                             this.pipelineState = PipelineState.EXECUTE;
@@ -217,6 +225,9 @@ module TSOS {
                         if (_MemoryAccessor.isReady()) {
                             // Set the first operand and repeat for the second operand
                             this._operand0 = _MemoryAccessor.getMdr();
+                            // Get the physical address of the operand
+                            this.operand0Addr = _MemoryAccessor.getMar();
+
                             this.PC += 0x0001;
                             this._decodeState = DecodeState.DECODE0;
                             this._hasSecondOperand = true;
@@ -226,6 +237,9 @@ module TSOS {
                         if (_MemoryAccessor.isReady()) {
                             // Set the second operand and move to execute
                             this._operand1 = _MemoryAccessor.getMdr();
+                            // Get the physical address of the operand
+                            this.operand1Addr = _MemoryAccessor.getMar();
+
                             this.PC += 0x0001;
                             this.pipelineState = PipelineState.EXECUTE;
                             this._executeState = ExecuteState.EXECUTE0;
@@ -455,17 +469,11 @@ module TSOS {
                     case ExecuteState.EXECUTE0:
                         // Branch only if the zFlag = 0
                         if (this.alu.getZFlag() == 0) {
-                            // Variables for the memory display
-                            this.preBranchAddr = this.PC;
-                            this.branchTaken = true;
-
                             // Set the low order byte of the program counter with the branch
                             this.PC = this.PC & 0xFF00 | this.alu.addWithCarry(this.PC & 0x00FF, _MemoryAccessor.getMdr());
                             // Go to EXECUTE1 to update the high order byte of the program counter
                             this._executeState = ExecuteState.EXECUTE1;
                         } else {
-                            // Branch was not taken
-                            this.branchTaken = false;
                             // Go to interrupt check
                             this.pipelineState = PipelineState.INTERRUPTCHECK;
                         }

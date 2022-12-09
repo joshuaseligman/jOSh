@@ -129,56 +129,16 @@ module TSOS {
 
         // Function to highlight the opcode and operands
         private setMemoryCellClasses(): void {
-            // The desired address is going to start at the current program counter - 1 (no operands)
-            let desiredAddr: number = _MemoryAccessor.getPhysicalAddress(_CPU.PC - 1, _PCBReadyQueue.getHead().baseReg);
-            // Initial assumption is that there were no operands
-            let numOperands: number = 0;
-
-            // Determine the location of the opcode and the number of operands
-            switch (_CPU.IR) {
-                // 1 operand
-                case 0xA9: // LDA constant
-                case 0xA2: // LDX constant
-                case 0xA0: // LDY constant
-                    // Go back 1 more spot in memory because we have 1 operand
-                    desiredAddr--;
-                    numOperands = 1;
-                    break;
-                
-                // 2 operands
-                case 0xAD: // LDA memory
-                case 0x8D: // STA
-                case 0x6D: // ADC
-                case 0xAE: // LDX memory
-                case 0xAC: // LDY memory
-                case 0xEC: // CPX
-                case 0xEE: // INC
-                    // Go back 2 more spots in memory because we have 2 operands
-                    desiredAddr -= 2;
-                    numOperands = 2;
-                    break;
-                case 0xD0: // BNE
-                    if (_CPU.branchTaken) {
-                        // If the branch was taken, we want to go to the old PC before the branch and go back 2 spaces
-                        desiredAddr = _CPU.preBranchAddr - 2;
-                    } else {
-                        // Otherwise just go back 1 for the operand
-                        desiredAddr--;
-                    }
-                    // Set the operands to 1
-                    numOperands = 1;
-                    break;
+            if (_CPU.opcodeAddr !== undefined) {
+                document.querySelector(`#mem${_CPU.opcodeAddr}`).classList.add('opcode');
             }
 
-            // Only show highlights if th CPU is running and the desired address is a valid address
-            if (_CPU.isExecuting && desiredAddr >= _PCBReadyQueue.getHead().baseReg) {
-                // Set the opcode to highlight as the opcode
-                document.querySelector(`#mem${desiredAddr}`).classList.add('opcode');
+            if (_CPU.operand0Addr !== undefined) {
+                document.querySelector(`#mem${_CPU.operand0Addr}`).classList.add('operand');
+            }
 
-                // Set the operands to be highlighted
-                for (let i = desiredAddr + 1; i <= desiredAddr + numOperands; i++) {
-                    document.querySelector(`#mem${i}`).classList.add('operand');
-                }
+            if (_CPU.operand1Addr !== undefined) {
+                document.querySelector(`#mem${_CPU.operand1Addr}`).classList.add('operand');
             }
         }
     }
