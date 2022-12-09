@@ -528,18 +528,23 @@ var TSOS;
         }
         shellQuantum(args) {
             if (args.length > 0) {
-                // Convert the input to an integer. Floating point values are taken care of
-                let newQuantum = parseInt(args[0]);
-                // Check to make sure we have a valid quantum
-                if (newQuantum > 0) {
-                    // Set the quantum and log it
-                    _Scheduler.setQuantum(newQuantum);
-                    _StdOut.putText(`Quantum set to ${newQuantum}`);
-                    _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
+                if (_Scheduler.getCurAlgo() === SchedulingAlgo.ROUND_ROBIN) {
+                    // Convert the input to an integer. Floating point values are taken care of
+                    let newQuantum = parseInt(args[0]);
+                    // Check to make sure we have a valid quantum
+                    if (newQuantum > 0) {
+                        // Set the quantum and log it
+                        _Scheduler.setQuantum(newQuantum);
+                        _StdOut.putText(`Quantum set to ${newQuantum}`);
+                        _Kernel.krnTrace(`Quantum set to ${newQuantum}`);
+                    }
+                    else {
+                        // Print out an error message for an invalid quantum value
+                        _StdOut.putText('Invalid quantum value. Quantum must be positive.');
+                    }
                 }
                 else {
-                    // Print out an error message for an invalid quantum value
-                    _StdOut.putText('Invalid quantum value. Quantum must be positive.');
+                    _StdOut.putText('Cannot change quantum value. Scheduling algorithm must be round robin.');
                 }
             }
             else {

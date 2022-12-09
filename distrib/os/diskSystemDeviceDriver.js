@@ -523,8 +523,11 @@ var TSOS;
                         // Add the byte of character data to the new name hex
                         newNameHex += newFileName.charCodeAt(i).toString(16).toUpperCase().padStart(2, '0');
                     }
+                    // Fill the rest of the file name with 0s
+                    newNameHex = newNameHex.padEnd(MAX_FILE_NAME_LENGTH * 2, '0');
+                    let metadata = sessionStorage.getItem(directoryTsb).substring(8 + MAX_FILE_NAME_LENGTH * 2);
                     // Set the new name to the directory entry
-                    sessionStorage.setItem(directoryTsb, sessionStorage.getItem(directoryTsb).substring(0, 8) + newNameHex.padEnd((BLOCK_SIZE - 4) * 2, '0'));
+                    sessionStorage.setItem(directoryTsb, sessionStorage.getItem(directoryTsb).substring(0, 8) + newNameHex + metadata);
                     this.updateTable();
                 }
             }
