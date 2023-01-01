@@ -49,6 +49,8 @@ var TSOS;
                 _GLaDOS = new Glados();
                 _GLaDOS.init();
             }
+            // Load my program that uses the complete instruction set
+            document.querySelector('#taProgramInput').innerHTML = 'A9 02 A2 01 EC 33 00 D0 02 A9 01 8D 35 00 A0 00 A2 00 98 6D 35 00 A8 AD 35 00 6D 36 00 8D 35 00 8A 6D 37 00 AA EC 34 00 D0 E8 A2 03 FF 38 00 A2 01 FF 00 00 02 00 02 01 53 75 6D 20 3D 20 00';
         }
         static hostLog(msg, source = "?") {
             // Note the OS CLOCK.

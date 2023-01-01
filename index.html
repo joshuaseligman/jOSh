@@ -15,6 +15,7 @@
    <script type="text/javascript" src="distrib/host/control.js"></script>
    <script type="text/javascript" src="distrib/host/devices.js"></script>
    <script type="text/javascript" src="distrib/host/cpu.js"></script>
+   <script type="text/javascript" src="distrib/host/alu.js"></script>
    <script type="text/javascript" src="distrib/host/memory.js"></script>
    <script type="text/javascript" src="distrib/host/memoryAccessor.js"></script>
 
@@ -36,6 +37,13 @@
    <script type="text/javascript" src="distrib/os/memoryManager.js"></script>
    <script type="text/javascript" src="distrib/os/diskSystemDeviceDriver.js"></script>
    <script type="text/javascript" src="distrib/os/swapper.js"></script>
+
+   <script type="text/javascript" src="distrib/host/imp/pipelineState.js"></script>
+   <script type="text/javascript" src="distrib/host/imp/fetchState.js"></script>
+   <script type="text/javascript" src="distrib/host/imp/decodeState.js"></script>
+   <script type="text/javascript" src="distrib/host/imp/executeState.js"></script>
+   <script type="text/javascript" src="distrib/host/imp/writebackState.js"></script>
+   <script type="text/javascript" src="distrib/host/imp/memoryState.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
@@ -146,6 +154,7 @@
          <h3>CPU Status</h3>
          <table id="cpuTable">
             <tr>
+               <th>State</th>
                <th>PC</th>
                <th>IR</th>
                <th>ACC</th>
@@ -154,6 +163,7 @@
                <th>Z</th>
             </tr>
             <tr>
+               <td id="cpuPipelineState">N/A</td>
                <td id="cpuPC">00</td>
                <td id="cpuIR">00</td>
                <td id="cpuAcc">00</td>

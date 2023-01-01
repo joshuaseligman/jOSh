@@ -66,7 +66,7 @@ var TSOS;
                 let finishedProgram = _PCBReadyQueue.dequeue();
                 finishedProgram.status = 'Terminated';
                 // Get final CPU values and save them in the table
-                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                finishedProgram.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 finishedProgram.updateTableEntry();
                 // Clear the CPU
                 _CPU.init();
@@ -86,8 +86,11 @@ var TSOS;
                This, on the other hand, is the clock pulse from the hardware / VM / host that tells the kernel
                that it has to look for interrupts and process them if it finds any.
             */
-            // Check for an interrupt, if there are any. Page 560
-            if (_KernelInterruptQueue.getSize() > 0) {
+            if (_CPU.isExecuting && _CPU.pipelineState !== TSOS.PipelineState.INTERRUPTCHECK) {
+                // Continue the execution of the instruction until it reaches the interrupt check
+                this.handleCpuCycle();
+            }
+            else if (_KernelInterruptQueue.getSize() > 0) {
                 // The process was interrupted, so we have to update its status
                 let currentPCB = _PCBReadyQueue.getHead();
                 if (currentPCB !== undefined && currentPCB.status !== 'Terminated') {
@@ -110,27 +113,15 @@ var TSOS;
                 // We can execute a CPU cycle if the step button is disabled (single step off)
                 // or if the button is enabled and the user just clicked it (_NextStepRequested)
                 if (stepBtn.disabled || (!stepBtn.disabled && _NextStepRequested)) {
-                    // Determine if the time is up for the process and if the cpu should run another cycle
                     if (_Scheduler.handleCpuSchedule()) {
-                        _CPU.cycle();
-                        // Get the running program and update its value in the PCB table
-                        let currentPCB = _PCBReadyQueue.getHead();
-                        currentPCB.status = 'Running';
-                        currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
-                        currentPCB.updateTableEntry();
-                        // Iterate through all of the running and ready processes
-                        for (const process of _PCBReadyQueue.q) {
-                            // Turnaround time increases
-                            process.turnaroundTime++;
-                            // Increment the wait time if they are not currently executing
-                            if (process.status === 'Ready') {
-                                process.waitTime++;
-                            }
-                        }
+                        // Set the CPU to go back to fetch
+                        _CPU.pipelineState = TSOS.PipelineState.FETCH;
+                        // Do the next cycle
+                        this.handleCpuCycle(true);
+                        // Set the flag to false so the user can click again
+                        // If the button is disabled, it still will be false
+                        _NextStepRequested = false;
                     }
-                    // Set the flag to false so the user can click again
-                    // If the button is disabled, it still will be false
-                    _NextStepRequested = false;
                 }
             }
             else {
@@ -208,7 +199,7 @@ var TSOS;
                     let runningProg = _PCBReadyQueue.getHead();
                     // Get the first character from memory
                     // Will return -1 if there is an error and will check for error bounds
-                    let charVal = _MemoryAccessor.callRead(params[0]);
+                    let charVal = _MemoryAccessor.readImmediate(params[0]);
                     // Increment variable to go untir 0x00 or error
                     let i = 0;
                     while (charVal !== -1 && charVal !== 0) {
@@ -219,7 +210,7 @@ var TSOS;
                         runningProg.output += printedChar;
                         // Increment i and get the next character
                         i++;
-                        charVal = _MemoryAccessor.callRead(params[0] + i);
+                        charVal = _MemoryAccessor.readImmediate(params[0] + i);
                     }
                     break;
                 case CALL_DISPATCHER_IRQ:
@@ -318,7 +309,7 @@ var TSOS;
             requestedProcess.status = 'Terminated';
             if (_PCBReadyQueue.getHead() === requestedProcess) {
                 // Get final CPU values and save them in the table if the program is running
-                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.Zflag);
+                requestedProcess.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
                 _Scheduler.handleCpuSchedule();
             }
             else {
@@ -707,6 +698,24 @@ var TSOS;
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
             _StdOut.bsod();
             this.krnShutdown();
+        }
+        handleCpuCycle(newCycle = false) {
+            // Determine if the time is up for the process and if the cpu should run another cycle
+            _CPU.cycle(newCycle);
+            // Get the running program and update its value in the PCB table
+            let currentPCB = _PCBReadyQueue.getHead();
+            currentPCB.status = 'Running';
+            currentPCB.updateCpuInfo(_CPU.PC, _CPU.IR, _CPU.Acc, _CPU.Xreg, _CPU.Yreg, _CPU.alu.getZFlag());
+            currentPCB.updateTableEntry();
+            // Iterate through all of the running and ready processes
+            for (const process of _PCBReadyQueue.q) {
+                // Turnaround time increases
+                process.turnaroundTime++;
+                // Increment the wait time if they are not currently executing
+                if (process.status === 'Ready') {
+                    process.waitTime++;
+                }
+            }
         }
     }
     TSOS.Kernel = Kernel;

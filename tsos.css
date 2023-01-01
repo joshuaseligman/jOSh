@@ -192,3 +192,7 @@ hr {
 #testOptions:focus {
   outline: none;
 }
+
+#cpuPipelineState {
+  width: 25%;
+}

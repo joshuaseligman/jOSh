@@ -416,6 +416,7 @@ var TSOS;
                 else {
                     // Call the kernel process to create a process
                     _Kernel.krnCreateProcess(progArr, priority);
+                    _Memory.updateMemoryTable();
                 }
             }
             else {
