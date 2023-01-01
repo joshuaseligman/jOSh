@@ -1,12 +1,14 @@
 jOSh
 ========================================================
 
+The master branch contains the final project (iProject 4) but modified to use my virtual 6502 CPU from my Computer Organization and Architecture class.
+
 Locations of the Incremental Projects
 =====================================
 iProject1 - iProject1 Branch <br />
 iProject2 - iProject2 Branch <br />
 iProject3 - iProject3 Branch <br />
-iProject4 - master and iProject4 branches
+iProject4 - iProject4 branch <br />
 
 Setup TypeScript
 ================
